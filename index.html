@@ -25,7 +25,7 @@
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); overflow: hidden; }
     
-    /* Panel Lateral Deslizante */
+    /* Panel Lateral (Escritorio) */
     #sidebar { 
       width: 360px; 
       background: var(--bg); 
@@ -42,10 +42,10 @@
       margin-left: -360px;
     }
 
-    /* Botón para Minimizar / Desplegar el Panel */
+    /* Botón Flotante para Escritorio */
     .toggle-sidebar-btn {
       position: absolute;
-      top: 10px;
+      top: 12px;
       right: -36px;
       width: 36px;
       height: 40px;
@@ -63,9 +63,9 @@
       box-shadow: 2px 0 8px rgba(0,0,0,0.4);
     }
     
-    /* Pestañas de Navegación del Panel Izquierdo */
+    /* Pestañas de Navegación */
     .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #181818; }
-    .tab-btn { flex: 1; padding: 10px 5px; font-size: 0.75rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; white-space: nowrap; }
+    .tab-btn { flex: 1; padding: 12px 5px; font-size: 0.78rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; white-space: nowrap; }
     .tab-btn.active { color: #fff; border-bottom-color: var(--primary); background: var(--card); font-weight: bold; }
     
     .filter-bar { padding: 8px; border-bottom: 1px solid var(--border); display: flex; gap: 5px; background: var(--bg); }
@@ -128,7 +128,7 @@
     .off { display: none !important; }
 
     /* ========================================================
-       DISEÑO RESPONSIVE PARA DISPOSITIVOS MÓVILES (PANTALLAS CHICAS)
+       DISEÑO RESPONSIVE EN MÓVILES (ESTILO HOJA INFERIOR)
        ======================================================== */
     @media (max-width: 768px) {
       .container {
@@ -137,7 +137,7 @@
 
       #sidebar {
         width: 100%;
-        height: 45vh; /* Ocupa un 45% de la pantalla en celulares */
+        height: 50vh;
         border-right: none;
         border-top: 1px solid var(--border);
         position: absolute;
@@ -145,24 +145,29 @@
         left: 0;
         z-index: 1500;
         transition: transform 0.3s ease;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
       }
 
+      /* Cuando se pliega en móviles, deja ver las pestañas abajo */
       #sidebar.collapsed {
         margin-left: 0;
-        transform: translateY(100%); /* Oculta hacia abajo en móviles */
+        transform: translateY(calc(100% - 44px));
       }
 
       .toggle-sidebar-btn {
         top: -36px;
-        right: 15px;
-        width: 45px;
+        right: 12px;
+        width: 100px;
         height: 36px;
         border-radius: 8px 8px 0 0;
-        border-left: 1px solid var(--border);
+        border: 1px solid var(--border);
         border-bottom: none;
+        font-size: 0.75rem;
+        font-weight: bold;
+        background: var(--card);
       }
 
-      .title-area p { display: none; } /* Oculta subtítulo en móviles para ahorrar espacio */
+      .title-area p { display: none; }
     }
   </style>
 </head>
@@ -183,12 +188,12 @@
     <div id="loading" class="off">Cargando datos...</div>
 
     <div id="sidebar">
-      <!-- Botón para Plegar/Desplegar el Panel -->
-      <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()" title="Minimizar / Mostrar panel">◀</button>
+      <!-- Botón Adaptable para Escritorio y Celulares -->
+      <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀ Panel</button>
 
       <div class="tab-bar">
-        <button class="tab-btn active" id="tab-estaciones-btn" onclick="cambiarPestana('estaciones')">🌊 Datos de referencia</button>
-        <button class="tab-btn" id="tab-centros-btn" onclick="cambiarPestana('centros')">🏠 Centros Evacuados</button>
+        <button class="tab-btn active" id="tab-estaciones-btn" onclick="seleccionarPestana('estaciones')">🌊 Datos de referencia</button>
+        <button class="tab-btn" id="tab-centros-btn" onclick="seleccionarPestana('centros')">🏠 Centros Evacuados</button>
       </div>
 
       <!-- Pestaña 1: Datos de Referencia -->
@@ -275,24 +280,37 @@
 
       cargarEstaciones();
       renderCentros(centrosData);
+      actualizarTextoBoton();
     }
 
-    // Función para plegar/desplegar el panel lateral
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
-      const toggleBtn = document.getElementById('toggleBtn');
       sidebar.classList.toggle('collapsed');
-      
-      const isMobile = window.innerWidth <= 768;
+      actualizarTextoBoton();
+      setTimeout(() => { map.invalidateSize(); }, 300);
+    }
 
-      if (sidebar.classList.contains('collapsed')) {
-        toggleBtn.innerHTML = isMobile ? '▲' : '▶';
+    function actualizarTextoBoton() {
+      const sidebar = document.getElementById('sidebar');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const isMobile = window.innerWidth <= 768;
+      const isCollapsed = sidebar.classList.contains('collapsed');
+
+      if (isMobile) {
+        toggleBtn.innerHTML = isCollapsed ? '▲ Ver Lista' : '▼ Ocultar';
       } else {
-        toggleBtn.innerHTML = isMobile ? '▼' : '◀';
+        toggleBtn.innerHTML = isCollapsed ? '▶' : '◀';
+      }
+    }
+
+    function seleccionarPestana(pestana) {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+        actualizarTextoBoton();
       }
 
-      // Reajustar el tamaño del mapa cuando el panel cambia
-      setTimeout(() => { map.invalidateSize(); }, 300);
+      cambiarPestana(pestana);
     }
 
     function cambiarPestana(pestana) {
@@ -336,7 +354,7 @@
       centrosData.push(nuevoCentro);
       renderCentros(centrosData);
       cerrarModalCentros();
-      cambiarPestana('centros');
+      seleccionarPestana('centros');
       map.flyTo([nuevoCentro.lat, nuevoCentro.lng], 13);
 
       fetch(APPS_SCRIPT_URL, {
@@ -369,7 +387,7 @@
         `;
         card.onclick = () => {
           map.flyTo([c.lat, c.lng], 13);
-          if (window.innerWidth <= 768) toggleSidebar(); // Ocultar panel en cel al seleccionar
+          if (window.innerWidth <= 768) toggleSidebar();
         };
         listEl.appendChild(card);
 
@@ -433,7 +451,7 @@
         `;
         card.onclick = () => {
           map.flyTo([est.lat, est.lng], 11);
-          if (window.innerWidth <= 768) toggleSidebar(); // Ocultar panel en cel al seleccionar
+          if (window.innerWidth <= 768) toggleSidebar();
         };
         listaEl.appendChild(card);
 
@@ -456,6 +474,7 @@
       else renderEstaciones(estacionesData.filter(e => e.rio.toLowerCase().includes(rio.toLowerCase())));
     }
 
+    window.onresize = actualizarTextoBoton;
     window.onload = initApp;
   </script>
 </body>
