@@ -17,11 +17,11 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--txt); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     
-    header { background: #1a1a1a; border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+    header { background: #1a1a1a; border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; height: 57px; }
     .title-area h1 { font-size: 1.1rem; color: #fff; }
     .title-area p { font-size: 0.75rem; color: var(--txt-dim); }
     
-    .container { display: flex; flex: 1; height: calc(100vh - 57px); }
+    .container { display: flex; flex: 1; height: calc(100vh - 57px); overflow: hidden; }
     #sidebar { width: 360px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 500; height: 100%; overflow: hidden; }
     
     /* Pestañas de Navegación del Panel Izquierdo */
@@ -29,11 +29,40 @@
     .tab-btn { flex: 1; padding: 10px; font-size: 0.8rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
     .tab-btn.active { color: #fff; border-bottom-color: var(--primary); background: var(--card); font-weight: bold; }
     
-    .filter-bar { padding: 8px; border-bottom: 1px solid var(--border); display: flex; gap: 5px; }
+    .filter-bar { padding: 8px; border-bottom: 1px solid var(--border); display: flex; gap: 5px; background: var(--bg); }
     .filter-btn { flex: 1; padding: 5px; font-size: 0.75rem; background: transparent; border: 1px solid var(--border); color: var(--txt-dim); border-radius: 4px; cursor: pointer; }
     .filter-btn.active { background: var(--card); color: #fff; border-color: var(--primary); }
     
-    .list { flex: 1; overflow-y: auto; padding: 10px; }
+    /* Regla clave para habilitar scroll en el panel */
+    #sec-estaciones, #sec-centros {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 105px);
+      overflow: hidden;
+    }
+
+    .list { 
+      flex: 1; 
+      overflow-y: auto !important; 
+      padding: 10px; 
+      height: 100%;
+    }
+
+    /* Estilos de la barra de scroll para navegadores webkit */
+    .list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .list::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    .list::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 3px;
+    }
+    .list::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
     
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; }
     .card:hover { border-color: #555; }
@@ -98,7 +127,7 @@
       </div>
 
       <!-- Pestaña 1: Datos de Referencia (Estaciones INA) -->
-      <div id="sec-estaciones" style="display:flex; flex-direction:column; flex:1;">
+      <div id="sec-estaciones">
         <div class="filter-bar">
           <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
           <button class="filter-btn" onclick="filtrar('Paraná', this)">Río Paraná</button>
@@ -108,7 +137,7 @@
       </div>
 
       <!-- Pestaña 2: Centros de Evacuados -->
-      <div id="sec-centros" style="display:none; flex-direction:column; flex:1;">
+      <div id="sec-centros" style="display:none;">
         <div class="list" id="list-centros"></div>
       </div>
     </div>
@@ -172,7 +201,7 @@
     let markersCentros = [];
     let estacionesData = [];
     let centrosData = [];
-    
+
     // Endpoint del conector con tu Google Sheets
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypc_RAZ1NQ17UrNp8LnJwN_xqRNVbnBB9wJYtUQLkBzeZupcVCalTKm6m-fNkSfjid/exec";
 
@@ -222,14 +251,12 @@
         contacto: document.getElementById('c-contacto').value || "Sin dato"
       };
 
-      // 1. Mostrar de inmediato en el mapa y panel
       centrosData.push(nuevoCentro);
       renderCentros(centrosData);
       cerrarModalCentros();
       cambiarPestana('centros');
       map.flyTo([nuevoCentro.lat, nuevoCentro.lng], 13);
 
-      // 2. Enviar automáticamente a la planilla de Google Sheets
       fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
