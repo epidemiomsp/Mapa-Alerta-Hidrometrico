@@ -114,174 +114,177 @@
 
   <!-- Carga dinámica de Leaflet JS con fallbacks -->
   <script>
-  (function loadLeaflet() {
-    const cdns = [
-      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
-      'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-      'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
-    ];
+(function loadLeaflet() {
+  const cdns = [
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+    'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
+  ];
 
-    function tryNext(index) {
-      if (index >= cdns.length) {
-        document.getElementById('loading').innerHTML = '<span style="color:#ff453a;">Error: No se pudo cargar la librería del mapa.</span>';
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = cdns[index];
-      script.onload = () => { initApp(); };
-      script.onerror = () => { tryNext(index + 1); };
-      document.head.appendChild(script);
+  function tryNext(index) {
+    if (index >= cdns.length) {
+      document.getElementById('loading').innerHTML = 'Error: No se pudo cargar Leaflet desde las CDNs disponibles.';
+      return;
     }
-
-    tryNext(0);
-  })();
-
-  let map;
-  let markers = [];
-  let estacionesData = [];
-
-  function initApp() {
-    // Inicialización del mapa
-    map = L.map('map').setView([-28.5, -57.8], 7);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // Cargar datos de las estaciones
-    cargarDatosINA();
-
-    // Evento botón de actualización
-    document.getElementById('btn-refresh').addEventListener('click', cargarDatosINA);
+    const script = document.createElement('script');
+    script.src = cdns[index];
+    script.onload = () => { initApp(); };
+    script.onerror = () => { tryNext(index + 1); };
+    document.head.appendChild(script);
   }
 
-  function cargarDatosINA() {
-    const loadingEl = document.getElementById('loading');
-    loadingEl.classList.remove('off');
+  tryNext(0);
+})();
 
-    // API INA / SIyAH vía Proxy CORS para asegurar conectividad
-    const apiINA = 'https://alerta.ina.gob.ar/siyah/api/estaciones/corrientes'; 
-    const urlProxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiINA);
+let map;
+let markers = [];
+let estacionesGlobal = [];
 
-    fetch(urlProxy)
-      .then(response => {
-        if (!response.ok) throw new Error('Servidor no disponible');
-        return response.json();
-      })
-      .then(data => {
-        estacionesData = data;
-        renderEstaciones(estacionesData);
-        loadingEl.classList.add('off');
-        document.getElementById('tstamp').innerText = 'Actualizado: ' + new Date().toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
-      })
-      .catch(err => {
-        console.warn('Usando datos de respaldo hidrométricos:', err);
-        // Respaldo de estaciones con datos de referencia
-        estacionesData = [
-          { id: 1, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 3.42, tendencia: "baja", normal: 3.50, alerta: 6.50, evacuacion: 7.00 },
-          { id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 3.25, tendencia: "baja", normal: 3.50, alerta: 6.50, evacuacion: 7.00 },
-          { id: 3, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, altura: 3.10, tendencia: "permanece", normal: 3.50, alerta: 6.80, evacuacion: 7.50 },
-          { id: 4, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, altura: 2.95, tendencia: "baja", normal: 3.50, alerta: 7.00, evacuacion: 7.50 },
-          { id: 5, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 1.80, tendencia: "crece", normal: 2.00, alerta: 3.50, evacuacion: 4.00 },
-          { id: 6, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, altura: 3.65, tendencia: "baja", normal: 3.50, alerta: 5.50, evacuacion: 6.00 },
-          { id: 7, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 3.80, tendencia: "baja", normal: 3.80, alerta: 5.20, evacuacion: 5.70 },
-          { id: 8, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, altura: 3.90, tendencia: "permanece", normal: 3.80, alerta: 4.80, evacuacion: 5.00 },
-          { id: 9, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, altura: 4.10, tendencia: "baja", normal: 6.00, alerta: 11.50, evacuacion: 12.50 },
-          { id: 10, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, altura: 4.50, tendencia: "baja", normal: 6.00, alerta: 9.50, evacuacion: 10.50 },
-          { id: 11, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, altura: 4.60, tendencia: "baja", normal: 6.00, alerta: 9.00, evacuacion: 10.00 },
-          { id: 12, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, altura: 4.20, tendencia: "permanece", normal: 5.50, alerta: 9.50, evacuacion: 10.50 },
-          { id: 13, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, altura: 3.85, tendencia: "baja", normal: 5.00, alerta: 7.50, evacuacion: 8.50 },
-          { id: 14, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, altura: 3.20, tendencia: "baja", normal: 4.50, alerta: 6.00, evacuacion: 7.50 }
-        ];
-        renderEstaciones(estacionesData);
-        loadingEl.classList.add('off');
-        document.getElementById('tstamp').innerText = 'Modo Referencia';
-      });
-  }
+function initApp() {
+  // Inicialización del mapa
+  map = L.map('map').setView([-28.5, -57.8], 7);
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
 
-  function renderEstaciones(estaciones) {
-    const listaEl = document.getElementById('list');
-    listaEl.innerHTML = '';
-
-    // Limpieza de marcadores
-    markers.forEach(m => map.removeLayer(m));
-    markers = [];
-
-    document.getElementById('count').innerText = estaciones.length;
-
-    estaciones.forEach(est => {
-      // Color según alerta/evacuación
-      let color = '#719C29'; // Normal (Verde)
-      if (est.altura >= est.evacuacion) color = '#F4492E'; // Evacuación (Rojo)
-      else if (est.altura >= est.alerta) color = '#FAAE05'; // Alerta (Amarillo)
-
-      // Simbología de tendencia
-      let flecha = '➔';
-      if (est.tendencia === 'crece') flecha = '⬆';
-      if (est.tendencia === 'baja') flecha = '⬇';
-
-      // Tarjeta de lista
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <div class="row1">
-          <span><span class="estado" style="background:${color}"></span><span class="muni">${est.nombre}</span></span>
-          <span class="rio">${est.rio}</span>
-        </div>
-        <div class="row2">
-          <span class="altura">${est.altura.toFixed(2)}</span>
-          <span class="unidad">mts</span>
-          <span class="tend ${est.tendencia}">${flecha} ${est.tendencia}</span>
-        </div>
-        <div class="umbrales">
-          <span>Alerta: <b>${est.alerta}m</b></span>
-          <span>Evacuación: <b>${est.evacuacion}m</b></span>
-        </div>
-      `;
-
-      card.addEventListener('click', () => {
-        map.flyTo([est.lat, est.lng], 11);
-        marker.openPopup();
-      });
-
-      listaEl.appendChild(card);
-
-      // Pin en el mapa
-      const customIcon = L.divIcon({
-        className: 'custom-pin',
-        html: `<div class="altura-label" style="border-color:${color}; color:${color}">
-                ${est.altura.toFixed(2)}m <span style="font-size:10px">${flecha}</span>
-               </div>`,
-        iconSize: [60, 25],
-        iconAnchor: [30, 12]
-      });
-
-      const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
-      marker.bindPopup(`
-        <h3>${est.nombre}</h3>
-        <div class="kv"><span>Río:</span> <b>${est.rio}</b></div>
-        <div class="kv"><span>Altura actual:</span> <b>${est.altura.toFixed(2)} m</b></div>
-        <div class="kv"><span>Tendencia:</span> <b>${est.tendencia}</b></div>
-        <div class="kv"><span>Nivel Alerta:</span> <b>${est.alerta} m</b></div>
-        <div class="kv"><span>Nivel Evacuación:</span> <b>${est.evacuacion} m</b></div>
-      `);
-
-      markers.push(marker);
+  // Escuchar eventos de botones e interfaz
+  document.getElementById('btn-refresh').addEventListener('click', cargarDatosINA);
+  
+  // Asignar eventos de filtrado Río Paraná / Uruguay
+  document.querySelectorAll('#side .filtro button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('#side .filtro button').forEach(b => b.classList.remove('on'));
+      e.target.classList.add('on');
+      const filtro = e.target.getAttribute('data-f');
+      filtrarEstaciones(filtro);
     });
-  }
+  });
 
-  function filtrar(rio, btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+  // Cargar estaciones hidrométricas
+  cargarDatosINA();
+}
 
-    if (rio === 'todos') {
-      renderEstaciones(estacionesData);
-    } else {
-      const filtradas = estacionesData.filter(e => e.rio.toLowerCase().includes(rio.toLowerCase()));
-      renderEstaciones(filtradas);
-    }
+function cargarDatosINA() {
+  const loadingEl = document.getElementById('loading');
+  loadingEl.classList.remove('off');
+  loadingEl.innerHTML = 'Cargando datos del INA…';
+
+  const apiINA = 'https://alerta.ina.gob.ar/siyah/api/estaciones/corrientes'; 
+  const urlProxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiINA);
+
+  fetch(urlProxy)
+    .then(response => {
+      if (!response.ok) throw new Error('Error al conectar');
+      return response.json();
+    })
+    .then(data => {
+      estacionesGlobal = data;
+      renderEstaciones(estacionesGlobal);
+      loadingEl.classList.add('off');
+      document.getElementById('tstamp').innerText = 'Actualizado: ' + new Date().toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
+    })
+    .catch(err => {
+      console.warn('Fallo de conexión directo, aplicando datos de estación:', err);
+      // Datos de respaldo con coordenadas y umbrales de la provincia de Corrientes
+      estacionesGlobal = [
+        { id: 1, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 3.42, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
+        { id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 3.25, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
+        { id: 3, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, altura: 3.10, tendencia: "permanece", alerta: 6.80, evacuacion: 7.50 },
+        { id: 4, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, altura: 2.95, tendencia: "baja", alerta: 7.00, evacuacion: 7.50 },
+        { id: 5, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 1.80, tendencia: "crece", alerta: 3.50, evacuacion: 4.00 },
+        { id: 6, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, altura: 3.65, tendencia: "baja", alerta: 5.50, evacuacion: 6.00 },
+        { id: 7, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 3.80, tendencia: "baja", alerta: 5.20, evacuacion: 5.70 },
+        { id: 8, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, altura: 3.90, tendencia: "permanece", alerta: 4.80, evacuacion: 5.00 },
+        { id: 9, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, altura: 4.10, tendencia: "baja", alerta: 11.50, evacuacion: 12.50 },
+        { id: 10, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, altura: 4.50, tendencia: "baja", alerta: 9.50, evacuacion: 10.50 },
+        { id: 11, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, altura: 4.60, tendencia: "baja", alerta: 9.00, evacuacion: 10.00 },
+        { id: 12, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, altura: 4.20, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
+        { id: 13, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, altura: 3.85, tendencia: "baja", alerta: 7.50, evacuacion: 8.50 },
+        { id: 14, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, altura: 3.20, tendencia: "baja", alerta: 6.00, evacuacion: 7.50 }
+      ];
+      renderEstaciones(estacionesGlobal);
+      loadingEl.classList.add('off');
+      document.getElementById('tstamp').innerText = 'Datos de referencia';
+    });
+}
+
+function renderEstaciones(estaciones) {
+  const listaEl = document.getElementById('list');
+  listaEl.innerHTML = '';
+
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  document.getElementById('count').innerText = estaciones.length;
+
+  estaciones.forEach(est => {
+    let color = '#719C29';
+    if (est.altura >= est.evacuacion) color = '#F4492E';
+    else if (est.altura >= est.alerta) color = '#FAAE05';
+
+    let flecha = '➔';
+    if (est.tendencia === 'crece') flecha = '⬆';
+    if (est.tendencia === 'baja') flecha = '⬇';
+
+    // Tarjeta lateral
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="row1">
+        <span class="estado" style="background:${color}"></span>
+        <span class="muni">${est.nombre}</span>
+        <span class="rio">${est.rio}</span>
+      </div>
+      <div class="row2">
+        <span class="altura">${est.altura.toFixed(2)}</span>
+        <span class="unidad">mts</span>
+        <span class="tend ${est.tendencia}">${flecha} ${est.tendencia}</span>
+      </div>
+      <div class="umbrales">
+        <span>Alerta: <b>${est.alerta}m</b></span>
+        <span>Evacuación: <b>${est.evacuacion}m</b></span>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      map.flyTo([est.lat, est.lng], 11);
+      marker.openPopup();
+    });
+
+    listaEl.appendChild(card);
+
+    // Marcador de mapa
+    const customIcon = L.divIcon({
+      className: 'custom-pin',
+      html: `<div class="altura-label" style="border-color:${color}; color:${color}">
+              ${est.altura.toFixed(2)}m <span class="arrow">${flecha}</span>
+             </div>`,
+      iconSize: [60, 25],
+      iconAnchor: [30, 12]
+    });
+
+    const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
+    marker.bindPopup(`
+      <h3>${est.nombre}</h3>
+      <div class="kv"><span>Río:</span> <b>${est.rio}</b></div>
+      <div class="kv"><span>Altura actual:</span> <b>${est.altura.toFixed(2)} m</b></div>
+      <div class="kv"><span>Tendencia:</span> <b>${est.tendencia}</b></div>
+      <div class="kv"><span>Nivel Alerta:</span> <b>${est.alerta} m</b></div>
+      <div class="kv"><span>Nivel Evacuación:</span> <b>${est.evacuacion} m</b></div>
+    `);
+
+    markers.push(marker);
+  });
+}
+
+function filtrarEstaciones(filtro) {
+  if (filtro === 'todos') {
+    renderEstaciones(estacionesGlobal);
+  } else {
+    const filtradas = estacionesGlobal.filter(e => e.rio.toLowerCase() === filtro.toLowerCase());
+    renderEstaciones(filtradas);
   }
-  </script>
-</body>
-</html>
+}
+</script>
