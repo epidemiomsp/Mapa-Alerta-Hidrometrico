@@ -89,7 +89,7 @@
     /* Tooltip para Departamentos */
     .dept-tooltip {
       background: rgba(0, 0, 0, 0.85);
-      border: 1px solid var(--border);
+      border: 1px solid #0a84ff;
       color: #fff;
       font-weight: bold;
       font-size: 0.75rem;
@@ -138,7 +138,7 @@
       <button class="btn-action" onclick="abrirModal('modalCentro')">+ Centro</button>
       <button class="btn-action" style="background:#28a745;" onclick="abrirModal('modalPersona')">+ Persona</button>
       <button class="btn-action" style="background:#17a2b8;" onclick="abrirModal('modalMonitoreo')">+ Monitoreo</button>
-      <button class="btn-sec" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
+      <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
       <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
     </div>
   </header>
@@ -311,6 +311,38 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
+    // GeoJSON embebido directamente para garantizar disponibilidad y evitar bloqueos CORS
+    const departamentosCorrientesGeoJSON = {
+      "type": "FeatureCollection",
+      "features": [
+        {"type":"Feature","properties":{"nombre":"Capital"},"geometry":{"type":"Polygon","coordinates":[[[-58.85,-27.42],[-58.73,-27.45],[-58.75,-27.55],[-58.85,-27.52],[-58.85,-27.42]]]}},
+        {"type":"Feature","properties":{"nombre":"San Cosme"},"geometry":{"type":"Polygon","coordinates":[[[-58.73,-27.28],[-58.48,-27.28],[-58.48,-27.48],[-58.73,-27.45],[-58.73,-27.28]]]}},
+        {"type":"Feature","properties":{"nombre":"Itatí"},"geometry":{"type":"Polygon","coordinates":[[[-58.48,-27.20],[-58.00,-27.22],[-58.02,-27.45],[-58.48,-27.48],[-58.48,-27.20]]]}},
+        {"type":"Feature","properties":{"nombre":"Berón de Astrada"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-27.22],[-57.50,-27.35],[-57.55,-27.55],[-58.02,-27.45],[-58.00,-27.22]]]}},
+        {"type":"Feature","properties":{"nombre":"General Paz"},"geometry":{"type":"Polygon","coordinates":[[[-57.90,-27.45],[-57.30,-27.60],[-57.45,-27.95],[-58.00,-27.80],[-57.90,-27.45]]]}},
+        {"type":"Feature","properties":{"nombre":"San Luis del Palmar"},"geometry":{"type":"Polygon","coordinates":[[[-58.73,-27.45],[-58.02,-27.45],[-58.00,-27.80],[-58.60,-27.70],[-58.73,-27.45]]]}},
+        {"type":"Feature","properties":{"nombre":"Empedrado"},"geometry":{"type":"Polygon","coordinates":[[[-58.85,-27.75],[-58.50,-27.70],[-58.45,-28.15],[-58.80,-28.05],[-58.85,-27.75]]]}},
+        {"type":"Feature","properties":{"nombre":"Mburucuyá"},"geometry":{"type":"Polygon","coordinates":[[[-58.45,-27.95],[-58.00,-27.90],[-58.00,-28.25],[-58.40,-28.20],[-58.45,-27.95]]]}},
+        {"type":"Feature","properties":{"nombre":"Saladas"},"geometry":{"type":"Polygon","coordinates":[[[-58.50,-28.15],[-58.00,-28.20],[-58.00,-28.45],[-58.40,-28.45],[-58.50,-28.15]]]}},
+        {"type":"Feature","properties":{"nombre":"Bella Vista"},"geometry":{"type":"Polygon","coordinates":[[[-59.05,-28.30],[-58.40,-28.30],[-58.40,-28.70],[-58.95,-28.70],[-59.05,-28.30]]]}},
+        {"type":"Feature","properties":{"nombre":"San Roque"},"geometry":{"type":"Polygon","coordinates":[[[-58.40,-28.45],[-57.90,-28.40],[-57.90,-28.80],[-58.40,-28.75],[-58.40,-28.45]]]}},
+        {"type":"Feature","properties":{"nombre":"Concepción"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-28.00],[-57.30,-28.00],[-57.30,-28.60],[-57.90,-28.50],[-58.00,-28.00]]]}},
+        {"type":"Feature","properties":{"nombre":"San Miguel"},"geometry":{"type":"Polygon","coordinates":[[[-57.60,-27.60],[-56.90,-27.70],[-57.00,-28.20],[-57.60,-28.00],[-57.60,-27.60]]]}},
+        {"type":"Feature","properties":{"nombre":"Ituzaingó"},"geometry":{"type":"Polygon","coordinates":[[[-57.50,-27.35],[-56.00,-27.50],[-56.30,-28.20],[-57.00,-28.10],[-57.50,-27.35]]]}},
+        {"type":"Feature","properties":{"nombre":"Santo Tomé"},"geometry":{"type":"Polygon","coordinates":[[[-56.30,-27.80],[-55.60,-28.00],[-56.10,-28.80],[-56.60,-28.60],[-56.30,-27.80]]]}},
+        {"type":"Feature","properties":{"nombre":"General Alvear"},"geometry":{"type":"Polygon","coordinates":[[[-56.60,-28.60],[-56.30,-28.80],[-56.60,-29.20],[-56.90,-29.00],[-56.60,-28.60]]]}},
+        {"type":"Feature","properties":{"nombre":"San Martín"},"geometry":{"type":"Polygon","coordinates":[[[-57.10,-28.50],[-56.60,-28.60],[-56.80,-29.30],[-57.20,-29.10],[-57.10,-28.50]]]}},
+        {"type":"Feature","properties":{"nombre":"Mercedes"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-28.60],[-57.10,-28.50],[-57.30,-29.30],[-58.20,-29.20],[-58.00,-28.60]]]}},
+        {"type":"Feature","properties":{"nombre":"Lavalle"},"geometry":{"type":"Polygon","coordinates":[[[-59.10,-28.70],[-58.70,-28.70],[-58.70,-29.10],[-59.20,-29.10],[-59.10,-28.70]]]}},
+        {"type":"Feature","properties":{"nombre":"Goya"},"geometry":{"type":"Polygon","coordinates":[[[-59.30,-29.00],[-58.60,-29.00],[-58.60,-29.60],[-59.60,-29.60],[-59.30,-29.00]]]}},
+        {"type":"Feature","properties":{"nombre":"Curuzú Cuatiá"},"geometry":{"type":"Polygon","coordinates":[[[-58.60,-29.20],[-57.60,-29.20],[-57.70,-29.80],[-58.60,-29.80],[-58.60,-29.20]]]}},
+        {"type":"Feature","properties":{"nombre":"Paso de los Libres"},"geometry":{"type":"Polygon","coordinates":[[[-57.60,-29.20],[-56.80,-29.30],[-57.00,-30.00],[-57.70,-29.80],[-57.60,-29.20]]]}},
+        {"type":"Feature","properties":{"nombre":"Sauce"},"geometry":{"type":"Polygon","coordinates":[[[-58.80,-29.60],[-58.00,-29.70],[-58.10,-30.30],[-58.90,-30.10],[-58.80,-29.60]]]}},
+        {"type":"Feature","properties":{"nombre":"Monte Caseros"},"geometry":{"type":"Polygon","coordinates":[[[-58.10,-29.80],[-57.50,-29.90],[-57.60,-30.70],[-58.00,-30.60],[-58.10,-29.80]]]}},
+        {"type":"Feature","properties":{"nombre":"Esquina"},"geometry":{"type":"Polygon","coordinates":[[[-59.60,-29.60],[-58.80,-29.60],[-58.90,-30.40],[-59.60,-30.20],[-59.60,-29.60]]]}}
+      ]
+    };
+
     // Mapa de IDs oficiales del INA para vincular cada puerto
     const inaEstacionesIds = {
       "Ituzaingó": { estacion_id: 15, var_id: 2 },
@@ -345,50 +377,44 @@
     }
 
     function cargarDepartamentos() {
-      const geojsonUrl = 'https://raw.githubusercontent.com/mgaitan/departamentos-argentina/master/departamentos-corrientes.json';
-
-      fetch(geojsonUrl)
-        .then(res => res.json())
-        .then(data => {
-          capaDepartamentos = L.geoJSON(data, {
-            style: function(feature) {
-              return {
-                color: '#1a1a1a',
-                weight: 1.5,
-                opacity: 0.8,
-                fillColor: '#3388ff',
-                fillOpacity: 0.15
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              const nombreDpto = feature.properties.departamento || feature.properties.nam || feature.properties.NAME_2 || "Departamento";
-              
-              layer.bindTooltip(nombreDpto, {
-                permanent: false,
-                direction: 'center',
-                className: 'dept-tooltip'
-              });
-
-              layer.on({
-                mouseover: function(e) {
-                  const l = e.target;
-                  l.setStyle({
-                    weight: 3,
-                    color: '#0a84ff',
-                    fillOpacity: 0.35
-                  });
-                },
-                mouseout: function(e) {
-                  capaDepartamentos.resetStyle(e.target);
-                }
-              });
-            }
+      capaDepartamentos = L.geoJSON(departamentosCorrientesGeoJSON, {
+        style: function(feature) {
+          return {
+            color: '#0a84ff',
+            weight: 2,
+            opacity: 0.9,
+            fillColor: '#0a84ff',
+            fillOpacity: 0.12
+          };
+        },
+        onEachFeature: function(feature, layer) {
+          const nombreDpto = feature.properties.nombre;
+          
+          layer.bindTooltip(`Dpto. ${nombreDpto}`, {
+            permanent: false,
+            direction: 'center',
+            className: 'dept-tooltip'
           });
 
-          capaDepartamentos.addTo(map);
-          departamentosVisibles = true;
-        })
-        .catch(err => console.error("Error al cargar los departamentos:", err));
+          layer.on({
+            mouseover: function(e) {
+              const l = e.target;
+              l.setStyle({
+                weight: 3.5,
+                color: '#5ac8fa',
+                fillOpacity: 0.3
+              });
+            },
+            mouseout: function(e) {
+              capaDepartamentos.resetStyle(e.target);
+            }
+          });
+        }
+      });
+
+      capaDepartamentos.addTo(map);
+      departamentosVisibles = true;
+      actualizarEstiloBotonDptos();
     }
 
     function toggleCapaDepartamentos() {
@@ -400,6 +426,15 @@
       } else {
         map.addLayer(capaDepartamentos);
         departamentosVisibles = true;
+      }
+      actualizarEstiloBotonDptos();
+    }
+
+    function actualizarEstiloBotonDptos() {
+      const btn = document.getElementById('btn-toggle-dptos');
+      if (btn) {
+        btn.style.background = departamentosVisibles ? '#0a84ff' : '#2c2c2e';
+        btn.style.borderColor = departamentosVisibles ? '#005bb5' : '#3a3a3c';
       }
     }
 
@@ -621,7 +656,6 @@
 
       const ctx = prepararCanvasGrafico();
 
-      // Proxy para sortear bloqueo de CORS de GitHub Pages al servidor del INA
       const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
       const urlProxy = `https://corsproxy.io/?${encodeURIComponent(urlTarget)}`;
 
