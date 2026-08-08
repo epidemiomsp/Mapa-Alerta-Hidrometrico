@@ -86,6 +86,17 @@
     .btn-action { background: var(--primary); color: #fff; border: none; padding: 5px 8px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
     .btn-sec { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:5px 8px; border-radius:5px; cursor:pointer; font-size: 0.7rem; }
 
+    /* Tooltip para Departamentos */
+    .dept-tooltip {
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid var(--border);
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
     /* Modales */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: 0.2s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
@@ -127,6 +138,7 @@
       <button class="btn-action" onclick="abrirModal('modalCentro')">+ Centro</button>
       <button class="btn-action" style="background:#28a745;" onclick="abrirModal('modalPersona')">+ Persona</button>
       <button class="btn-action" style="background:#17a2b8;" onclick="abrirModal('modalMonitoreo')">+ Monitoreo</button>
+      <button class="btn-sec" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
       <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
     </div>
   </header>
@@ -296,6 +308,8 @@
     let markersEstaciones = [], markersCentros = [];
     let estacionesData = [], centrosData = [], personasData = [], monitoreoData = [];
     let miChart = null;
+    let capaDepartamentos = null;
+    let departamentosVisibles = false;
 
     // Mapa de IDs oficiales del INA para vincular cada puerto
     const inaEstacionesIds = {
@@ -326,7 +340,67 @@
 
       cargarEstaciones();
       cargarDatosActualizados();
+      cargarDepartamentos();
       actualizarTextoBoton();
+    }
+
+    function cargarDepartamentos() {
+      const geojsonUrl = 'https://raw.githubusercontent.com/mgaitan/departamentos-argentina/master/departamentos-corrientes.json';
+
+      fetch(geojsonUrl)
+        .then(res => res.json())
+        .then(data => {
+          capaDepartamentos = L.geoJSON(data, {
+            style: function(feature) {
+              return {
+                color: '#1a1a1a',
+                weight: 1.5,
+                opacity: 0.8,
+                fillColor: '#3388ff',
+                fillOpacity: 0.15
+              };
+            },
+            onEachFeature: function(feature, layer) {
+              const nombreDpto = feature.properties.departamento || feature.properties.nam || feature.properties.NAME_2 || "Departamento";
+              
+              layer.bindTooltip(nombreDpto, {
+                permanent: false,
+                direction: 'center',
+                className: 'dept-tooltip'
+              });
+
+              layer.on({
+                mouseover: function(e) {
+                  const l = e.target;
+                  l.setStyle({
+                    weight: 3,
+                    color: '#0a84ff',
+                    fillOpacity: 0.35
+                  });
+                },
+                mouseout: function(e) {
+                  capaDepartamentos.resetStyle(e.target);
+                }
+              });
+            }
+          });
+
+          capaDepartamentos.addTo(map);
+          departamentosVisibles = true;
+        })
+        .catch(err => console.error("Error al cargar los departamentos:", err));
+    }
+
+    function toggleCapaDepartamentos() {
+      if (!capaDepartamentos) return;
+
+      if (departamentosVisibles) {
+        map.removeLayer(capaDepartamentos);
+        departamentosVisibles = false;
+      } else {
+        map.addLayer(capaDepartamentos);
+        departamentosVisibles = true;
+      }
     }
 
     function cargarDatosActualizados() {
