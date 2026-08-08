@@ -559,62 +559,132 @@
     }
 
     function renderEstaciones(estaciones) {
-      const listaEl = document.getElementById('list-estaciones');
-      listaEl.innerHTML = '';
-      markersEstaciones.forEach(m => map.removeLayer(m));
-      markersEstaciones = [];
+  const listaEl = document.getElementById('list-estaciones');
+  listaEl.innerHTML = '';
+  markersEstaciones.forEach(m => map.removeLayer(m));
+  markersEstaciones = [];
 
-      estaciones.forEach(est => {
-        let color = '#719C29';
-        if (est.altura >= est.evacuacion) color = '#F4492E';
-        else if (est.altura >= est.alerta) color = '#FAAE05';
+  estaciones.forEach(est => {
+    // 1. Asignación dinámica de colores según nivel de alerta y tendencia
+    let colorEstado = '#28a745'; // Verde por defecto
 
-        let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
-
-        const inaInfo = inaEstacionesIds[est.nombre] || { estacion_id: 15, var_id: 2 };
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div style="display:flex; justify-content:space-between;">
-            <span class="muni">${est.nombre}</span>
-            <span class="rio">Río ${est.rio}</span>
-          </div>
-          <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-            <span class="altura">${est.altura.toFixed(2)}</span>
-            <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
-            <span style="margin-left:auto; font-size:0.8rem;">${flecha} ${est.tendencia}</span>
-          </div>
-          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
-                  style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
-            📈 Ver Gráfica de Evolución
-          </button>
-        `;
-        card.onclick = () => {
-          map.flyTo([est.lat, est.lng], 11);
-          if (window.innerWidth <= 768) toggleSidebar();
-        };
-        listaEl.appendChild(card);
-
-        const customIcon = L.divIcon({
-          className: 'custom-pin',
-          html: `<div style="background:rgba(30,30,30,0.9); border:2px solid ${color}; color:${color}; padding:2px 6px; border-radius:8px; font-weight:bold; font-size:11px; white-space:nowrap;">${est.nombre}: ${est.altura.toFixed(2)}m ${flecha}</div>`,
-          iconSize: [80, 25]
-        });
-
-        const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
-        marker.bindPopup(`
-          <div style="color:#000;">
-            <b>${est.nombre}</b><br>Río: ${est.rio}<br>Altura actual: ${est.altura.toFixed(2)}m<br>Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
-            <button onclick="mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
-                    style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
-              📈 Ver Gráfica de Evolución
-            </button>
-          </div>
-        `);
-        markersEstaciones.push(marker);
-      });
+    if (est.altura >= est.evacuacion) {
+      colorEstado = '#F4492E'; // Rojo: Evacuación
+    } else if (est.altura >= est.alerta) {
+      colorEstado = '#FAAE05'; // Amarillo: Alerta
+    } else {
+      // Niveles normales según tendencia
+      if (est.tendencia === 'baja') {
+        colorEstado = '#00D2FF'; // Celeste: Baja
+      } else if (est.tendencia === 'permanece') {
+        colorEstado = '#28a745'; // Verde: Permanece
+      } else {
+        colorEstado = '#0a84ff'; // Azul: Crece (normal)
+      }
     }
+
+    let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
+    const inaInfo = inaEstacionesIds[est.nombre] || { estacion_id: 15, var_id: 2 };
+
+    // 2. Tarjeta para el panel lateral
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between;">
+        <span class="muni">${est.nombre}</span>
+        <span class="rio">Río ${est.rio}</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+        <span class="altura">${est.altura.toFixed(2)}</span>
+        <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
+        <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
+      </div>
+      <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
+              style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
+        📈 Ver Gráfica de Evolución
+      </button>
+    `;
+    card.onclick = () => {
+      map.flyTo([est.lat, est.lng], 12);
+      if (window.innerWidth <= 768) toggleSidebar();
+    };
+    listaEl.appendChild(card);
+
+    // 3. Marcador con la imagen del triángulo de advertencia y etiquetas apiladas
+    const customIcon = L.divIcon({
+      className: 'custom-river-pin',
+      html: `
+        <div style="
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          justify-content: center; 
+          text-align: center;
+          cursor: pointer;
+        ">
+          <!-- Icono de la imagen del triángulo de advertencia de río -->
+          <img src="./Rio-removebg-preview.png" style="
+            width: 30px; 
+            height: 30px; 
+            object-fit: contain;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
+            margin-bottom: 2px;
+          " alt="Alerta Río">
+
+          <!-- Nombre del Municipio -->
+          <div style="
+            background: rgba(18, 18, 18, 0.90); 
+            color: #ffffff; 
+            font-size: 10.5px; 
+            font-weight: 700; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            white-space: nowrap; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.15);
+            line-height: 1.2;
+          ">
+            ${est.nombre}
+          </div>
+
+          <!-- Altura y Flecha etiquetada con el color dinámico de estado -->
+          <div style="
+            background: rgba(18, 18, 18, 0.95); 
+            color: ${colorEstado}; 
+            font-size: 11px; 
+            font-weight: 800; 
+            padding: 1px 6px; 
+            border-radius: 4px; 
+            white-space: nowrap; 
+            margin-top: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            border: 1px solid ${colorEstado};
+            line-height: 1.2;
+          ">
+            ${est.altura.toFixed(2)}m ${flecha}
+          </div>
+        </div>
+      `,
+      iconSize: [110, 70],
+      iconAnchor: [55, 15]
+    });
+
+    const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
+    marker.bindPopup(`
+      <div style="color:#000;">
+        <b>${est.nombre}</b><br>
+        Río: ${est.rio}<br>
+        Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
+        Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
+        <button onclick="mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
+                style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
+          📈 Ver Gráfica de Evolución
+        </button>
+      </div>
+    `);
+    markersEstaciones.push(marker);
+  });
+}
 
     function prepararCanvasGrafico() {
       const container = document.getElementById('chartContainer');
