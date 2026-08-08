@@ -740,56 +740,69 @@
       });
     }
 
-    function renderCentros(centros) {
-      const listEl = document.getElementById('list-centros');
-      listEl.innerHTML = '';
-      markersCentros.forEach(m => map.removeLayer(m));
-      markersCentros = [];
+  function renderCentros(centros) {
+  const listEl = document.getElementById('list-centros');
+  listEl.innerHTML = '';
+  markersCentros.forEach(m => map.removeLayer(m));
+  markersCentros = [];
 
-      centros.forEach(c => {
-        const pctOcupacion = c.capacidad > 0 ? Math.round((c.evacuados / c.capacidad) * 100) : 0;
-        let colorPin = '#0a84ff';
-        if (pctOcupacion >= 100) colorPin = '#F4492E';
-        else if (pctOcupacion >= 80) colorPin = '#FAAE05';
+  centros.forEach(c => {
+    const pctOcupacion = c.capacidad > 0 ? Math.round((c.evacuados / c.capacidad) * 100) : 0;
+    let colorPin = '#0a84ff';
+    if (pctOcupacion >= 100) colorPin = '#F4492E';
+    else if (pctOcupacion >= 80) colorPin = '#FAAE05';
 
-        const card = document.createElement('div');
-        card.className = 'item-card';
-        card.style.borderLeft = `4px solid ${colorPin}`;
-        card.innerHTML = `
-          <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
-          <div class="item-title">🏠 ${c.nombre}</div>
-          <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
-          <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
-        `;
-        card.onclick = () => {
-          map.flyTo([c.lat, c.lng], 13);
-          if (window.innerWidth <= 768) toggleSidebar();
-        };
-        listEl.appendChild(card);
+    // 1. Tarjeta en la lista lateral
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.style.borderLeft = `4px solid ${colorPin}`;
+    card.innerHTML = `
+      <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
+      <div class="item-title">🏠 ${c.nombre}</div>
+      <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
+      <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
+    `;
+    card.onclick = () => {
+      map.flyTo([c.lat, c.lng], 15);
+      if (window.innerWidth <= 768) toggleSidebar();
+    };
+    listEl.appendChild(card);
 
-        const iconoCasa = L.divIcon({
-          className: 'custom-house-pin',
-          html: `<div style="background:${colorPin}; color:#fff; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px; border:2px solid #fff; white-space:nowrap; box-shadow:0 2px 5px rgba(0,0,0,0.4);">🏠 ${c.evacuados} evac.</div>`,
-          iconSize: [85, 25]
-        });
+    // 2. Icono personalizado de la imagen
+    const iconoSalud = L.icon({
+      iconUrl: './3304549.png', // Ruta de la imagen en tu repositorio
+      iconSize: [36, 36],       // Tamaño del pin
+      iconAnchor: [18, 36],     // Punto del icono que apunta a las coordenadas
+      popupAnchor: [0, -32]     // Posición donde se despliega el popup respecto al pin
+    });
 
-        const marker = L.marker([c.lat, c.lng], { icon: iconoCasa }).addTo(map);
-        marker.bindPopup(`
-          <div style="color:#000;">
-            <b style="font-size:0.95rem;">${c.nombre}</b><br>
-            <b>Municipio:</b> ${c.municipio}<br>
-            <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
-            <b>Contacto:</b> ${c.contacto}<br>
-            <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p<br><br>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-              <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
-              <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
-            </div>
-          </div>
-        `);
-        markersCentros.push(marker);
-      });
-    }
+    // 3. Creación del marcador con el popup estructurado
+    const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
+    
+    marker.bindPopup(`
+      <div style="color:#000; min-width: 180px;">
+        <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+          Centro de Evacuados
+        </div>
+        <div style="font-size:1.05rem; font-weight:bold; color:#111; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">
+          ${c.nombre}
+        </div>
+        <div style="font-size: 0.8rem; line-height: 1.4;">
+          <b>Municipio:</b> ${c.municipio}<br>
+          <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
+          <b>Contacto:</b> ${c.contacto}<br>
+          <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+          <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
+          <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
+        </div>
+      </div>
+    `);
+
+    markersCentros.push(marker);
+  });
+}
 
     function verEvacuadosCentro(idCentro) {
       cambiarPestana('ingresos');
