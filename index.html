@@ -101,7 +101,7 @@
     .centro-info { font-size: 0.75rem; color: var(--txt-dim); margin-top: 4px; }
     .centro-stats { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.7rem; background: #262626; padding: 5px; border-radius: 4px; }
     
-    #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; }
+    #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; }
     
     .btn-add { background: var(--primary); color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
     .btn-refresh { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:6px 10px; border-radius:6px; cursor:pointer; font-size: 0.75rem; }
@@ -149,7 +149,6 @@
         box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
       }
 
-      /* En celulares no movemos todo el sidebar, solo ocultamos el contenido */
       #sidebar.collapsed {
         margin-left: 0 !important;
       }
@@ -198,7 +197,6 @@
       <div class="tab-bar">
         <button class="tab-btn active" id="tab-estaciones-btn" onclick="seleccionarPestana('estaciones')">🌊 Datos</button>
         <button class="tab-btn" id="tab-centros-btn" onclick="seleccionarPestana('centros')">🏠 Evacuados</button>
-        <!-- Botón Integrado en la Barra de Pestañas -->
         <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
       </div>
 
@@ -273,16 +271,40 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script>
     let map;
+    let tempMarker = null;
     let markersEstaciones = [];
     let markersCentros = [];
     let estacionesData = [];
     let centrosData = [];
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzF3uEOXzRh0czcp9Z67I0OMdyxWA2Gv9slalW0pBKJXcSxAZ0gGY6e7pVpkvAtPKOmnQ/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzBQhxZFtdQGh9CptOjw8jl1CTqM0Eei2KZ6rVObkVfXT6XPUHD6IfW2ToWRtrkJUKzFg/exec";
 
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+      // EVENTO PARA DETECTAR CLIC EN EL MAPA Y EXTRAER COORDENADAS
+      map.on('click', function(e) {
+        const lat = e.latlng.lat.toFixed(5);
+        const lng = e.latlng.lng.toFixed(5);
+
+        // Si había un marcador temporal previo, quitarlo
+        if (tempMarker) {
+          map.removeLayer(tempMarker);
+        }
+
+        // Crear marcador temporal donde se hizo clic
+        tempMarker = L.marker([lat, lng]).addTo(map)
+          .bindPopup("📍 Ubicación seleccionada para el nuevo centro")
+          .openPopup();
+
+        // Cargar lat/lng automáticamente en el formulario
+        document.getElementById('c-lat').value = lat;
+        document.getElementById('c-lng').value = lng;
+
+        // Abrir ventana emergente
+        abrirModalCentros();
+      });
 
       cargarEstaciones();
       cargarCentrosDesdeSheet();
@@ -346,6 +368,12 @@
     function cerrarModalCentros() {
       document.getElementById('modalCentro').classList.remove('active');
       document.getElementById('formNuevoCentro').reset();
+      
+      // Quitar marcador temporal si cancela la carga
+      if (tempMarker) {
+        map.removeLayer(tempMarker);
+        tempMarker = null;
+      }
     }
 
     function cargarCentrosDesdeSheet() {
@@ -378,6 +406,12 @@
         lng: parseFloat(document.getElementById('c-lng').value),
         contacto: document.getElementById('c-contacto').value || "Sin dato"
       };
+
+      // Si había marcador temporal, eliminarlo al guardar
+      if (tempMarker) {
+        map.removeLayer(tempMarker);
+        tempMarker = null;
+      }
 
       centrosData.push(nuevoCentro);
       renderCentros(centrosData);
