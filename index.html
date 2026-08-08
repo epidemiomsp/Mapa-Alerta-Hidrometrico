@@ -345,24 +345,11 @@
     }
 
     function cargarDepartamentos() {
-      // Endpoint WFS oficial del IGN
-      const urlWFS = 'https://wms.ign.gob.ar/geoserver/ign/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ign:departamento&outputFormat=application/json';
-
-      fetch(urlWFS)
+      // Carga directa del archivo corrientes.json recién subido al repositorio
+      fetch('./corrientes.json')
         .then(res => res.json())
         .then(data => {
-          // Filtrado estricto para extraer solo departamentos pertenecientes a Corrientes (Código INDEC "18")
-          const dptosCorrientes = {
-            type: "FeatureCollection",
-            features: data.features.filter(f => {
-              const p = f.properties;
-              return (p.fna && p.fna.includes("Corrientes")) || 
-                     (p.nam && p.nam.includes("Corrientes")) ||
-                     (p.in1 === "18");
-            })
-          };
-
-          capaDepartamentos = L.geoJSON(dptosCorrientes, {
+          capaDepartamentos = L.geoJSON(data, {
             style: function(feature) {
               return {
                 color: '#0a84ff',
@@ -373,7 +360,8 @@
               };
             },
             onEachFeature: function(feature, layer) {
-              const nombreDpto = feature.properties.nam || feature.properties.fna || "Departamento";
+              const p = feature.properties || {};
+              const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
               
               layer.bindTooltip(`Dpto. ${nombreDpto}`, {
                 permanent: false,
@@ -397,7 +385,7 @@
           actualizarEstiloBotonDptos();
         })
         .catch(err => {
-          console.error("Error al obtener GeoJSON desde IGN WFS:", err);
+          console.error("Error al cargar corrientes.json:", err);
         });
     }
 
