@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Estado Hidrométrico y Centros de Evacuados - Corrientes</title>
 
-  <!-- CSS Leaflet con fallback CDN -->
+  <!-- CSS Leaflet CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
         onerror="this.onerror=null;this.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';"/>
 
@@ -25,7 +25,7 @@
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); overflow: hidden; }
     
-    /* Panel Lateral (Escritorio) */
+    /* Panel Lateral */
     #sidebar { 
       width: 360px; 
       background: var(--bg); 
@@ -38,32 +38,16 @@
       transition: margin-left 0.3s ease;
     }
 
-    #sidebar.collapsed {
-      margin-left: -360px;
-    }
+    #sidebar.collapsed { margin-left: -360px; }
 
-    /* Botón para Escritorio */
     .toggle-sidebar-btn {
-      position: absolute;
-      top: 12px;
-      right: -36px;
-      width: 36px;
-      height: 40px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-left: none;
-      color: #fff;
-      border-radius: 0 8px 8px 0;
-      cursor: pointer;
-      z-index: 1600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
+      position: absolute; top: 12px; right: -36px; width: 36px; height: 40px;
+      background: var(--card); border: 1px solid var(--border); border-left: none;
+      color: #fff; border-radius: 0 8px 8px 0; cursor: pointer; z-index: 1600;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
       box-shadow: 2px 0 8px rgba(0,0,0,0.4);
     }
     
-    /* Pestañas de Navegación */
     .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #181818; align-items: center; }
     .tab-btn { flex: 1; padding: 12px 5px; font-size: 0.78rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; white-space: nowrap; }
     .tab-btn.active { color: #fff; border-bottom-color: var(--primary); background: var(--card); font-weight: bold; }
@@ -72,20 +56,9 @@
     .filter-btn { flex: 1; padding: 5px; font-size: 0.75rem; background: transparent; border: 1px solid var(--border); color: var(--txt-dim); border-radius: 4px; cursor: pointer; }
     .filter-btn.active { background: var(--card); color: #fff; border-color: var(--primary); }
     
-    #sec-estaciones, #sec-centros {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transition: max-height 0.3s ease, opacity 0.3s ease;
-    }
+    #sec-estaciones, #sec-centros { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-    .list { 
-      flex: 1; 
-      overflow-y: auto !important; 
-      padding: 10px; 
-    }
-
+    .list { flex: 1; overflow-y: auto !important; padding: 10px; }
     .list::-webkit-scrollbar { width: 6px; }
     .list::-webkit-scrollbar-track { background: var(--bg); }
     .list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
@@ -109,7 +82,7 @@
     /* Modal Formulario */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: 0.2s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; width: 420px; max-width: 90%; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; width: 440px; max-width: 95%; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
     .modal-header h3 { font-size: 1rem; color: #fff; }
     .close-modal { background: none; border: none; color: var(--txt-dim); font-size: 1.4rem; cursor: pointer; }
@@ -128,51 +101,12 @@
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.8); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; }
     .off { display: none !important; }
 
-    /* ========================================================
-       DISEÑO RESPONSIVE PARA DISPOSITIVOS MÓVILES
-       ======================================================== */
     @media (max-width: 768px) {
-      .container {
-        flex-direction: column-reverse;
-      }
-
-      #sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 50vh;
-        border-right: none;
-        border-top: 1px solid var(--border);
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        z-index: 1500;
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
-      }
-
-      #sidebar.collapsed {
-        margin-left: 0 !important;
-      }
-
-      #sidebar.collapsed #sec-estaciones,
-      #sidebar.collapsed #sec-centros {
-        display: none !important;
-      }
-
-      .toggle-sidebar-btn {
-        position: relative;
-        top: 0;
-        right: 0;
-        width: auto;
-        height: 100%;
-        padding: 0 10px;
-        border-radius: 0;
-        border: none;
-        border-left: 1px solid var(--border);
-        font-size: 0.75rem;
-        font-weight: bold;
-        background: #252525;
-      }
-
+      .container { flex-direction: column-reverse; }
+      #sidebar { width: 100%; height: auto; max-height: 50vh; border-right: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; left: 0; z-index: 1500; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); }
+      #sidebar.collapsed { margin-left: 0 !important; }
+      #sidebar.collapsed #sec-estaciones, #sidebar.collapsed #sec-centros { display: none !important; }
+      .toggle-sidebar-btn { position: relative; top: 0; right: 0; width: auto; height: 100%; padding: 0 10px; border-radius: 0; border: none; border-left: 1px solid var(--border); font-size: 0.75rem; font-weight: bold; background: #252525; }
       .title-area p { display: none; }
     }
   </style>
@@ -181,7 +115,7 @@
 
   <header>
     <div class="title-area">
-      <h1>Estado Hidrométrico y Evacuados</h1>
+      <h1>Alerta Hidrológica y Centros de Evacuados</h1>
       <p>Provincia de Corrientes - Monitoreo Sanitario</p>
     </div>
     <div class="header-actions">
@@ -228,12 +162,12 @@
       </div>
       <form id="formNuevoCentro" onsubmit="guardarCentro(event)">
         <div class="form-group">
-          <label>Nombre de la Institución / Centro *</label>
-          <input type="text" id="c-nombre" placeholder="Ej: Escuela Nº 1 / Polideportivo" required>
+          <label>Nombre del Centro *</label>
+          <input type="text" id="c-nombre" placeholder="Ej: Hospital Billinghurst / Escuela Nº 1" required>
         </div>
         <div class="form-group">
-          <label>Municipio *</label>
-          <input type="text" id="c-muni" placeholder="Ej: Goya, Paso de los Libres" required>
+          <label>Localidad / Municipio *</label>
+          <input type="text" id="c-muni" placeholder="Ej: Ituzaingó, Goya" required>
         </div>
         <div class="form-row-2">
           <div class="form-group">
@@ -248,16 +182,26 @@
         <div class="form-row-2">
           <div class="form-group">
             <label>Latitud *</label>
-            <input type="number" step="any" id="c-lat" placeholder="-29.140" required>
+            <input type="number" step="any" id="c-lat" placeholder="-27.58688" required>
           </div>
           <div class="form-group">
             <label>Longitud *</label>
-            <input type="number" step="any" id="c-lng" placeholder="-59.260" required>
+            <input type="number" step="any" id="c-lng" placeholder="-56.69061" required>
           </div>
         </div>
         <div class="form-group">
-          <label>Teléfono de Contacto / Responsable</label>
-          <input type="text" id="c-contacto" placeholder="Ej: 3777-123456">
+          <label>Responsable / Tel. Contacto</label>
+          <input type="text" id="c-contacto" placeholder="Ej: 3624772121">
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Baños Operativos</label>
+            <input type="number" id="c-banos" value="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Litros Agua/Día/Persona</label>
+            <input type="number" step="any" id="c-agua" value="0" min="0">
+          </div>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-cancel" onclick="cerrarModalCentros()">Cancelar</button>
@@ -277,32 +221,26 @@
     let estacionesData = [];
     let centrosData = [];
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzBQhxZFtdQGh9CptOjw8jl1CTqM0Eei2KZ6rVObkVfXT6XPUHD6IfW2ToWRtrkJUKzFg/exec";
+    // PON AQUÍ LA URL DE TU WEB APP DE GOOGLE APPS SCRIPT
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQWeHoQ1hlcY9Eot48uizHKt1LlPlMfkmR-ZQ6x5KF0LIP_4E9Sm-k5HlL5Umu-GfpSg/exec";
 
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-      // EVENTO PARA DETECTAR CLIC EN EL MAPA Y EXTRAER COORDENADAS
+      // Clic en el mapa para autocargar coordenadas
       map.on('click', function(e) {
         const lat = e.latlng.lat.toFixed(5);
         const lng = e.latlng.lng.toFixed(5);
 
-        // Si había un marcador temporal previo, quitarlo
-        if (tempMarker) {
-          map.removeLayer(tempMarker);
-        }
+        if (tempMarker) map.removeLayer(tempMarker);
 
-        // Crear marcador temporal donde se hizo clic
         tempMarker = L.marker([lat, lng]).addTo(map)
-          .bindPopup("📍 Ubicación seleccionada para el nuevo centro")
+          .bindPopup("📍 Ubicación seleccionada")
           .openPopup();
 
-        // Cargar lat/lng automáticamente en el formulario
         document.getElementById('c-lat').value = lat;
         document.getElementById('c-lng').value = lng;
-
-        // Abrir ventana emergente
         abrirModalCentros();
       });
 
@@ -342,7 +280,6 @@
         sidebar.classList.remove('collapsed');
         actualizarTextoBoton();
       }
-
       cambiarPestana(pestana);
     }
 
@@ -368,8 +305,6 @@
     function cerrarModalCentros() {
       document.getElementById('modalCentro').classList.remove('active');
       document.getElementById('formNuevoCentro').reset();
-      
-      // Quitar marcador temporal si cancela la carga
       if (tempMarker) {
         map.removeLayer(tempMarker);
         tempMarker = null;
@@ -404,10 +339,11 @@
         capacidad: parseInt(document.getElementById('c-capacidad').value) || 0,
         lat: parseFloat(document.getElementById('c-lat').value),
         lng: parseFloat(document.getElementById('c-lng').value),
-        contacto: document.getElementById('c-contacto').value || "Sin dato"
+        contacto: document.getElementById('c-contacto').value || "Sin dato",
+        banos: parseInt(document.getElementById('c-banos').value) || 0,
+        agua: parseFloat(document.getElementById('c-agua').value) || 0
       };
 
-      // Si había marcador temporal, eliminarlo al guardar
       if (tempMarker) {
         map.removeLayer(tempMarker);
         tempMarker = null;
@@ -426,7 +362,7 @@
         body: JSON.stringify(nuevoCentro)
       })
       .then(() => {
-        console.log("Registrado con éxito en Google Sheets");
+        console.log("Registrado con éxito");
         setTimeout(cargarCentrosDesdeSheet, 1500);
       })
       .catch(err => console.error("Error enviando a la planilla:", err));
@@ -470,23 +406,15 @@
         });
 
         const marker = L.marker([c.lat, c.lng], { icon: iconoCasa }).addTo(map);
-        
-        let detalleSalud = '';
-        if (c.casosEDA || c.casosFebriIes || c.casosIRA) {
-          detalleSalud = `<hr style="margin:5px 0; border:0; border-top:1px solid #ccc;">
-            <b style="color:#d9534f;">Atenciones Sanitarias:</b><br>
-            - Fiebre: ${c.casosFebriIes || 0}<br>
-            - Diarrea (EDA): ${c.casosEDA || 0}<br>
-            - Respiratorio (IRA): ${c.casosIRA || 0}`;
-        }
 
         marker.bindPopup(`
           <div style="color:#000;">
             <b style="font-size:0.95rem;">${c.nombre}</b><br>
             <b>Municipio:</b> ${c.municipio}<br>
             <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
-            <b>Contacto:</b> ${c.contacto}
-            ${detalleSalud}
+            <b>Contacto:</b> ${c.contacto}<br>
+            <b>Baños Operativos:</b> ${c.banos || 0}<br>
+            <b>Agua / Día / Persona:</b> ${c.agua || 0} L
           </div>
         `);
         markersCentros.push(marker);
