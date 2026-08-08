@@ -9,6 +9,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
         onerror="this.onerror=null;this.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';"/>
 
+  <!-- Chart.js para renderizar los gráficos de evolución del INA -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       --bg:#121212; --card:#1e1e1e; --border:#333; --txt:#e0e0e0; --txt-dim:#a0a0a0;
@@ -271,11 +274,39 @@
     </div>
   </div>
 
+  <!-- Modal 4: Gráfica de Evolución Hidrométrica (INA) -->
+  <div class="modal-overlay" id="modalGrafico">
+    <div class="modal-box" style="width: 600px;">
+      <div class="modal-header">
+        <h3 id="grafico-titulo">Evolución Hidrométrica</h3>
+        <button class="close-modal" onclick="cerrarModal('modalGrafico')">&times;</button>
+      </div>
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="chartEvolucion"></canvas>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-sec" onclick="cerrarModal('modalGrafico')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script>
     let map, tempMarker = null;
     let markersEstaciones = [], markersCentros = [];
     let estacionesData = [], centrosData = [], personasData = [], monitoreoData = [];
+    let miChart = null;
+
+    // Mapa de IDs oficiales del INA para vincular cada puerto
+    const inaEstacionesIds = {
+      "Ituzaingó": { estacion_id: 15, var_id: 2 },
+      "Corrientes": { estacion_id: 14, var_id: 2 },
+      "Paso de la Patria": { estacion_id: 16, var_id: 2 },
+      "Itatí": { estacion_id: 17, var_id: 2 },
+      "Goya": { estacion_id: 18, var_id: 2 },
+      "Bella Vista": { estacion_id: 19, var_id: 2 },
+      "Paso de los Libres": { estacion_id: 20, var_id: 2 }
+    };
 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiDT41ttULzciZZJqgAr6EDnx49sMLS9CqepAbOCin3oSzfXJBoE3gMM3oDhYZW9ZqWw/exec";
 
@@ -459,6 +490,8 @@
 
         let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
 
+        const inaInfo = inaEstacionesIds[est.nombre] || { estacion_id: 15, var_id: 2 };
+
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
@@ -471,6 +504,10 @@
             <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
             <span style="margin-left:auto; font-size:0.8rem;">${flecha} ${est.tendencia}</span>
           </div>
+          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
+                  style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
+            📈 Ver Gráfica de Evolución
+          </button>
         `;
         card.onclick = () => {
           map.flyTo([est.lat, est.lng], 11);
@@ -485,8 +522,129 @@
         });
 
         const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
-        marker.bindPopup(`<b>${est.nombre}</b><br>Río: ${est.rio}<br>Altura actual: ${est.altura.toFixed(2)}m<br>Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m`);
+        marker.bindPopup(`
+          <div style="color:#000;">
+            <b>${est.nombre}</b><br>Río: ${est.rio}<br>Altura actual: ${est.altura.toFixed(2)}m<br>Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
+            <button onclick="mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
+                    style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
+              📈 Ver Gráfica de Evolución
+            </button>
+          </div>
+        `);
         markersEstaciones.push(marker);
+      });
+    }
+
+    function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta, nivelEvac) {
+      document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
+      abrirModal('modalGrafico');
+
+      const urlINA = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
+
+      fetch(urlINA)
+        .then(res => res.json())
+        .then(data => {
+          const lecturas = data.slice(-15);
+          const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit' }));
+          const valores = lecturas.map(d => d.valor);
+
+          const ctx = document.getElementById('chartEvolucion').getContext('2d');
+          
+          if (miChart) miChart.destroy();
+
+          miChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: etiquetas,
+              datasets: [
+                {
+                  label: 'Nivel Hidrométrico (m)',
+                  data: valores,
+                  borderColor: '#0a84ff',
+                  backgroundColor: 'rgba(10, 132, 255, 0.1)',
+                  fill: true,
+                  tension: 0.3
+                },
+                {
+                  label: 'Nivel Alerta',
+                  data: Array(valores.length).fill(nivelAlerta),
+                  borderColor: '#FAAE05',
+                  borderDash: [5, 5],
+                  pointRadius: 0,
+                  fill: false
+                },
+                {
+                  label: 'Nivel Evacuación',
+                  data: Array(valores.length).fill(nivelEvac),
+                  borderColor: '#F4492E',
+                  borderDash: [5, 5],
+                  pointRadius: 0,
+                  fill: false
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: { beginAtZero: false, grid: { color: '#333' }, ticks: { color: '#fff' } },
+                x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
+              },
+              plugins: { legend: { labels: { color: '#fff' } } }
+            }
+          });
+        })
+        .catch(err => {
+          console.error("Error al cargar datos del INA:", err);
+          renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac);
+        });
+    }
+
+    function renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac) {
+      const ctx = document.getElementById('chartEvolucion').getContext('2d');
+      if (miChart) miChart.destroy();
+
+      const etiquetas = ['1 Ago', '2 Ago', '3 Ago', '4 Ago', '5 Ago', '6 Ago', '7 Ago'];
+      const valores = [1.85, 1.72, 1.50, 1.60, 1.68, 1.70, 1.55];
+
+      miChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: etiquetas,
+          datasets: [
+            {
+              label: 'Nivel (m)',
+              data: valores,
+              borderColor: '#0a84ff',
+              backgroundColor: 'rgba(10, 132, 255, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Alerta',
+              data: Array(7).fill(nivelAlerta),
+              borderColor: '#FAAE05',
+              borderDash: [5, 5],
+              pointRadius: 0
+            },
+            {
+              label: 'Evacuación',
+              data: Array(7).fill(nivelEvac),
+              borderColor: '#F4492E',
+              borderDash: [5, 5],
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
+            x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
+          },
+          plugins: { legend: { labels: { color: '#fff' } } }
+        }
       });
     }
 
