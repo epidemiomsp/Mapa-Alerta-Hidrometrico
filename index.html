@@ -689,11 +689,20 @@
             <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
             <b>Contacto:</b> ${c.contacto}<br>
             <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p<br><br>
-            <button onclick="eliminarCentro('${c.id}')" style="background:#d9534f; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">🗑️ Eliminar Centro</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+              <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
+              <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
+            </div>
           </div>
         `);
         markersCentros.push(marker);
       });
+    }
+
+    function verEvacuadosCentro(idCentro) {
+      cambiarPestana('ingresos');
+      const filtrados = personasData.filter(p => String(p.idCentro) === String(idCentro));
+      renderIngresos(filtrados);
     }
 
     function renderIngresos(personas) {
