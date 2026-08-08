@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Monitoreo Hidrométrico y Sanitario - Corrientes</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
+  <title>Monitoreo Hidrométrico y Centros de Evacuados - Corrientes</title>
+
+  <!-- CSS Leaflet CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
+        onerror="this.onerror=null;this.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';"/>
 
   <style>
     :root {
@@ -22,11 +25,19 @@
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); overflow: hidden; }
     
+    /* Panel Lateral */
     #sidebar { 
-      width: 380px; background: var(--bg); border-right: 1px solid var(--border); 
-      display: flex; flex-direction: column; z-index: 1500; height: 100%; position: relative;
+      width: 380px; 
+      background: var(--bg); 
+      border-right: 1px solid var(--border); 
+      display: flex; 
+      flex-direction: column; 
+      z-index: 1500; 
+      height: 100%; 
+      position: relative;
       transition: margin-left 0.3s ease;
     }
+
     #sidebar.collapsed { margin-left: -380px; }
 
     .toggle-sidebar-btn {
@@ -34,10 +45,11 @@
       background: var(--card); border: 1px solid var(--border); border-left: none;
       color: #fff; border-radius: 0 6px 6px 0; cursor: pointer; z-index: 1600;
       display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.4);
     }
     
     .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #181818; }
-    .tab-btn { flex: 1; padding: 10px 2px; font-size: 0.7rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; text-align: center; }
+    .tab-btn { flex: 1; padding: 10px 2px; font-size: 0.7rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; text-align: center; white-space: nowrap; }
     .tab-btn.active { color: #fff; border-bottom-color: var(--primary); background: var(--card); font-weight: bold; }
     
     .filter-bar { padding: 6px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; background: var(--bg); }
@@ -50,30 +62,39 @@
     .list::-webkit-scrollbar { width: 5px; }
     .list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-bottom: 6px; cursor: pointer; }
+    /* Tarjetas de Ríos */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
     .card:hover { border-color: #555; }
-    
-    .item-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-bottom: 6px; position: relative; font-size: 0.75rem; }
-    .item-title { font-weight: bold; color: #fff; margin-bottom: 2px; }
-    .item-sub { color: var(--txt-dim); font-size: 0.7rem; }
-    .item-badge { display: inline-block; padding: 2px 5px; border-radius: 4px; font-size: 0.65rem; background: #2a2a2a; color: #fff; margin-top: 4px; }
+    .muni { font-weight: 600; font-size: 0.88rem; }
+    .rio { font-size: 0.68rem; color: var(--txt-dim); background: #2a2a2a; padding: 2px 6px; border-radius: 4px; }
+    .altura { font-size: 1.25rem; font-weight: 700; }
 
-    #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; }
+    /* Tarjetas de Centros, Ingresos y Monitoreo */
+    .item-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; position: relative; font-size: 0.75rem; }
+    .item-card:hover { border-color: #555; }
+    .item-title { font-weight: bold; color: #fff; margin-bottom: 2px; font-size: 0.85rem; padding-right: 20px; }
+    .item-sub { color: var(--txt-dim); font-size: 0.72rem; margin-top: 2px; }
+    .item-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 0.68rem; background: #2a2a2a; color: #fff; margin-top: 5px; }
+    .btn-delete-card { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #ff4d4d; font-size: 0.9rem; cursor: pointer; }
+    .btn-delete-card:hover { color: #ff0000; }
+
+    #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; }
     
     .btn-action { background: var(--primary); color: #fff; border: none; padding: 5px 8px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
     .btn-sec { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:5px 8px; border-radius:5px; cursor:pointer; font-size: 0.7rem; }
 
     /* Modales */
-    .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); display:flex; justify-content:center; align-items:center; z-index:3000; opacity:0; pointer-events:none; transition:0.2s; }
-    .modal-overlay.active { opacity:1; pointer-events:auto; }
-    .modal-box { background:var(--card); border:1px solid var(--border); border-radius:8px; width:460px; max-width:95%; padding:15px; max-height:90vh; overflow-y:auto; }
-    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px; }
-    .modal-header h3 { font-size:0.9rem; color:#fff; }
-    .close-modal { background:none; border:none; color:var(--txt-dim); font-size:1.2rem; cursor:pointer; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: 0.2s; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+    .modal-header h3 { font-size: 0.9rem; color: #fff; }
+    .close-modal { background: none; border: none; color: var(--txt-dim); font-size: 1.2rem; cursor: pointer; }
     
     .form-group { margin-bottom: 8px; }
     .form-group label { display: block; font-size: 0.7rem; color: var(--txt-dim); margin-bottom: 2px; }
     .form-group input, .form-group select { width: 100%; background: #121212; border: 1px solid var(--border); color: #fff; padding: 6px; border-radius: 4px; font-size: 0.8rem; outline: none; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
     .form-row-2 { display: flex; gap: 8px; }
     .form-row-2 .form-group { flex: 1; }
     
@@ -84,9 +105,11 @@
 
     @media (max-width: 768px) {
       .container { flex-direction: column-reverse; }
-      #sidebar { width: 100%; height: auto; max-height: 50vh; position: absolute; bottom: 0; left: 0; }
-      #sidebar.collapsed #sec-estaciones, #sidebar.collapsed #sec-centros, #sidebar.collapsed #sec-ingresos, #sidebar.collapsed #sec-monitoreo { display: none !important; }
-      .toggle-sidebar-btn { top:0; right:0; position:relative; width:auto; height:100%; border-radius:0; }
+      #sidebar { width: 100%; height: auto; max-height: 50vh; border-right: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; left: 0; z-index: 1500; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); }
+      #sidebar.collapsed { margin-left: 0 !important; }
+      #sidebar.collapsed .sec-tab { display: none !important; }
+      .toggle-sidebar-btn { position: relative; top: 0; right: 0; width: auto; height: 100%; padding: 0 8px; border-radius: 0; border: none; border-left: 1px solid var(--border); font-size: 0.75rem; background: #252525; }
+      .title-area p { display: none; }
     }
   </style>
 </head>
@@ -95,7 +118,7 @@
   <header>
     <div class="title-area">
       <h1>Estado Hidrométrico y Sanitario</h1>
-      <p>Provincia de Corrientes - Gestión de Evacuados</p>
+      <p>Provincia de Corrientes - Monitoreo de Ríos y Evacuados</p>
     </div>
     <div class="header-actions">
       <button class="btn-action" onclick="abrirModal('modalCentro')">+ Centro</button>
@@ -117,7 +140,7 @@
         <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
       </div>
 
-      <!-- Pestaña 1: Ríos -->
+      <!-- Pestaña 1: Ríos (Paraná y Uruguay) -->
       <div id="sec-estaciones" class="sec-tab">
         <div class="filter-bar">
           <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
@@ -154,24 +177,24 @@
         <button class="close-modal" onclick="cerrarModal('modalCentro')">&times;</button>
       </div>
       <form onsubmit="guardarCentro(event)">
-        <div class="form-group"><label>Nombre *</label><input type="text" id="c-nombre" required></div>
-        <div class="form-group"><label>Municipio *</label><input type="text" id="c-muni" required></div>
+        <div class="form-group"><label>Nombre del Centro *</label><input type="text" id="c-nombre" required placeholder="Ej: Hospital Billinghurst"></div>
+        <div class="form-group"><label>Municipio / Localidad *</label><input type="text" id="c-muni" required placeholder="Ej: Ituzaingó"></div>
         <div class="form-row-2">
-          <div class="form-group"><label>Evacuados</label><input type="number" id="c-evacuados" value="0"></div>
-          <div class="form-group"><label>Capacidad</label><input type="number" id="c-capacidad" value="100"></div>
+          <div class="form-group"><label>Evacuados Actuales</label><input type="number" id="c-evacuados" value="0" min="0"></div>
+          <div class="form-group"><label>Capacidad Máxima</label><input type="number" id="c-capacidad" value="100" min="0"></div>
         </div>
         <div class="form-row-2">
-          <div class="form-group"><label>Latitud *</label><input type="number" step="any" id="c-lat" required></div>
-          <div class="form-group"><label>Longitud *</label><input type="number" step="any" id="c-lng" required></div>
+          <div class="form-group"><label>Latitud *</label><input type="number" step="any" id="c-lat" required placeholder="-27.58688"></div>
+          <div class="form-group"><label>Longitud *</label><input type="number" step="any" id="c-lng" required placeholder="-56.69061"></div>
         </div>
-        <div class="form-group"><label>Contacto</label><input type="text" id="c-contacto"></div>
+        <div class="form-group"><label>Teléfono / Responsable</label><input type="text" id="c-contacto" placeholder="Ej: 3624772121"></div>
         <div class="form-row-2">
-          <div class="form-group"><label>Baños</label><input type="number" id="c-banos" value="0"></div>
-          <div class="form-group"><label>Agua (L/día/p)</label><input type="number" step="any" id="c-agua" value="0"></div>
+          <div class="form-group"><label>Baños Operativos</label><input type="number" id="c-banos" value="0"></div>
+          <div class="form-group"><label>Litros Agua/Día/Persona</label><input type="number" step="any" id="c-agua" value="0"></div>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalCentro')">Cancelar</button>
-          <button type="submit" class="btn-action">Guardar</button>
+          <button type="submit" class="btn-action">Guardar Centro</button>
         </div>
       </form>
     </div>
@@ -189,20 +212,20 @@
           <label>Centro de Evacuados *</label>
           <select id="p-centro" required></select>
         </div>
-        <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="p-nombre" required></div>
+        <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="p-nombre" required placeholder="Ej: Juan Pérez"></div>
         <div class="form-row-2">
-          <div class="form-group"><label>DNI / Doc *</label><input type="text" id="p-dni" required></div>
-          <div class="form-group"><label>Fecha Ingreso</label><input type="date" id="p-fecha"></div>
+          <div class="form-group"><label>DNI / Documento *</label><input type="text" id="p-dni" required></div>
+          <div class="form-group"><label>Fecha de Ingreso</label><input type="date" id="p-fecha"></div>
         </div>
         <div class="form-row-2">
           <div class="form-group"><label>Fecha Nacimiento</label><input type="date" id="p-nac"></div>
           <div class="form-group">
             <label>Sexo</label>
-            <select id="p-sexo"><option>M</option><option>F</option><option>Otro</option></select>
+            <select id="p-sexo"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Otro">Otro</option></select>
           </div>
         </div>
-        <div class="form-group"><label>Enfermedades Crónicas</label><input type="text" id="p-cronicas" placeholder="Ej: Diabetes, Hipertensión"></div>
-        <div class="form-group"><label>Síntomas al Ingreso</label><input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos"></div>
+        <div class="form-group"><label>Enfermedades Crónicas</label><input type="text" id="p-cronicas" placeholder="Ej: Hipertensión, Diabetes"></div>
+        <div class="form-group"><label>Síntomas al Ingreso</label><input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos, Ninguno"></div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalPersona')">Cancelar</button>
           <button type="submit" class="btn-action" style="background:#28a745;">Registrar Ingreso</button>
@@ -238,8 +261,8 @@
             <select id="m-discapacidad"><option value="NO">NO</option><option value="SI">SI</option></select>
           </div>
         </div>
-        <div class="form-group"><label>Medicación Requerida</label><input type="text" id="m-medicacion"></div>
-        <div class="form-group"><label>Síntomas / Observaciones</label><input type="text" id="m-sintomas"></div>
+        <div class="form-group"><label>Medicación Requerida</label><input type="text" id="m-medicacion" placeholder="Ej: Enalapril 10mg"></div>
+        <div class="form-group"><label>Síntomas / Observaciones Sanitarias</label><input type="text" id="m-sintomas"></div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalMonitoreo')">Cancelar</button>
           <button type="submit" class="btn-action" style="background:#17a2b8;">Guardar Monitoreo</button>
@@ -272,6 +295,7 @@
 
       cargarEstaciones();
       cargarDatosActualizados();
+      actualizarTextoBoton();
     }
 
     function cargarDatosActualizados() {
@@ -295,11 +319,21 @@
     function actualizarSelectsCentros() {
       const selects = [document.getElementById('p-centro'), document.getElementById('m-centro')];
       selects.forEach(s => {
-        s.innerHTML = centrosData.map(c => `<option value="${c.id}">${c.nombre} (${c.municipio})</option>`).join('');
+        if (centrosData.length > 0) {
+          s.innerHTML = centrosData.map(c => `<option value="${c.id}">${c.nombre} (${c.municipio})</option>`).join('');
+        } else {
+          s.innerHTML = '<option value="">Sin centros registrados</option>';
+        }
       });
     }
 
     function cambiarPestana(pestana) {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+        actualizarTextoBoton();
+      }
+
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.sec-tab').forEach(s => s.style.display = 'none');
 
@@ -308,23 +342,27 @@
     }
 
     function abrirModal(id) { document.getElementById(id).classList.add('active'); }
-    function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
+    function cerrarModal(id) { 
+      document.getElementById(id).classList.remove('active');
+      if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
+    }
 
     function guardarCentro(e) {
       e.preventDefault();
       const nuevo = {
-        id: Date.now(), nombre: document.getElementById('c-nombre').value,
+        id: Date.now(),
+        nombre: document.getElementById('c-nombre').value,
         municipio: document.getElementById('c-muni').value,
         evacuados: parseInt(document.getElementById('c-evacuados').value)||0,
         capacidad: parseInt(document.getElementById('c-capacidad').value)||0,
         lat: parseFloat(document.getElementById('c-lat').value),
         lng: parseFloat(document.getElementById('c-lng').value),
-        contacto: document.getElementById('c-contacto').value,
+        contacto: document.getElementById('c-contacto').value || "Sin dato",
         banos: parseInt(document.getElementById('c-banos').value)||0,
         agua: parseFloat(document.getElementById('c-agua').value)||0
       };
       cerrarModal('modalCentro');
-      enviarAData(nuevo, "centro");
+      enviarAData(nuevo, "centros");
     }
 
     function guardarPersona(e) {
@@ -362,6 +400,20 @@
       enviarAData(nuevoM, "monitoreo");
     }
 
+    function eliminarCentro(idCentro, event) {
+      if (event) event.stopPropagation();
+      if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
+
+      document.getElementById('loading').classList.remove('off');
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: "delete_centro", id: idCentro })
+      })
+      .then(() => setTimeout(() => { cargarDatosActualizados(); }, 1200))
+      .catch(err => console.error(err));
+    }
+
     function enviarAData(payload, pestanaDestino) {
       document.getElementById('loading').classList.remove('off');
       fetch(APPS_SCRIPT_URL, {
@@ -373,6 +425,71 @@
       .catch(err => console.error(err));
     }
 
+    // Lista Completa de Puertos de Corrientes (INA / Prefectura)
+    function cargarEstaciones() {
+      estacionesData = [
+        { id: 1, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 3.42, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
+        { id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 3.25, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
+        { id: 3, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, altura: 3.10, tendencia: "permanece", alerta: 6.80, evacuacion: 7.50 },
+        { id: 4, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, altura: 2.95, tendencia: "baja", alerta: 7.00, evacuacion: 7.50 },
+        { id: 5, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 1.80, tendencia: "crece", alerta: 3.50, evacuacion: 4.00 },
+        { id: 6, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, altura: 3.65, tendencia: "baja", alerta: 5.50, evacuacion: 6.00 },
+        { id: 7, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 3.80, tendencia: "baja", alerta: 5.20, evacuacion: 5.70 },
+        { id: 8, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, altura: 3.90, tendencia: "permanece", alerta: 4.80, evacuacion: 5.00 },
+        { id: 9, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, altura: 4.10, tendencia: "baja", alerta: 11.50, evacuacion: 12.50 },
+        { id: 10, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, altura: 4.50, tendencia: "baja", alerta: 9.50, evacuacion: 10.50 },
+        { id: 11, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, altura: 4.60, tendencia: "baja", alerta: 9.00, evacuacion: 10.00 },
+        { id: 12, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, altura: 4.20, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
+        { id: 13, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, altura: 3.85, tendencia: "baja", alerta: 7.50, evacuacion: 8.50 },
+        { id: 14, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, altura: 3.20, tendencia: "baja", alerta: 6.00, evacuacion: 7.50 }
+      ];
+      renderEstaciones(estacionesData);
+    }
+
+    function renderEstaciones(estaciones) {
+      const listaEl = document.getElementById('list-estaciones');
+      listaEl.innerHTML = '';
+      markersEstaciones.forEach(m => map.removeLayer(m));
+      markersEstaciones = [];
+
+      estaciones.forEach(est => {
+        let color = '#719C29';
+        if (est.altura >= est.evacuacion) color = '#F4492E';
+        else if (est.altura >= est.alerta) color = '#FAAE05';
+
+        let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between;">
+            <span class="muni">${est.nombre}</span>
+            <span class="rio">Río ${est.rio}</span>
+          </div>
+          <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+            <span class="altura">${est.altura.toFixed(2)}</span>
+            <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
+            <span style="margin-left:auto; font-size:0.8rem;">${flecha} ${est.tendencia}</span>
+          </div>
+        `;
+        card.onclick = () => {
+          map.flyTo([est.lat, est.lng], 11);
+          if (window.innerWidth <= 768) toggleSidebar();
+        };
+        listaEl.appendChild(card);
+
+        const customIcon = L.divIcon({
+          className: 'custom-pin',
+          html: `<div style="background:rgba(30,30,30,0.9); border:2px solid ${color}; color:${color}; padding:2px 6px; border-radius:8px; font-weight:bold; font-size:11px; white-space:nowrap;">${est.nombre}: ${est.altura.toFixed(2)}m ${flecha}</div>`,
+          iconSize: [80, 25]
+        });
+
+        const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
+        marker.bindPopup(`<b>${est.nombre}</b><br>Río: ${est.rio}<br>Altura actual: ${est.altura.toFixed(2)}m<br>Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m`);
+        markersEstaciones.push(marker);
+      });
+    }
+
     function renderCentros(centros) {
       const listEl = document.getElementById('list-centros');
       listEl.innerHTML = '';
@@ -380,25 +497,50 @@
       markersCentros = [];
 
       centros.forEach(c => {
+        const pctOcupacion = c.capacidad > 0 ? Math.round((c.evacuados / c.capacidad) * 100) : 0;
+        let colorPin = '#0a84ff';
+        if (pctOcupacion >= 100) colorPin = '#F4492E';
+        else if (pctOcupacion >= 80) colorPin = '#FAAE05';
+
         const card = document.createElement('div');
         card.className = 'item-card';
+        card.style.borderLeft = `4px solid ${colorPin}`;
         card.innerHTML = `
+          <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
           <div class="item-title">🏠 ${c.nombre}</div>
-          <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto || 'Sin dato'}</div>
-          <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad}</div>
+          <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
+          <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
         `;
-        card.onclick = () => map.flyTo([c.lat, c.lng], 13);
+        card.onclick = () => {
+          map.flyTo([c.lat, c.lng], 13);
+          if (window.innerWidth <= 768) toggleSidebar();
+        };
         listEl.appendChild(card);
 
-        const marker = L.marker([c.lat, c.lng]).addTo(map)
-          .bindPopup(`<b>${c.nombre}</b><br>Municipio: ${c.municipio}<br>Evacuados: ${c.evacuados}`);
+        const iconoCasa = L.divIcon({
+          className: 'custom-house-pin',
+          html: `<div style="background:${colorPin}; color:#fff; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px; border:2px solid #fff; white-space:nowrap; box-shadow:0 2px 5px rgba(0,0,0,0.4);">🏠 ${c.evacuados} evac.</div>`,
+          iconSize: [85, 25]
+        });
+
+        const marker = L.marker([c.lat, c.lng], { icon: iconoCasa }).addTo(map);
+        marker.bindPopup(`
+          <div style="color:#000;">
+            <b style="font-size:0.95rem;">${c.nombre}</b><br>
+            <b>Municipio:</b> ${c.municipio}<br>
+            <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
+            <b>Contacto:</b> ${c.contacto}<br>
+            <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p<br><br>
+            <button onclick="eliminarCentro('${c.id}')" style="background:#d9534f; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">🗑️ Eliminar Centro</button>
+          </div>
+        `);
         markersCentros.push(marker);
       });
     }
 
     function renderIngresos(personas) {
       const listEl = document.getElementById('list-ingresos');
-      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem;">Sin registros en Hoja 2</div>';
+      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros en Hoja 2</div>';
       
       personas.forEach(p => {
         const centro = centrosData.find(c => String(c.id) === String(p.idCentro)) || { nombre: 'Centro General' };
@@ -407,7 +549,7 @@
         card.innerHTML = `
           <div class="item-title">👤 ${p.nombreApellido}</div>
           <div class="item-sub">DNI: ${p.dni} | Centro: ${centro.nombre}</div>
-          <div class="item-sub">Fecha Ingreso: ${p.fechaIngreso || 'S/D'}</div>
+          <div class="item-sub">Fecha Ingreso: ${p.fechaIngreso || 'S/D'} | Sexo: ${p.sexo || 'S/D'}</div>
           <div class="item-badge">Síntomas: ${p.sintomas || 'Ninguno'}</div>
         `;
         listEl.appendChild(card);
@@ -416,7 +558,7 @@
 
     function renderMonitoreo(monitoreos) {
       const listEl = document.getElementById('list-monitoreo');
-      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem;">Sin registros en Hoja 3</div>';
+      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros en Hoja 3</div>';
       
       monitoreos.forEach(m => {
         const centro = centrosData.find(c => String(c.id) === String(m.idCentro)) || { nombre: 'Centro General' };
@@ -432,30 +574,24 @@
       });
     }
 
-    function cargarEstaciones() {
-      estacionesData = [
-        { nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 3.42, tendencia: "baja" },
-        { nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 1.80, tendencia: "crece" },
-        { nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 3.80, tendencia: "baja" }
-      ];
-      renderEstaciones(estacionesData);
-    }
-
-    function renderEstaciones(estaciones) {
-      const listEl = document.getElementById('list-estaciones');
-      listEl.innerHTML = '';
-      estaciones.forEach(est => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `<div style="font-weight:bold;">${est.nombre} (${est.rio})</div><div>Altura: ${est.altura}m</div>`;
-        card.onclick = () => map.flyTo([est.lat, est.lng], 11);
-        listEl.appendChild(card);
-      });
-    }
-
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+      actualizarTextoBoton();
       setTimeout(() => map.invalidateSize(), 300);
+    }
+
+    function actualizarTextoBoton() {
+      const sidebar = document.getElementById('sidebar');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const isMobile = window.innerWidth <= 768;
+      const isCollapsed = sidebar.classList.contains('collapsed');
+
+      if (isMobile) {
+        toggleBtn.innerHTML = isCollapsed ? '▲ Lista' : '▼ Ocultar';
+      } else {
+        toggleBtn.innerHTML = isCollapsed ? '▶' : '◀';
+      }
     }
 
     function filtrar(rio, btn) {
@@ -465,6 +601,7 @@
       else renderEstaciones(estacionesData.filter(e => e.rio.toLowerCase().includes(rio.toLowerCase())));
     }
 
+    window.onresize = actualizarTextoBoton;
     window.onload = initApp;
   </script>
 </body>
