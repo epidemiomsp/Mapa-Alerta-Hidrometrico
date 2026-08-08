@@ -69,10 +69,16 @@
     .rio { font-size: 0.7rem; color: var(--txt-dim); background: #2a2a2a; padding: 2px 6px; border-radius: 4px; }
     .altura { font-size: 1.3rem; font-weight: 700; }
     
-    .centro-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid var(--primary); }
-    .centro-title { font-weight: bold; font-size: 0.85rem; color: #fff; }
+    .centro-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid var(--primary); position: relative; }
+    .centro-title { font-weight: bold; font-size: 0.85rem; color: #fff; padding-right: 25px; }
     .centro-info { font-size: 0.75rem; color: var(--txt-dim); margin-top: 4px; }
     .centro-stats { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.7rem; background: #262626; padding: 5px; border-radius: 4px; }
+    .btn-delete-card { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #ff4d4d; font-size: 1rem; cursor: pointer; }
+    .btn-delete-card:hover { color: #ff0000; }
+
+    .personas-box { margin-top: 8px; background: #181818; padding: 6px; border-radius: 4px; font-size: 0.72rem; border: 1px solid #2a2a2a; }
+    .persona-item { border-bottom: 1px solid #282828; padding: 3px 0; }
+    .persona-item:last-child { border-bottom: none; }
     
     #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; }
     
@@ -115,7 +121,7 @@
 
   <header>
     <div class="title-area">
-      <h1>Alerta Hidrológica y Centros de Evacuados</h1>
+      <h1>Alerta Hidológica y Centros Evacuados</h1>
       <p>Provincia de Corrientes - Monitoreo Sanitario</p>
     </div>
     <div class="header-actions">
@@ -134,7 +140,7 @@
         <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
       </div>
 
-      <!-- Pestaña 1: Datos de Referencia -->
+      <!-- Pestaña 1 -->
       <div id="sec-estaciones">
         <div class="filter-bar">
           <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
@@ -144,7 +150,7 @@
         <div class="list" id="list-estaciones"></div>
       </div>
 
-      <!-- Pestaña 2: Centros de Evacuados -->
+      <!-- Pestaña 2 -->
       <div id="sec-centros" style="display:none;">
         <div class="list" id="list-centros"></div>
       </div>
@@ -221,14 +227,12 @@
     let estacionesData = [];
     let centrosData = [];
 
-    // PON AQUÍ LA URL DE TU WEB APP DE GOOGLE APPS SCRIPT
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQWeHoQ1hlcY9Eot48uizHKt1LlPlMfkmR-ZQ6x5KF0LIP_4E9Sm-k5HlL5Umu-GfpSg/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzBQhxZFtdQGh9CptOjw8jl1CTqM0Eei2KZ6rVObkVfXT6XPUHD6IfW2ToWRtrkJUKzFg/exec";
 
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-      // Clic en el mapa para autocargar coordenadas
       map.on('click', function(e) {
         const lat = e.latlng.lat.toFixed(5);
         const lng = e.latlng.lng.toFixed(5);
@@ -322,7 +326,7 @@
             renderCentros(centrosData);
           }
         })
-        .catch(err => console.error("Error al cargar centros desde Google Sheets:", err))
+        .catch(err => console.error("Error al cargar centros:", err))
         .finally(() => {
           document.getElementById('loading').classList.add('off');
         });
@@ -362,10 +366,33 @@
         body: JSON.stringify(nuevoCentro)
       })
       .then(() => {
-        console.log("Registrado con éxito");
         setTimeout(cargarCentrosDesdeSheet, 1500);
       })
-      .catch(err => console.error("Error enviando a la planilla:", err));
+      .catch(err => console.error("Error al guardar:", err));
+    }
+
+    function eliminarCentro(idCentro, event) {
+      if (event) event.stopPropagation();
+      
+      if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
+
+      document.getElementById('loading').classList.remove('off');
+
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: "delete", id: idCentro })
+      })
+      .then(() => {
+        centrosData = centrosData.filter(c => String(c.id) !== String(idCentro));
+        renderCentros(centrosData);
+        setTimeout(cargarCentrosDesdeSheet, 1500);
+      })
+      .catch(err => console.error("Error al eliminar:", err))
+      .finally(() => {
+        document.getElementById('loading').classList.add('off');
+      });
     }
 
     function renderCentros(centros) {
@@ -382,16 +409,30 @@
         if (pctOcupacion >= 100) colorPin = '#F4492E';
         else if (pctOcupacion >= 80) colorPin = '#FAAE05';
 
+        // Armar lista de personas ingresadas (Hoja 2)
+        let htmlPersonas = '';
+        if (c.personas && c.personas.length > 0) {
+          htmlPersonas = `<div class="personas-box"><b style="color:var(--primary);">👥 Personas Ingresadas (${c.personas.length}):</b>`;
+          c.personas.forEach(p => {
+            htmlPersonas += `<div class="persona-item">• ${p.nombreApellido || 'Sin Nombre'} | DNI: ${p.dni || 'S/D'} | Sintomas: ${p.sintomas || 'Ninguno'}</div>`;
+          });
+          htmlPersonas += `</div>`;
+        } else {
+          htmlPersonas = `<div class="personas-box" style="color:var(--txt-dim);">Sin personas registradas en Hoja 2</div>`;
+        }
+
         const card = document.createElement('div');
         card.className = 'centro-card';
         card.style.borderLeftColor = colorPin;
         card.innerHTML = `
+          <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
           <div class="centro-title">🏠 ${c.nombre}</div>
           <div class="centro-info">📍 ${c.municipio} | 📞 ${c.contacto}</div>
           <div class="centro-stats">
             <span>Evacuados: <b>${c.evacuados}</b> / ${c.capacidad}</span>
             <span>Ocupación: <b>${pctOcupacion}%</b></span>
           </div>
+          ${htmlPersonas}
         `;
         card.onclick = () => {
           map.flyTo([c.lat, c.lng], 13);
@@ -414,7 +455,9 @@
             <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
             <b>Contacto:</b> ${c.contacto}<br>
             <b>Baños Operativos:</b> ${c.banos || 0}<br>
-            <b>Agua / Día / Persona:</b> ${c.agua || 0} L
+            <b>Agua / Día / Persona:</b> ${c.agua || 0} L<br>
+            <b>Registrados (Hoja 2):</b> ${c.personas ? c.personas.length : 0} pers.<br><br>
+            <button onclick="eliminarCentro('${c.id}')" style="background:#d9534f; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">🗑️ Eliminar Centro</button>
           </div>
         `);
         markersCentros.push(marker);
