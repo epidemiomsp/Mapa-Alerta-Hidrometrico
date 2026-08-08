@@ -187,7 +187,7 @@
     </div>
     <div class="header-actions">
       <button class="btn-add" onclick="abrirModalCentros()">+ Centro</button>
-      <button class="btn-refresh" onclick="cargarEstaciones()">🔄</button>
+      <button class="btn-refresh" onclick="cargarDatosActualizados()">🔄</button>
     </div>
   </header>
 
@@ -278,15 +278,20 @@
     let estacionesData = [];
     let centrosData = [];
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypc_RAZ1NQ17UrNp8LnJwN_xqRNVbnBB9wJYtUQLkBzeZupcVCalTKm6m-fNkSfjid/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzF3uEOXzRh0czcp9Z67I0OMdyxWA2Gv9slalW0pBKJXcSxAZ0gGY6e7pVpkvAtPKOmnQ/exec";
 
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
       cargarEstaciones();
-      renderCentros(centrosData);
+      cargarCentrosDesdeSheet();
       actualizarTextoBoton();
+    }
+
+    function cargarDatosActualizados() {
+      cargarEstaciones();
+      cargarCentrosDesdeSheet();
     }
 
     function toggleSidebar() {
@@ -343,6 +348,23 @@
       document.getElementById('formNuevoCentro').reset();
     }
 
+    function cargarCentrosDesdeSheet() {
+      document.getElementById('loading').classList.remove('off');
+      
+      fetch(APPS_SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            centrosData = data;
+            renderCentros(centrosData);
+          }
+        })
+        .catch(err => console.error("Error al cargar centros desde Google Sheets:", err))
+        .finally(() => {
+          document.getElementById('loading').classList.add('off');
+        });
+    }
+
     function guardarCentro(e) {
       e.preventDefault();
 
@@ -350,8 +372,8 @@
         id: Date.now(),
         nombre: document.getElementById('c-nombre').value,
         municipio: document.getElementById('c-muni').value,
-        evacuados: parseInt(document.getElementById('c-evacuados').value),
-        capacidad: parseInt(document.getElementById('c-capacidad').value),
+        evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
+        capacidad: parseInt(document.getElementById('c-capacidad').value) || 0,
         lat: parseFloat(document.getElementById('c-lat').value),
         lng: parseFloat(document.getElementById('c-lng').value),
         contacto: document.getElementById('c-contacto').value || "Sin dato"
@@ -369,7 +391,10 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nuevoCentro)
       })
-      .then(() => console.log("Registrado con éxito en Google Sheets"))
+      .then(() => {
+        console.log("Registrado con éxito en Google Sheets");
+        setTimeout(cargarCentrosDesdeSheet, 1500);
+      })
       .catch(err => console.error("Error enviando a la planilla:", err));
     }
 
@@ -381,14 +406,21 @@
       markersCentros = [];
 
       centros.forEach(c => {
+        const pctOcupacion = c.capacidad > 0 ? Math.round((c.evacuados / c.capacidad) * 100) : 0;
+        
+        let colorPin = '#0a84ff';
+        if (pctOcupacion >= 100) colorPin = '#F4492E';
+        else if (pctOcupacion >= 80) colorPin = '#FAAE05';
+
         const card = document.createElement('div');
         card.className = 'centro-card';
+        card.style.borderLeftColor = colorPin;
         card.innerHTML = `
           <div class="centro-title">🏠 ${c.nombre}</div>
           <div class="centro-info">📍 ${c.municipio} | 📞 ${c.contacto}</div>
           <div class="centro-stats">
-            <span>Evacuados: <b>${c.evacuados}</b></span>
-            <span>Capacidad: <b>${c.capacidad}</b></span>
+            <span>Evacuados: <b>${c.evacuados}</b> / ${c.capacidad}</span>
+            <span>Ocupación: <b>${pctOcupacion}%</b></span>
           </div>
         `;
         card.onclick = () => {
@@ -399,12 +431,30 @@
 
         const iconoCasa = L.divIcon({
           className: 'custom-house-pin',
-          html: `<div style="background:#0a84ff; color:#fff; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px; border:2px solid #fff; white-space:nowrap;">🏠 ${c.evacuados} evac.</div>`,
-          iconSize: [80, 25]
+          html: `<div style="background:${colorPin}; color:#fff; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px; border:2px solid #fff; white-space:nowrap; box-shadow:0 2px 5px rgba(0,0,0,0.4);">🏠 ${c.evacuados} evac.</div>`,
+          iconSize: [85, 25]
         });
 
         const marker = L.marker([c.lat, c.lng], { icon: iconoCasa }).addTo(map);
-        marker.bindPopup(`<b>${c.nombre}</b><br>Municipio: ${c.municipio}<br>Evacuados: ${c.evacuados} / ${c.capacidad}<br>Contacto: ${c.contacto}`);
+        
+        let detalleSalud = '';
+        if (c.casosEDA || c.casosFebriIes || c.casosIRA) {
+          detalleSalud = `<hr style="margin:5px 0; border:0; border-top:1px solid #ccc;">
+            <b style="color:#d9534f;">Atenciones Sanitarias:</b><br>
+            - Fiebre: ${c.casosFebriIes || 0}<br>
+            - Diarrea (EDA): ${c.casosEDA || 0}<br>
+            - Respiratorio (IRA): ${c.casosIRA || 0}`;
+        }
+
+        marker.bindPopup(`
+          <div style="color:#000;">
+            <b style="font-size:0.95rem;">${c.nombre}</b><br>
+            <b>Municipio:</b> ${c.municipio}<br>
+            <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
+            <b>Contacto:</b> ${c.contacto}
+            ${detalleSalud}
+          </div>
+        `);
         markersCentros.push(marker);
       });
     }
