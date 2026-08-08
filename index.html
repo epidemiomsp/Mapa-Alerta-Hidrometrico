@@ -281,7 +281,7 @@
         <h3 id="grafico-titulo">Evolución Hidrométrica</h3>
         <button class="close-modal" onclick="cerrarModal('modalGrafico')">&times;</button>
       </div>
-      <div style="position: relative; height: 300px; width: 100%;">
+      <div id="chartContainer" style="position: relative; height: 300px; width: 100%;">
         <canvas id="chartEvolucion"></canvas>
       </div>
       <div class="form-actions">
@@ -535,21 +535,33 @@
       });
     }
 
+    function prepararCanvasGrafico() {
+      const container = document.getElementById('chartContainer');
+      container.innerHTML = '<canvas id="chartEvolucion"></canvas>';
+      return document.getElementById('chartEvolucion').getContext('2d');
+    }
+
     function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta, nivelEvac) {
       document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
       abrirModal('modalGrafico');
 
-      const urlINA = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
+      const ctx = prepararCanvasGrafico();
 
-      fetch(urlINA)
+      // Proxy para sortear bloqueo de CORS de GitHub Pages al servidor del INA
+      const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
+      const urlProxy = `https://corsproxy.io/?${encodeURIComponent(urlTarget)}`;
+
+      fetch(urlProxy)
         .then(res => res.json())
         .then(data => {
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("Formato de datos no válido");
+          }
+
           const lecturas = data.slice(-15);
-          const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit' }));
+          const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
           const valores = lecturas.map(d => d.valor);
 
-          const ctx = document.getElementById('chartEvolucion').getContext('2d');
-          
           if (miChart) miChart.destroy();
 
           miChart = new Chart(ctx, {
@@ -595,13 +607,13 @@
           });
         })
         .catch(err => {
-          console.error("Error al cargar datos del INA:", err);
+          console.warn("No se pudieron cargar datos en vivo del INA, cargando gráfico de respaldo:", err);
           renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac);
         });
     }
 
     function renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac) {
-      const ctx = document.getElementById('chartEvolucion').getContext('2d');
+      const ctx = prepararCanvasGrafico();
       if (miChart) miChart.destroy();
 
       const etiquetas = ['1 Ago', '2 Ago', '3 Ago', '4 Ago', '5 Ago', '6 Ago', '7 Ago'];
