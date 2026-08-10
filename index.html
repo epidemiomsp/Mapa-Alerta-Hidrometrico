@@ -170,12 +170,12 @@
         <div class="list" id="list-centros"></div>
       </div>
 
-      <!-- Pestaña 3: Ingreso de Personas (Hoja 2) -->
+      <!-- Pestaña 3: Ingreso de Personas -->
       <div id="sec-ingresos" class="sec-tab" style="display:none;">
         <div class="list" id="list-ingresos"></div>
       </div>
 
-      <!-- Pestaña 4: Monitoreo Diario (Hoja 3) -->
+      <!-- Pestaña 4: Monitoreo Diario -->
       <div id="sec-monitoreo" class="sec-tab" style="display:none;">
         <div class="list" id="list-monitoreo"></div>
       </div>
@@ -215,11 +215,11 @@
     </div>
   </div>
 
-  <!-- Modal 2: Ingreso Personas (Hoja 2) -->
+  <!-- Modal 2: Ingreso Personas -->
   <div class="modal-overlay" id="modalPersona">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Ingreso de Persona (Hoja 2)</h3>
+        <h3>Ingreso de Persona</h3>
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
       <form onsubmit="guardarPersona(event)">
@@ -249,11 +249,11 @@
     </div>
   </div>
 
-  <!-- Modal 3: Monitoreo Diario (Hoja 3) -->
+  <!-- Modal 3: Monitoreo Diario -->
   <div class="modal-overlay" id="modalMonitoreo">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Registro Monitoreo Diario (Hoja 3)</h3>
+        <h3>Registro Monitoreo Diario</h3>
         <button class="close-modal" onclick="cerrarModal('modalMonitoreo')">&times;</button>
       </div>
       <form onsubmit="guardarMonitoreo(event)">
@@ -311,17 +311,6 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    // Mapa de IDs oficiales del INA para vincular cada puerto
-    const inaEstacionesIds = {
-      "Ituzaingó": { estacion_id: 15, var_id: 2 },
-      "Corrientes": { estacion_id: 14, var_id: 2 },
-      "Paso de la Patria": { estacion_id: 16, var_id: 2 },
-      "Itatí": { estacion_id: 17, var_id: 2 },
-      "Goya": { estacion_id: 18, var_id: 2 },
-      "Bella Vista": { estacion_id: 19, var_id: 2 },
-      "Paso de los Libres": { estacion_id: 20, var_id: 2 }
-    };
-
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiDT41ttULzciZZJqgAr6EDnx49sMLS9CqepAbOCin3oSzfXJBoE3gMM3oDhYZW9ZqWw/exec";
 
     function initApp() {
@@ -338,14 +327,12 @@
         abrirModal('modalCentro');
       });
 
-      cargarEstaciones();
       cargarDatosActualizados();
       cargarDepartamentos();
       actualizarTextoBoton();
     }
 
     function cargarDepartamentos() {
-      // Carga directa del archivo corrientes.json recién subido al repositorio
       fetch('./corrientes.json')
         .then(res => res.json())
         .then(data => {
@@ -384,9 +371,7 @@
           departamentosVisibles = true;
           actualizarEstiloBotonDptos();
         })
-        .catch(err => {
-          console.error("Error al cargar corrientes.json:", err);
-        });
+        .catch(err => console.error("Error al cargar corrientes.json:", err));
     }
 
     function toggleCapaDepartamentos() {
@@ -415,6 +400,11 @@
       fetch(APPS_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
+          // Asignación de datos recibidos del servidor
+          if (data.estaciones && data.estaciones.length > 0) {
+            estacionesData = data.estaciones;
+            renderEstaciones(estacionesData);
+          }
           centrosData = data.centros || [];
           personasData = data.personas || [];
           monitoreoData = data.monitoreos || [];
@@ -537,154 +527,87 @@
       .catch(err => console.error(err));
     }
 
-    // Lista Completa de Puertos de Corrientes (INA / Prefectura)
-    function cargarEstaciones() {
-      estacionesData = [
-        { id: 1, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 3.42, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
-        { id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 3.25, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
-        { id: 3, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, altura: 3.10, tendencia: "permanece", alerta: 6.80, evacuacion: 7.50 },
-        { id: 4, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, altura: 2.95, tendencia: "baja", alerta: 7.00, evacuacion: 7.50 },
-        { id: 5, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 1.80, tendencia: "crece", alerta: 3.50, evacuacion: 4.00 },
-        { id: 6, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, altura: 3.65, tendencia: "baja", alerta: 5.50, evacuacion: 6.00 },
-        { id: 7, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 3.80, tendencia: "baja", alerta: 5.20, evacuacion: 5.70 },
-        { id: 8, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, altura: 3.90, tendencia: "permanece", alerta: 4.80, evacuacion: 5.00 },
-        { id: 9, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, altura: 4.10, tendencia: "baja", alerta: 11.50, evacuacion: 12.50 },
-        { id: 10, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, altura: 4.50, tendencia: "baja", alerta: 9.50, evacuacion: 10.50 },
-        { id: 11, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, altura: 4.60, tendencia: "baja", alerta: 9.00, evacuacion: 10.00 },
-        { id: 12, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, altura: 4.20, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
-        { id: 13, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, altura: 3.85, tendencia: "baja", alerta: 7.50, evacuacion: 8.50 },
-        { id: 14, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, altura: 3.20, tendencia: "baja", alerta: 6.00, evacuacion: 7.50 }
-      ];
-      renderEstaciones(estacionesData);
-    }
-
     function renderEstaciones(estaciones) {
-  const listaEl = document.getElementById('list-estaciones');
-  listaEl.innerHTML = '';
-  markersEstaciones.forEach(m => map.removeLayer(m));
-  markersEstaciones = [];
+      const listaEl = document.getElementById('list-estaciones');
+      listaEl.innerHTML = '';
+      markersEstaciones.forEach(m => map.removeLayer(m));
+      markersEstaciones = [];
 
-  estaciones.forEach(est => {
-    // 1. Asignación dinámica de colores según nivel de alerta y tendencia
-    let colorEstado = '#28a745'; // Verde por defecto
+      estaciones.forEach(est => {
+        let colorEstado = '#28a745';
 
-    if (est.altura >= est.evacuacion) {
-      colorEstado = '#F4492E'; // Rojo: Evacuación
-    } else if (est.altura >= est.alerta) {
-      colorEstado = '#FAAE05'; // Amarillo: Alerta
-    } else {
-      // Niveles normales según tendencia
-      if (est.tendencia === 'baja') {
-        colorEstado = '#00D2FF'; // Celeste: Baja
-      } else if (est.tendencia === 'permanece') {
-        colorEstado = '#28a745'; // Verde: Permanece
-      } else {
-        colorEstado = '#0a84ff'; // Azul: Crece (normal)
-      }
+        if (est.altura >= est.evacuacion) {
+          colorEstado = '#F4492E';
+        } else if (est.altura >= est.alerta) {
+          colorEstado = '#FAAE05';
+        } else {
+          if (est.tendencia === 'baja') {
+            colorEstado = '#00D2FF';
+          } else if (est.tendencia === 'permanece') {
+            colorEstado = '#28a745';
+          } else {
+            colorEstado = '#0a84ff';
+          }
+        }
+
+        let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between;">
+            <span class="muni">${est.nombre}</span>
+            <span class="rio">Río ${est.rio}</span>
+          </div>
+          <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+            <span class="altura">${est.altura.toFixed(2)}</span>
+            <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
+            <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
+          </div>
+          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.ina_id || 15}, ${est.var_id || 2}, ${est.alerta}, ${est.evacuacion})" 
+                  style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
+            📈 Ver Gráfica de Evolución
+          </button>
+        `;
+        card.onclick = () => {
+          map.flyTo([est.lat, est.lng], 12);
+          if (window.innerWidth <= 768) toggleSidebar();
+        };
+        listaEl.appendChild(card);
+
+        const customIcon = L.divIcon({
+          className: 'custom-river-pin',
+          html: `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer;">
+              <img src="./Rio-removebg-preview.png" style="width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6)); margin-bottom: 2px;" alt="Alerta Río">
+              <div style="background: rgba(18, 18, 18, 0.90); color: #ffffff; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); line-height: 1.2;">
+                ${est.nombre}
+              </div>
+              <div style="background: rgba(18, 18, 18, 0.95); color: ${colorEstado}; font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 4px; white-space: nowrap; margin-top: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); border: 1px solid ${colorEstado}; line-height: 1.2;">
+                ${est.altura.toFixed(2)}m ${flecha}
+              </div>
+            </div>
+          `,
+          iconSize: [110, 70],
+          iconAnchor: [55, 15]
+        });
+
+        const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
+        marker.bindPopup(`
+          <div style="color:#000;">
+            <b>${est.nombre}</b><br>
+            Río: ${est.rio}<br>
+            Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
+            Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
+            <button onclick="mostrarGraficoINA('${est.nombre}', ${est.ina_id || 15}, ${est.var_id || 2}, ${est.alerta}, ${est.evacuacion})" 
+                    style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
+              📈 Ver Gráfica de Evolución
+            </button>
+          </div>
+        `);
+        markersEstaciones.push(marker);
+      });
     }
-
-    let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
-    const inaInfo = inaEstacionesIds[est.nombre] || { estacion_id: 15, var_id: 2 };
-
-    // 2. Tarjeta para el panel lateral
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div style="display:flex; justify-content:space-between;">
-        <span class="muni">${est.nombre}</span>
-        <span class="rio">Río ${est.rio}</span>
-      </div>
-      <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-        <span class="altura">${est.altura.toFixed(2)}</span>
-        <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
-        <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
-      </div>
-      <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
-              style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
-        📈 Ver Gráfica de Evolución
-      </button>
-    `;
-    card.onclick = () => {
-      map.flyTo([est.lat, est.lng], 12);
-      if (window.innerWidth <= 768) toggleSidebar();
-    };
-    listaEl.appendChild(card);
-
-    // 3. Marcador con la imagen del triángulo de advertencia y etiquetas apiladas
-    const customIcon = L.divIcon({
-      className: 'custom-river-pin',
-      html: `
-        <div style="
-          display: flex; 
-          flex-direction: column; 
-          align-items: center; 
-          justify-content: center; 
-          text-align: center;
-          cursor: pointer;
-        ">
-          <!-- Icono de la imagen del triángulo de advertencia de río -->
-          <img src="./Rio-removebg-preview.png" style="
-            width: 30px; 
-            height: 30px; 
-            object-fit: contain;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
-            margin-bottom: 2px;
-          " alt="Alerta Río">
-
-          <!-- Nombre del Municipio -->
-          <div style="
-            background: rgba(18, 18, 18, 0.90); 
-            color: #ffffff; 
-            font-size: 10.5px; 
-            font-weight: 700; 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            white-space: nowrap; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.15);
-            line-height: 1.2;
-          ">
-            ${est.nombre}
-          </div>
-
-          <!-- Altura y Flecha etiquetada con el color dinámico de estado -->
-          <div style="
-            background: rgba(18, 18, 18, 0.95); 
-            color: ${colorEstado}; 
-            font-size: 11px; 
-            font-weight: 800; 
-            padding: 1px 6px; 
-            border-radius: 4px; 
-            white-space: nowrap; 
-            margin-top: 2px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-            border: 1px solid ${colorEstado};
-            line-height: 1.2;
-          ">
-            ${est.altura.toFixed(2)}m ${flecha}
-          </div>
-        </div>
-      `,
-      iconSize: [110, 70],
-      iconAnchor: [55, 15]
-    });
-
-    const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
-    marker.bindPopup(`
-      <div style="color:#000;">
-        <b>${est.nombre}</b><br>
-        Río: ${est.rio}<br>
-        Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
-        Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
-        <button onclick="mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
-                style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
-          📈 Ver Gráfica de Evolución
-        </button>
-      </div>
-    `);
-    markersEstaciones.push(marker);
-  });
-}
 
     function prepararCanvasGrafico() {
       const container = document.getElementById('chartContainer');
@@ -697,16 +620,13 @@
       abrirModal('modalGrafico');
 
       const ctx = prepararCanvasGrafico();
-
       const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
       const urlProxy = `https://corsproxy.io/?${encodeURIComponent(urlTarget)}`;
 
       fetch(urlProxy)
         .then(res => res.json())
         .then(data => {
-          if (!Array.isArray(data) || data.length === 0) {
-            throw new Error("Formato de datos no válido");
-          }
+          if (!Array.isArray(data) || data.length === 0) throw new Error("Datos inválidos");
 
           const lecturas = data.slice(-15);
           const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
@@ -732,16 +652,14 @@
                   data: Array(valores.length).fill(nivelAlerta),
                   borderColor: '#FAAE05',
                   borderDash: [5, 5],
-                  pointRadius: 0,
-                  fill: false
+                  pointRadius: 0
                 },
                 {
                   label: 'Nivel Evacuación',
                   data: Array(valores.length).fill(nivelEvac),
                   borderColor: '#F4492E',
                   borderDash: [5, 5],
-                  pointRadius: 0,
-                  fill: false
+                  pointRadius: 0
                 }
               ]
             },
@@ -749,7 +667,7 @@
               responsive: true,
               maintainAspectRatio: false,
               scales: {
-                y: { beginAtZero: false, grid: { color: '#333' }, ticks: { color: '#fff' } },
+                y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
                 x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
               },
               plugins: { legend: { labels: { color: '#fff' } } }
@@ -757,7 +675,7 @@
           });
         })
         .catch(err => {
-          console.warn("No se pudieron cargar datos en vivo del INA, cargando gráfico de respaldo:", err);
+          console.warn("Cargando gráfico de respaldo:", err);
           renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac);
         });
     }
@@ -782,20 +700,8 @@
               fill: true,
               tension: 0.3
             },
-            {
-              label: 'Alerta',
-              data: Array(7).fill(nivelAlerta),
-              borderColor: '#FAAE05',
-              borderDash: [5, 5],
-              pointRadius: 0
-            },
-            {
-              label: 'Evacuación',
-              data: Array(7).fill(nivelEvac),
-              borderColor: '#F4492E',
-              borderDash: [5, 5],
-              pointRadius: 0
-            }
+            { label: 'Alerta', data: Array(7).fill(nivelAlerta), borderColor: '#FAAE05', borderDash: [5, 5], pointRadius: 0 },
+            { label: 'Evacuación', data: Array(7).fill(nivelEvac), borderColor: '#F4492E', borderDash: [5, 5], pointRadius: 0 }
           ]
         },
         options: {
@@ -810,69 +716,61 @@
       });
     }
 
-  function renderCentros(centros) {
-  const listEl = document.getElementById('list-centros');
-  listEl.innerHTML = '';
-  markersCentros.forEach(m => map.removeLayer(m));
-  markersCentros = [];
+    function renderCentros(centros) {
+      const listEl = document.getElementById('list-centros');
+      listEl.innerHTML = '';
+      markersCentros.forEach(m => map.removeLayer(m));
+      markersCentros = [];
 
-  centros.forEach(c => {
-    const pctOcupacion = c.capacidad > 0 ? Math.round((c.evacuados / c.capacidad) * 100) : 0;
-    let colorPin = '#0a84ff';
-    if (pctOcupacion >= 100) colorPin = '#F4492E';
-    else if (pctOcupacion >= 80) colorPin = '#FAAE05';
+      centros.forEach(c => {
+        const pctOcupacion = c.capacidad > 0 ? Math.round((c.evacuados / c.capacidad) * 100) : 0;
+        let colorPin = '#0a84ff';
+        if (pctOcupacion >= 100) colorPin = '#F4492E';
+        else if (pctOcupacion >= 80) colorPin = '#FAAE05';
 
-    // 1. Tarjeta en la lista lateral
-    const card = document.createElement('div');
-    card.className = 'item-card';
-    card.style.borderLeft = `4px solid ${colorPin}`;
-    card.innerHTML = `
-      <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
-      <div class="item-title">🏠 ${c.nombre}</div>
-      <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
-      <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
-    `;
-    card.onclick = () => {
-      map.flyTo([c.lat, c.lng], 15);
-      if (window.innerWidth <= 768) toggleSidebar();
-    };
-    listEl.appendChild(card);
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.style.borderLeft = `4px solid ${colorPin}`;
+        card.innerHTML = `
+          <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
+          <div class="item-title">🏠 ${c.nombre}</div>
+          <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
+          <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
+        `;
+        card.onclick = () => {
+          map.flyTo([c.lat, c.lng], 15);
+          if (window.innerWidth <= 768) toggleSidebar();
+        };
+        listEl.appendChild(card);
 
-    // 2. Icono personalizado de la imagen
-    const iconoSalud = L.icon({
-      iconUrl: './3304549.png', // Ruta de la imagen en tu repositorio
-      iconSize: [36, 36],       // Tamaño del pin
-      iconAnchor: [18, 36],     // Punto del icono que apunta a las coordenadas
-      popupAnchor: [0, -32]     // Posición donde se despliega el popup respecto al pin
-    });
+        const iconoSalud = L.icon({
+          iconUrl: './3304549.png',
+          iconSize: [36, 36],
+          iconAnchor: [18, 36],
+          popupAnchor: [0, -32]
+        });
 
-    // 3. Creación del marcador con el popup estructurado
-    const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
-    
-    marker.bindPopup(`
-      <div style="color:#000; min-width: 180px;">
-        <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
-          Centro de Evacuados
-        </div>
-        <div style="font-size:1.05rem; font-weight:bold; color:#111; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">
-          ${c.nombre}
-        </div>
-        <div style="font-size: 0.8rem; line-height: 1.4;">
-          <b>Municipio:</b> ${c.municipio}<br>
-          <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
-          <b>Contacto:</b> ${c.contacto}<br>
-          <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-          <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
-          <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
-        </div>
-      </div>
-    `);
+        const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
+        marker.bindPopup(`
+          <div style="color:#000; min-width: 180px;">
+            <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Centro de Evacuados</div>
+            <div style="font-size:1.05rem; font-weight:bold; color:#111; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">${c.nombre}</div>
+            <div style="font-size: 0.8rem; line-height: 1.4;">
+              <b>Municipio:</b> ${c.municipio}<br>
+              <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
+              <b>Contacto:</b> ${c.contacto}<br>
+              <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+              <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
+              <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
+            </div>
+          </div>
+        `);
 
-    markersCentros.push(marker);
-  });
-}
+        markersCentros.push(marker);
+      });
+    }
 
     function verEvacuadosCentro(idCentro) {
       cambiarPestana('ingresos');
