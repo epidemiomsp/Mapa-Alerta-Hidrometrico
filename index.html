@@ -322,7 +322,7 @@
       "Paso de los Libres": { estacion_id: 20, var_id: 2 }
     };
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz3ZEokUE-rKhVQpppnoTeebCUYWlU0h9Q2IYDojm-6_hkGBBV8SFRC0R8wdmWCB221/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypx3DAHcibB5FNSgHq8CenTVttVn9pzKHfjxbvFYf-BopHmWeEjQkY4bKe21y3vi-BWA/exec";
 
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
@@ -699,7 +699,7 @@
       const ctx = prepararCanvasGrafico();
 
       const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
-      const urlProxy = `https://corsproxy.io/?${encodeURIComponent(urlTarget)}`;
+      const urlProxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlTarget)}`;
 
       fetch(urlProxy)
         .then(res => res.json())
