@@ -692,95 +692,109 @@
       return document.getElementById('chartEvolucion').getContext('2d');
     }
 
-function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta, nivelEvac) {
+async function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta, nivelEvac) {
   document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
   abrirModal('modalGrafico');
 
   const ctx = prepararCanvasGrafico();
-
-  // Endpoint oficial del INA
   const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
-  
-  // Proxy libre de redirecciones (CodeTabs)
-  const urlProxy = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlTarget)}`;
 
-  fetch(urlProxy)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      console.log("Datos recibidos del INA:", data);
+  // Lista de proxies de respaldo en orden de prioridad
+  const proxies = [
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlTarget)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(urlTarget)}`
+  ];
 
-      let registros = Array.isArray(data) ? data : (data.datos || data.series || []);
+  let data = null;
 
-      if (!registros || registros.length === 0) {
-        throw new Error("No hay registros disponibles para esta estación");
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy);
+      if (!res.ok) continue;
+
+      const responseText = await res.text();
+      const parsed = JSON.parse(responseText);
+
+      // Si AllOrigins devuelve { contents: "..." }
+      const rawData = parsed.contents ? JSON.parse(parsed.contents) : parsed;
+      
+      data = Array.isArray(rawData) ? rawData : (rawData.datos || rawData.series || []);
+
+      if (Array.isArray(data) && data.length > 0) {
+        console.log("Datos obtenidos con éxito desde proxy:", proxy, data);
+        break; // Éxito: salimos del bucle
       }
+    } catch (e) {
+      console.warn("Intento de proxy fallido:", proxy, e);
+    }
+  }
 
-      // Tomar las últimas 15 mediciones
-      const lecturas = registros.slice(-15);
+  // Si ninguno de los dos proxies obtuvo datos reales, recién ahí cargamos el respaldo
+  if (!data || data.length === 0) {
+    console.error("No se pudo conectar con el INA a través de ningún proxy.");
+    renderGraficoEjemplo(ctx, nivelAlerta, nivelEvac);
+    return;
+  }
 
-      const labels = lecturas.map(item => {
-        const fechaRaw = item.timestart || item.fecha || item.timestamp;
-        if (!fechaRaw) return '';
-        const d = new Date(fechaRaw);
-        return isNaN(d.getTime()) ? String(fechaRaw) : `${d.getDate()} ${d.toLocaleString('es-ES', { month: 'short' })}`;
-      });
+  // Procesar y renderizar las últimas 15 lecturas reales
+  const lecturas = data.slice(-15);
 
-      const valores = lecturas.map(item => parseFloat(item.valor));
+  const labels = lecturas.map(item => {
+    const fechaRaw = item.timestart || item.fecha || item.timestamp;
+    if (!fechaRaw) return '';
+    const d = new Date(fechaRaw);
+    return isNaN(d.getTime()) 
+      ? String(fechaRaw) 
+      : `${d.getDate()} ${d.toLocaleString('es-ES', { month: 'short' })}`;
+  });
 
-      // Renderizar el gráfico
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Nivel (m)',
-              data: valores,
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              fill: true,
-              tension: 0.3,
-              pointRadius: 4,
-              pointBackgroundColor: '#3b82f6'
-            },
-            {
-              label: 'Alerta',
-              data: Array(labels.length).fill(nivelAlerta),
-              borderColor: '#f59e0b',
-              borderDash: [5, 5],
-              pointRadius: 0,
-              fill: false
-            },
-            {
-              label: 'Evacuación',
-              data: Array(labels.length).fill(nivelEvac),
-              borderColor: '#ef4444',
-              borderDash: [5, 5],
-              pointRadius: 0,
-              fill: false
-            }
-          ]
+  const valores = lecturas.map(item => parseFloat(item.valor));
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Nivel (m)',
+          data: valores,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#3b82f6'
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { labels: { color: '#e5e7eb' } }
-          },
-          scales: {
-            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
-          }
+        {
+          label: 'Alerta',
+          data: Array(labels.length).fill(nivelAlerta),
+          borderColor: '#f59e0b',
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false
+        },
+        {
+          label: 'Evacuación',
+          data: Array(labels.length).fill(nivelEvac),
+          borderColor: '#ef4444',
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false
         }
-      });
-    })
-    .catch(err => {
-      console.error("Error al conectar con el INA:", err);
-      renderGraficoEjemplo(ctx, nivelAlerta, nivelEvac);
-    });
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#e5e7eb' } }
+      },
+      scales: {
+        x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+        y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+      }
+    }
+  });
 }
     function renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac) {
       const ctx = prepararCanvasGrafico();
