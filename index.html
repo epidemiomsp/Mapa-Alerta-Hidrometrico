@@ -328,55 +328,61 @@
     }
 
     async function cargarTodo() {
-      document.getElementById('loading').classList.remove('off');
-      estacionesData = JSON.parse(JSON.stringify(ESTACIONES_LISTA));
+  document.getElementById('loading').classList.remove('off');
+  estacionesData = JSON.parse(JSON.stringify(ESTACIONES_LISTA));
 
-      // 1. Cargar Centros/Personas de tu Google Apps Script
-      try {
-        const res = await fetch(APPS_SCRIPT_URL);
-        const data = await res.json();
-        centrosData = data.centros || [];
-        personasData = data.personas || [];
-        monitoreoData = data.monitoreos || [];
-        
-        actualizarSelectsCentros();
-        renderCentros(centrosData);
-        renderIngresos(personasData);
-        renderMonitoreo(monitoreoData);
-      } catch (err) {
-        console.error("Error al cargar centros/personas:", err);
-      }
+  // 1. Cargar Centros/Personas de Google Apps Script
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    const data = await res.json();
+    centrosData = data.centros || [];
+    personasData = data.personas || [];
+    monitoreoData = data.monitoreos || [];
+    
+    actualizarSelectsCentros();
+    renderCentros(centrosData);
+    renderIngresos(personasData);
+    renderMonitoreo(monitoreoData);
+  } catch (err) {
+    console.error("Error al cargar centros/personas:", err);
+  }
 
-      // 2. Cargar Alturas en Vivo directamente mediante Proxy CORS desde Prefectura
-      try {
-        const targetUrl = "https://www.argentina.gob.ar/prefecturanaval/altura-de-los-rios";
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-        
-        const resPna = await fetch(proxyUrl);
-        const dataPna = await resPna.json();
+  // 2. Consulta directa a la API pública del INA para cada estación
+  const promesasINA = estacionesData.map(async (est) => {
+    try {
+      // API oficial del INA para obtener las últimas lecturas
+      const urlINA = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${est.ina_id}/${est.var_id}/datos`;
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlINA)}`;
+      
+      const res = await fetch(proxyUrl);
+      const dataProxy = await res.json();
+      const lecturas = JSON.parse(dataProxy.contents);
 
-        if (dataPna && dataPna.contents) {
-          const htmlText = dataPna.contents;
+      if (Array.isArray(lecturas) && lecturas.length >= 2) {
+        // La última lectura realizada
+        const ultima = lecturas[lecturas.length - 1];
+        const penultima = lecturas[lecturas.length - 2];
+
+        if (ultima && ultima.valor !== null) {
+          est.altura = parseFloat(ultima.valor);
           
-          estacionesData.forEach(est => {
-            const reg = new RegExp(est.pna + "[\\s\\S]*?<td[^>]*>\\s*([0-9]+[\\.,][0-9]+)\\s*<\\/td>[\\s\\S]*?<td[^>]*>\\s*([A-Za-z]+)\\s*<\\/td>", "i");
-            const match = reg.exec(htmlText);
-            if (match && match[1]) {
-              est.altura = parseFloat(match[1].replace(',', '.'));
-              const tendStr = match[2].toLowerCase();
-              if (tendStr.includes("crece")) est.tendencia = "crece";
-              else if (tendStr.includes("baja")) est.tendencia = "baja";
-              else est.tendencia = "permanece";
-            }
-          });
+          // Determinación automática de la tendencia
+          const diff = ultima.valor - penultima.valor;
+          if (diff > 0.01) est.tendencia = "crece";
+          else if (diff < -0.01) est.tendencia = "baja";
+          else est.tendencia = "permanece";
         }
-      } catch(e) {
-        console.warn("No se pudieron actualizar en vivo las alturas por el proxy:", e);
       }
-
-      renderEstaciones(estacionesData);
-      document.getElementById('loading').classList.add('off');
+    } catch (e) {
+      console.warn(`No se pudo actualizar ${est.nombre} desde INA:`, e);
     }
+  });
+
+  await Promise.all(promesasINA);
+
+  renderEstaciones(estacionesData);
+  document.getElementById('loading').classList.add('off');
+}
 
     function cargarDepartamentos() {
       fetch('./corrientes.json')
