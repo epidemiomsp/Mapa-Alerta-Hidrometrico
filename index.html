@@ -693,74 +693,98 @@
     }
 
     function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta, nivelEvac) {
-      document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
-      abrirModal('modalGrafico');
+  document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
+  abrirModal('modalGrafico');
 
-      const ctx = prepararCanvasGrafico();
+  const ctx = prepararCanvasGrafico();
 
-      const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
-      const urlProxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlTarget)}`;
+  // Endpoint oficial del INA
+  const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
+  
+  // Usamos el proxy de AllOrigins con timestamp para evitar caché
+  const urlProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(urlTarget)}&_=${Date.now()}`;
 
-      fetch(urlProxy)
-        .then(res => res.json())
-        .then(data => {
-          if (!Array.isArray(data) || data.length === 0) {
-            throw new Error("Formato de datos no válido");
-          }
+  fetch(urlProxy)
+    .then(res => {
+      if (!res.ok) throw new Error("Error en la respuesta de la red");
+      return res.json();
+    })
+    .then(dataProxy => {
+      // AllOrigins envuelve la respuesta en la propiedad 'contents' como string JSON
+      let data = typeof dataProxy.contents === 'string' ? JSON.parse(dataProxy.contents) : dataProxy.contents;
 
-          const lecturas = data.slice(-15);
-          const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
-          const valores = lecturas.map(d => d.valor);
+      // Si la API devuelve un objeto con propiedad 'datos' o 'series'
+      if (data && data.datos) data = data.datos;
 
-          if (miChart) miChart.destroy();
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error("Formato de datos no válido o vacío");
+      }
 
-          miChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: etiquetas,
-              datasets: [
-                {
-                  label: 'Nivel Hidrométrico (m)',
-                  data: valores,
-                  borderColor: '#0a84ff',
-                  backgroundColor: 'rgba(10, 132, 255, 0.1)',
-                  fill: true,
-                  tension: 0.3
-                },
-                {
-                  label: 'Nivel Alerta',
-                  data: Array(valores.length).fill(nivelAlerta),
-                  borderColor: '#FAAE05',
-                  borderDash: [5, 5],
-                  pointRadius: 0,
-                  fill: false
-                },
-                {
-                  label: 'Nivel Evacuación',
-                  data: Array(valores.length).fill(nivelEvac),
-                  borderColor: '#F4492E',
-                  borderDash: [5, 5],
-                  pointRadius: 0,
-                  fill: false
-                }
-              ]
+      // Tomamos las últimas 15 lecturas reales
+      const lecturas = data.slice(-15);
+
+      const labels = lecturas.map(item => {
+        // Formatear la fecha obtenida del INA (timestart, fecha o timestamp)
+        const fechaRaw = item.timestart || item.fecha || item.timestamp;
+        if (!fechaRaw) return '';
+        const d = new Date(fechaRaw);
+        return isNaN(d.getTime()) ? String(fechaRaw) : `${d.getDate()} ${d.toLocaleString('es-ES', { month: 'short' })}`;
+      });
+
+      const valores = lecturas.map(item => parseFloat(item.valor));
+
+      // Renderizar el gráfico con datos reales del INA
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Nivel (m)',
+              data: valores,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4,
+              pointBackgroundColor: '#3b82f6'
             },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: { beginAtZero: false, grid: { color: '#333' }, ticks: { color: '#fff' } },
-                x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
-              },
-              plugins: { legend: { labels: { color: '#fff' } } }
+            {
+              label: 'Alerta',
+              data: Array(labels.length).fill(nivelAlerta),
+              borderColor: '#f59e0b',
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false
+            },
+            {
+              label: 'Evacuación',
+              data: Array(labels.length).fill(nivelEvac),
+              borderColor: '#ef4444',
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false
             }
-          });
-        })
-        .catch(err => {
-          console.warn("No se pudieron cargar datos en vivo del INA, cargando gráfico de respaldo:", err);
-          renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac);
-        });
-    }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#e5e7eb' } }
+          },
+          scales: {
+            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+          }
+        }
+      });
+    })
+    .catch(err => {
+      console.warn("Fallo al obtener datos del INA via proxy, cargando gráfico de respaldo:", err);
+      renderGraficoEjemplo(ctx, nivelAlerta, nivelEvac);
+    });
+}
 
     function renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac) {
       const ctx = prepararCanvasGrafico();
