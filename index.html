@@ -331,7 +331,7 @@
   document.getElementById('loading').classList.remove('off');
   estacionesData = JSON.parse(JSON.stringify(ESTACIONES_LISTA));
 
-  // 1. Cargar Centros/Personas de Google Apps Script
+  // 1. Cargar Centros/Personas desde Google Apps Script
   try {
     const res = await fetch(APPS_SCRIPT_URL);
     const data = await res.json();
@@ -347,10 +347,9 @@
     console.error("Error al cargar centros/personas:", err);
   }
 
-  // 2. Consulta directa a la API pública del INA para cada estación
+  // 2. Cargar Alturas en Vivo directamente desde la API pública del INA
   const promesasINA = estacionesData.map(async (est) => {
     try {
-      // API oficial del INA para obtener las últimas lecturas
       const urlINA = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${est.ina_id}/${est.var_id}/datos`;
       const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlINA)}`;
       
@@ -359,14 +358,12 @@
       const lecturas = JSON.parse(dataProxy.contents);
 
       if (Array.isArray(lecturas) && lecturas.length >= 2) {
-        // La última lectura realizada
         const ultima = lecturas[lecturas.length - 1];
         const penultima = lecturas[lecturas.length - 2];
 
         if (ultima && ultima.valor !== null) {
           est.altura = parseFloat(ultima.valor);
           
-          // Determinación automática de la tendencia
           const diff = ultima.valor - penultima.valor;
           if (diff > 0.01) est.tendencia = "crece";
           else if (diff < -0.01) est.tendencia = "baja";
@@ -374,7 +371,7 @@
         }
       }
     } catch (e) {
-      console.warn(`No se pudo actualizar ${est.nombre} desde INA:`, e);
+      console.warn(`No se pudo actualizar la estación ${est.nombre} desde INA:`, e);
     }
   });
 
