@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
         onerror="this.onerror=null;this.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';"/>
 
-  <!-- Chart.js para renderizar los gráficos de evolución del INA -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -28,7 +28,6 @@
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); overflow: hidden; }
     
-    /* Panel Lateral */
     #sidebar { 
       width: 380px; 
       background: var(--bg); 
@@ -65,28 +64,24 @@
     .list::-webkit-scrollbar { width: 5px; }
     .list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     
-    /* Tarjetas de Ríos */
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
     .card:hover { border-color: #555; }
     .muni { font-weight: 600; font-size: 0.88rem; }
     .rio { font-size: 0.68rem; color: var(--txt-dim); background: #2a2a2a; padding: 2px 6px; border-radius: 4px; }
     .altura { font-size: 1.25rem; font-weight: 700; }
 
-    /* Tarjetas de Centros, Ingresos y Monitoreo */
     .item-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; position: relative; font-size: 0.75rem; }
     .item-card:hover { border-color: #555; }
     .item-title { font-weight: bold; color: #fff; margin-bottom: 2px; font-size: 0.85rem; padding-right: 20px; }
     .item-sub { color: var(--txt-dim); font-size: 0.72rem; margin-top: 2px; }
     .item-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 0.68rem; background: #2a2a2a; color: #fff; margin-top: 5px; }
     .btn-delete-card { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #ff4d4d; font-size: 0.9rem; cursor: pointer; }
-    .btn-delete-card:hover { color: #ff0000; }
 
     #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; }
     
     .btn-action { background: var(--primary); color: #fff; border: none; padding: 5px 8px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
     .btn-sec { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:5px 8px; border-radius:5px; cursor:pointer; font-size: 0.7rem; }
 
-    /* Tooltip para Departamentos */
     .dept-tooltip {
       background: rgba(0, 0, 0, 0.85);
       border: 1px solid #0a84ff;
@@ -97,7 +92,6 @@
       border-radius: 4px;
     }
 
-    /* Modales */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: 0.2s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
@@ -108,10 +102,8 @@
     .form-group { margin-bottom: 8px; }
     .form-group label { display: block; font-size: 0.7rem; color: var(--txt-dim); margin-bottom: 2px; }
     .form-group input, .form-group select { width: 100%; background: #121212; border: 1px solid var(--border); color: #fff; padding: 6px; border-radius: 4px; font-size: 0.8rem; outline: none; }
-    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
     .form-row-2 { display: flex; gap: 8px; }
     .form-row-2 .form-group { flex: 1; }
-    
     .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
@@ -119,11 +111,10 @@
 
     @media (max-width: 768px) {
       .container { flex-direction: column-reverse; }
-      #sidebar { width: 100%; height: auto; max-height: 50vh; border-right: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; left: 0; z-index: 1500; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); }
+      #sidebar { width: 100%; height: auto; max-height: 50vh; border-right: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; left: 0; z-index: 1500; }
       #sidebar.collapsed { margin-left: 0 !important; }
       #sidebar.collapsed .sec-tab { display: none !important; }
-      .toggle-sidebar-btn { position: relative; top: 0; right: 0; width: auto; height: 100%; padding: 0 8px; border-radius: 0; border: none; border-left: 1px solid var(--border); font-size: 0.75rem; background: #252525; }
-      .title-area p { display: none; }
+      .toggle-sidebar-btn { position: relative; top: 0; right: 0; width: auto; height: 100%; padding: 0 8px; border-radius: 0; border: none; background: #252525; }
     }
   </style>
 </head>
@@ -139,12 +130,12 @@
       <button class="btn-action" style="background:#28a745;" onclick="abrirModal('modalPersona')">+ Persona</button>
       <button class="btn-action" style="background:#17a2b8;" onclick="abrirModal('modalMonitoreo')">+ Monitoreo</button>
       <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
-      <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
+      <button class="btn-sec" onclick="cargarTodo()">🔄</button>
     </div>
   </header>
 
   <div class="container">
-    <div id="loading" class="off">Cargando datos...</div>
+    <div id="loading" class="off">Cargando datos en vivo...</div>
 
     <div id="sidebar">
       <div class="tab-bar">
@@ -155,7 +146,6 @@
         <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
       </div>
 
-      <!-- Pestaña 1: Ríos (Paraná y Uruguay) -->
       <div id="sec-estaciones" class="sec-tab">
         <div class="filter-bar">
           <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
@@ -165,17 +155,14 @@
         <div class="list" id="list-estaciones"></div>
       </div>
 
-      <!-- Pestaña 2: Centros de Evacuados -->
       <div id="sec-centros" class="sec-tab" style="display:none;">
         <div class="list" id="list-centros"></div>
       </div>
 
-      <!-- Pestaña 3: Ingreso de Personas -->
       <div id="sec-ingresos" class="sec-tab" style="display:none;">
         <div class="list" id="list-ingresos"></div>
       </div>
 
-      <!-- Pestaña 4: Monitoreo Diario -->
       <div id="sec-monitoreo" class="sec-tab" style="display:none;">
         <div class="list" id="list-monitoreo"></div>
       </div>
@@ -184,7 +171,7 @@
     <div id="map"></div>
   </div>
 
-  <!-- Modal 1: Agregar Centro -->
+  <!-- Modales -->
   <div class="modal-overlay" id="modalCentro">
     <div class="modal-box">
       <div class="modal-header">
@@ -215,7 +202,6 @@
     </div>
   </div>
 
-  <!-- Modal 2: Ingreso Personas -->
   <div class="modal-overlay" id="modalPersona">
     <div class="modal-box">
       <div class="modal-header">
@@ -223,10 +209,7 @@
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
       <form onsubmit="guardarPersona(event)">
-        <div class="form-group">
-          <label>Centro de Evacuados *</label>
-          <select id="p-centro" required></select>
-        </div>
+        <div class="form-group"><label>Centro de Evacuados *</label><select id="p-centro" required></select></div>
         <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="p-nombre" required placeholder="Ej: Juan Pérez"></div>
         <div class="form-row-2">
           <div class="form-group"><label>DNI / Documento *</label><input type="text" id="p-dni" required></div>
@@ -239,8 +222,8 @@
             <select id="p-sexo"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Otro">Otro</option></select>
           </div>
         </div>
-        <div class="form-group"><label>Enfermedades Crónicas</label><input type="text" id="p-cronicas" placeholder="Ej: Hipertensión, Diabetes"></div>
-        <div class="form-group"><label>Síntomas al Ingreso</label><input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos, Ninguno"></div>
+        <div class="form-group"><label>Enfermedades Crónicas</label><input type="text" id="p-cronicas" placeholder="Ej: Hipertensión"></div>
+        <div class="form-group"><label>Síntomas al Ingreso</label><input type="text" id="p-sintomas" placeholder="Ej: Fiebre"></div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalPersona')">Cancelar</button>
           <button type="submit" class="btn-action" style="background:#28a745;">Registrar Ingreso</button>
@@ -249,7 +232,6 @@
     </div>
   </div>
 
-  <!-- Modal 3: Monitoreo Diario -->
   <div class="modal-overlay" id="modalMonitoreo">
     <div class="modal-box">
       <div class="modal-header">
@@ -257,10 +239,7 @@
         <button class="close-modal" onclick="cerrarModal('modalMonitoreo')">&times;</button>
       </div>
       <form onsubmit="guardarMonitoreo(event)">
-        <div class="form-group">
-          <label>Centro de Evacuados *</label>
-          <select id="m-centro" required></select>
-        </div>
+        <div class="form-group"><label>Centro de Evacuados *</label><select id="m-centro" required></select></div>
         <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="m-nombre" required></div>
         <div class="form-row-2">
           <div class="form-group"><label>DNI *</label><input type="text" id="m-dni" required></div>
@@ -276,7 +255,7 @@
             <select id="m-discapacidad"><option value="NO">NO</option><option value="SI">SI</option></select>
           </div>
         </div>
-        <div class="form-group"><label>Medicación Requerida</label><input type="text" id="m-medicacion" placeholder="Ej: Enalapril 10mg"></div>
+        <div class="form-group"><label>Medicación Requerida</label><input type="text" id="m-medicacion"></div>
         <div class="form-group"><label>Síntomas / Observaciones Sanitarias</label><input type="text" id="m-sintomas"></div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalMonitoreo')">Cancelar</button>
@@ -286,7 +265,6 @@
     </div>
   </div>
 
-  <!-- Modal 4: Gráfica de Evolución Hidrométrica (INA) -->
   <div class="modal-overlay" id="modalGrafico">
     <div class="modal-box" style="width: 600px;">
       <div class="modal-header">
@@ -313,6 +291,24 @@
 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiDT41ttULzciZZJqgAr6EDnx49sMLS9CqepAbOCin3oSzfXJBoE3gMM3oDhYZW9ZqWw/exec";
 
+    // Mapeo completo de estaciones
+    const ESTACIONES_LISTA = [
+      { id: 1, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, alerta: 6.50, evacuacion: 7.00, ina_id: 14, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, alerta: 6.50, evacuacion: 7.00, ina_id: 16, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 3, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, alerta: 6.80, evacuacion: 7.50, ina_id: 17, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 4, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, alerta: 7.00, evacuacion: 7.50, ina_id: 30, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 5, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, alerta: 3.50, evacuacion: 4.00, ina_id: 15, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 6, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, alerta: 5.50, evacuacion: 6.00, ina_id: 19, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 7, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, alerta: 5.20, evacuacion: 5.70, ina_id: 18, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 8, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, alerta: 4.80, evacuacion: 5.00, ina_id: 25, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 9, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, alerta: 11.50, evacuacion: 12.50, ina_id: 21, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 10, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, alerta: 9.50, evacuacion: 10.50, ina_id: 22, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 11, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, alerta: 9.00, evacuacion: 10.00, ina_id: 23, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 12, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, alerta: 9.50, evacuacion: 10.50, ina_id: 24, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 13, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, alerta: 7.50, evacuacion: 8.50, ina_id: 20, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 14, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, alerta: 6.00, evacuacion: 7.50, ina_id: 26, var_id: 2, altura: 0, tendencia: "permanece" }
+    ];
+
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
@@ -327,9 +323,62 @@
         abrirModal('modalCentro');
       });
 
-      cargarDatosActualizados();
+      cargarTodo();
       cargarDepartamentos();
       actualizarTextoBoton();
+    }
+
+    async function cargarTodo() {
+      document.getElementById('loading').classList.remove('off');
+      
+      // 1. Cargar centros desde Sheets
+      try {
+        const res = await fetch(APPS_SCRIPT_URL);
+        const data = await res.json();
+        centrosData = data.centros || [];
+        personasData = data.personas || [];
+        monitoreoData = data.monitoreos || [];
+        
+        actualizarSelectsCentros();
+        renderCentros(centrosData);
+        renderIngresos(personasData);
+        renderMonitoreo(monitoreoData);
+      } catch (err) {
+        console.error("Error al cargar Google Sheets:", err);
+      }
+
+      // 2. Consultar alturas en vivo directamente al INA mediante Proxy
+      estacionesData = [...ESTACIONES_LISTA];
+      renderEstaciones(estacionesData);
+
+      const promesasINA = estacionesData.map(async (est) => {
+        try {
+          const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${est.ina_id}/${est.var_id}/datos`;
+          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(urlTarget)}`;
+          
+          const res = await fetch(proxyUrl);
+          const data = await res.json();
+          
+          if (Array.isArray(data) && data.length >= 2) {
+            const lecturas = data.filter(d => d.valor !== null && d.valor !== undefined);
+            if (lecturas.length >= 2) {
+              const ult = lecturas[lecturas.length - 1].valor;
+              const penult = lecturas[lecturas.length - 2].valor;
+              
+              est.altura = parseFloat(ult.toFixed(2));
+              if (ult > penult) est.tendencia = 'crece';
+              else if (ult < penult) est.tendencia = 'baja';
+              else est.tendencia = 'permanece';
+            }
+          }
+        } catch (e) {
+          console.warn(`Error al consultar INA para ${est.nombre}:`, e);
+        }
+      });
+
+      await Promise.all(promesasINA);
+      renderEstaciones(estacionesData);
+      document.getElementById('loading').classList.add('off');
     }
 
     function cargarDepartamentos() {
@@ -337,36 +386,19 @@
         .then(res => res.json())
         .then(data => {
           capaDepartamentos = L.geoJSON(data, {
-            style: function(feature) {
-              return {
-                color: '#0a84ff',
-                weight: 1.8,
-                opacity: 0.9,
-                fillColor: '#0a84ff',
-                fillOpacity: 0.15
-              };
+            style: function() {
+              return { color: '#0a84ff', weight: 1.8, opacity: 0.9, fillColor: '#0a84ff', fillOpacity: 0.15 };
             },
             onEachFeature: function(feature, layer) {
               const p = feature.properties || {};
               const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
-              
-              layer.bindTooltip(`Dpto. ${nombreDpto}`, {
-                permanent: false,
-                direction: 'center',
-                className: 'dept-tooltip'
-              });
-
+              layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
               layer.on({
-                mouseover: function(e) {
-                  e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 });
-                },
-                mouseout: function(e) {
-                  capaDepartamentos.resetStyle(e.target);
-                }
+                mouseover: (e) => e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 }),
+                mouseout: (e) => capaDepartamentos.resetStyle(e.target)
               });
             }
           });
-
           capaDepartamentos.addTo(map);
           departamentosVisibles = true;
           actualizarEstiloBotonDptos();
@@ -376,7 +408,6 @@
 
     function toggleCapaDepartamentos() {
       if (!capaDepartamentos) return;
-
       if (departamentosVisibles) {
         map.removeLayer(capaDepartamentos);
         departamentosVisibles = false;
@@ -393,29 +424,6 @@
         btn.style.background = departamentosVisibles ? '#0a84ff' : '#2c2c2e';
         btn.style.borderColor = departamentosVisibles ? '#005bb5' : '#3a3a3c';
       }
-    }
-
-    function cargarDatosActualizados() {
-      document.getElementById('loading').classList.remove('off');
-      fetch(APPS_SCRIPT_URL)
-        .then(res => res.json())
-        .then(data => {
-          // Asignación de datos recibidos del servidor
-          if (data.estaciones && data.estaciones.length > 0) {
-            estacionesData = data.estaciones;
-            renderEstaciones(estacionesData);
-          }
-          centrosData = data.centros || [];
-          personasData = data.personas || [];
-          monitoreoData = data.monitoreos || [];
-          
-          actualizarSelectsCentros();
-          renderCentros(centrosData);
-          renderIngresos(personasData);
-          renderMonitoreo(monitoreoData);
-        })
-        .catch(err => console.error("Error al cargar backend:", err))
-        .finally(() => document.getElementById('loading').classList.add('off'));
     }
 
     function actualizarSelectsCentros() {
@@ -512,7 +520,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: "delete_centro", id: idCentro })
       })
-      .then(() => setTimeout(() => { cargarDatosActualizados(); }, 1200))
+      .then(() => setTimeout(() => { cargarTodo(); }, 1200))
       .catch(err => console.error(err));
     }
 
@@ -523,7 +531,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      .then(() => setTimeout(() => { cargarDatosActualizados(); cambiarPestana(pestanaDestino); }, 1200))
+      .then(() => setTimeout(() => { cargarTodo(); cambiarPestana(pestanaDestino); }, 1200))
       .catch(err => console.error(err));
     }
 
@@ -564,7 +572,7 @@
             <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
             <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
           </div>
-          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.ina_id || 15}, ${est.var_id || 2}, ${est.alerta}, ${est.evacuacion})" 
+          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.ina_id}, ${est.var_id}, ${est.alerta}, ${est.evacuacion})" 
                   style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
             📈 Ver Gráfica de Evolución
           </button>
@@ -599,7 +607,7 @@
             Río: ${est.rio}<br>
             Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
             Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
-            <button onclick="mostrarGraficoINA('${est.nombre}', ${est.ina_id || 15}, ${est.var_id || 2}, ${est.alerta}, ${est.evacuacion})" 
+            <button onclick="mostrarGraficoINA('${est.nombre}', ${est.ina_id}, ${est.var_id}, ${est.alerta}, ${est.evacuacion})" 
                     style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
               📈 Ver Gráfica de Evolución
             </button>
@@ -628,7 +636,7 @@
         .then(data => {
           if (!Array.isArray(data) || data.length === 0) throw new Error("Datos inválidos");
 
-          const lecturas = data.slice(-15);
+          const lecturas = data.filter(d => d.valor !== null && d.valor !== undefined).slice(-15);
           const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
           const valores = lecturas.map(d => d.valor);
 
@@ -675,7 +683,7 @@
           });
         })
         .catch(err => {
-          console.warn("Cargando gráfico de respaldo:", err);
+          console.warn("Cargando gráfico de ejemplo:", err);
           renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac);
         });
     }
@@ -692,14 +700,7 @@
         data: {
           labels: etiquetas,
           datasets: [
-            {
-              label: 'Nivel (m)',
-              data: valores,
-              borderColor: '#0a84ff',
-              backgroundColor: 'rgba(10, 132, 255, 0.1)',
-              fill: true,
-              tension: 0.3
-            },
+            { label: 'Nivel (m)', data: valores, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', fill: true, tension: 0.3 },
             { label: 'Alerta', data: Array(7).fill(nivelAlerta), borderColor: '#FAAE05', borderDash: [5, 5], pointRadius: 0 },
             { label: 'Evacuación', data: Array(7).fill(nivelEvac), borderColor: '#F4492E', borderDash: [5, 5], pointRadius: 0 }
           ]
@@ -753,7 +754,7 @@
         const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
         marker.bindPopup(`
           <div style="color:#000; min-width: 180px;">
-            <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Centro de Evacuados</div>
+            <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; margin-bottom: 2px;">Centro de Evacuados</div>
             <div style="font-size:1.05rem; font-weight:bold; color:#111; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">${c.nombre}</div>
             <div style="font-size: 0.8rem; line-height: 1.4;">
               <b>Municipio:</b> ${c.municipio}<br>
@@ -780,7 +781,7 @@
 
     function renderIngresos(personas) {
       const listEl = document.getElementById('list-ingresos');
-      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros en Hoja 2</div>';
+      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros</div>';
       
       personas.forEach(p => {
         const centro = centrosData.find(c => String(c.id) === String(p.idCentro)) || { nombre: 'Centro General' };
@@ -798,7 +799,7 @@
 
     function renderMonitoreo(monitoreos) {
       const listEl = document.getElementById('list-monitoreo');
-      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros en Hoja 3</div>';
+      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros</div>';
       
       monitoreos.forEach(m => {
         const centro = centrosData.find(c => String(c.id) === String(m.idCentro)) || { nombre: 'Centro General' };
