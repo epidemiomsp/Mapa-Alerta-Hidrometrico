@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
         onerror="this.onerror=null;this.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';"/>
 
-  <!-- Chart.js -->
+  <!-- Chart.js para renderizar los gráficos de evolución del INA -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -28,6 +28,7 @@
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); overflow: hidden; }
     
+    /* Panel Lateral */
     #sidebar { 
       width: 380px; 
       background: var(--bg); 
@@ -64,24 +65,28 @@
     .list::-webkit-scrollbar { width: 5px; }
     .list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     
+    /* Tarjetas de Ríos */
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
     .card:hover { border-color: #555; }
     .muni { font-weight: 600; font-size: 0.88rem; }
     .rio { font-size: 0.68rem; color: var(--txt-dim); background: #2a2a2a; padding: 2px 6px; border-radius: 4px; }
     .altura { font-size: 1.25rem; font-weight: 700; }
 
+    /* Tarjetas de Centros, Ingresos y Monitoreo */
     .item-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; position: relative; font-size: 0.75rem; }
     .item-card:hover { border-color: #555; }
     .item-title { font-weight: bold; color: #fff; margin-bottom: 2px; font-size: 0.85rem; padding-right: 20px; }
     .item-sub { color: var(--txt-dim); font-size: 0.72rem; margin-top: 2px; }
     .item-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 0.68rem; background: #2a2a2a; color: #fff; margin-top: 5px; }
     .btn-delete-card { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #ff4d4d; font-size: 0.9rem; cursor: pointer; }
+    .btn-delete-card:hover { color: #ff0000; }
 
     #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; }
     
     .btn-action { background: var(--primary); color: #fff; border: none; padding: 5px 8px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
     .btn-sec { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:5px 8px; border-radius:5px; cursor:pointer; font-size: 0.7rem; }
 
+    /* Tooltip para Departamentos */
     .dept-tooltip {
       background: rgba(0, 0, 0, 0.85);
       border: 1px solid #0a84ff;
@@ -92,6 +97,7 @@
       border-radius: 4px;
     }
 
+    /* Modales */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: 0.2s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
@@ -102,8 +108,10 @@
     .form-group { margin-bottom: 8px; }
     .form-group label { display: block; font-size: 0.7rem; color: var(--txt-dim); margin-bottom: 2px; }
     .form-group input, .form-group select { width: 100%; background: #121212; border: 1px solid var(--border); color: #fff; padding: 6px; border-radius: 4px; font-size: 0.8rem; outline: none; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
     .form-row-2 { display: flex; gap: 8px; }
     .form-row-2 .form-group { flex: 1; }
+    
     .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
@@ -111,10 +119,11 @@
 
     @media (max-width: 768px) {
       .container { flex-direction: column-reverse; }
-      #sidebar { width: 100%; height: auto; max-height: 50vh; border-right: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; left: 0; z-index: 1500; }
+      #sidebar { width: 100%; height: auto; max-height: 50vh; border-right: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; left: 0; z-index: 1500; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); }
       #sidebar.collapsed { margin-left: 0 !important; }
       #sidebar.collapsed .sec-tab { display: none !important; }
-      .toggle-sidebar-btn { position: relative; top: 0; right: 0; width: auto; height: 100%; padding: 0 8px; border-radius: 0; border: none; background: #252525; }
+      .toggle-sidebar-btn { position: relative; top: 0; right: 0; width: auto; height: 100%; padding: 0 8px; border-radius: 0; border: none; border-left: 1px solid var(--border); font-size: 0.75rem; background: #252525; }
+      .title-area p { display: none; }
     }
   </style>
 </head>
@@ -130,12 +139,12 @@
       <button class="btn-action" style="background:#28a745;" onclick="abrirModal('modalPersona')">+ Persona</button>
       <button class="btn-action" style="background:#17a2b8;" onclick="abrirModal('modalMonitoreo')">+ Monitoreo</button>
       <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
-      <button class="btn-sec" onclick="cargarTodo()">🔄</button>
+      <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
     </div>
   </header>
 
   <div class="container">
-    <div id="loading" class="off">Cargando datos en vivo...</div>
+    <div id="loading" class="off">Cargando datos...</div>
 
     <div id="sidebar">
       <div class="tab-bar">
@@ -146,6 +155,7 @@
         <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
       </div>
 
+      <!-- Pestaña 1: Ríos (Paraná y Uruguay) -->
       <div id="sec-estaciones" class="sec-tab">
         <div class="filter-bar">
           <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
@@ -155,14 +165,17 @@
         <div class="list" id="list-estaciones"></div>
       </div>
 
+      <!-- Pestaña 2: Centros de Evacuados -->
       <div id="sec-centros" class="sec-tab" style="display:none;">
         <div class="list" id="list-centros"></div>
       </div>
 
+      <!-- Pestaña 3: Ingreso de Personas (Hoja 2) -->
       <div id="sec-ingresos" class="sec-tab" style="display:none;">
         <div class="list" id="list-ingresos"></div>
       </div>
 
+      <!-- Pestaña 4: Monitoreo Diario (Hoja 3) -->
       <div id="sec-monitoreo" class="sec-tab" style="display:none;">
         <div class="list" id="list-monitoreo"></div>
       </div>
@@ -171,7 +184,7 @@
     <div id="map"></div>
   </div>
 
-  <!-- Modales -->
+  <!-- Modal 1: Agregar Centro -->
   <div class="modal-overlay" id="modalCentro">
     <div class="modal-box">
       <div class="modal-header">
@@ -202,14 +215,18 @@
     </div>
   </div>
 
+  <!-- Modal 2: Ingreso Personas (Hoja 2) -->
   <div class="modal-overlay" id="modalPersona">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Ingreso de Persona</h3>
+        <h3>Ingreso de Persona (Hoja 2)</h3>
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
       <form onsubmit="guardarPersona(event)">
-        <div class="form-group"><label>Centro de Evacuados *</label><select id="p-centro" required></select></div>
+        <div class="form-group">
+          <label>Centro de Evacuados *</label>
+          <select id="p-centro" required></select>
+        </div>
         <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="p-nombre" required placeholder="Ej: Juan Pérez"></div>
         <div class="form-row-2">
           <div class="form-group"><label>DNI / Documento *</label><input type="text" id="p-dni" required></div>
@@ -222,8 +239,8 @@
             <select id="p-sexo"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Otro">Otro</option></select>
           </div>
         </div>
-        <div class="form-group"><label>Enfermedades Crónicas</label><input type="text" id="p-cronicas" placeholder="Ej: Hipertensión"></div>
-        <div class="form-group"><label>Síntomas al Ingreso</label><input type="text" id="p-sintomas" placeholder="Ej: Fiebre"></div>
+        <div class="form-group"><label>Enfermedades Crónicas</label><input type="text" id="p-cronicas" placeholder="Ej: Hipertensión, Diabetes"></div>
+        <div class="form-group"><label>Síntomas al Ingreso</label><input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos, Ninguno"></div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalPersona')">Cancelar</button>
           <button type="submit" class="btn-action" style="background:#28a745;">Registrar Ingreso</button>
@@ -232,14 +249,18 @@
     </div>
   </div>
 
+  <!-- Modal 3: Monitoreo Diario (Hoja 3) -->
   <div class="modal-overlay" id="modalMonitoreo">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Registro Monitoreo Diario</h3>
+        <h3>Registro Monitoreo Diario (Hoja 3)</h3>
         <button class="close-modal" onclick="cerrarModal('modalMonitoreo')">&times;</button>
       </div>
       <form onsubmit="guardarMonitoreo(event)">
-        <div class="form-group"><label>Centro de Evacuados *</label><select id="m-centro" required></select></div>
+        <div class="form-group">
+          <label>Centro de Evacuados *</label>
+          <select id="m-centro" required></select>
+        </div>
         <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="m-nombre" required></div>
         <div class="form-row-2">
           <div class="form-group"><label>DNI *</label><input type="text" id="m-dni" required></div>
@@ -255,7 +276,7 @@
             <select id="m-discapacidad"><option value="NO">NO</option><option value="SI">SI</option></select>
           </div>
         </div>
-        <div class="form-group"><label>Medicación Requerida</label><input type="text" id="m-medicacion"></div>
+        <div class="form-group"><label>Medicación Requerida</label><input type="text" id="m-medicacion" placeholder="Ej: Enalapril 10mg"></div>
         <div class="form-group"><label>Síntomas / Observaciones Sanitarias</label><input type="text" id="m-sintomas"></div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalMonitoreo')">Cancelar</button>
@@ -265,6 +286,7 @@
     </div>
   </div>
 
+  <!-- Modal 4: Gráfica de Evolución Hidrométrica (INA) -->
   <div class="modal-overlay" id="modalGrafico">
     <div class="modal-box" style="width: 600px;">
       <div class="modal-header">
@@ -289,24 +311,55 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi3xZxSziDAt6uiNkQUwGR1AhqgGnjvhqypTronCtvpMOEELlXGkFh8oO-ScJlq_iQYA/exec";
+    const departamentosCorrientesGeoJSON = {
+      "type": "FeatureCollection",
+      "features": [
+        {"type":"Feature","properties":{"nombre":"Capital"},"geometry":{"type":"Polygon","coordinates":[[[-58.85,-27.42],[-58.73,-27.45],[-58.75,-27.55],[-58.85,-27.52],[-58.85,-27.42]]]}},
+        {"type":"Feature","properties":{"nombre":"San Cosme"},"geometry":{"type":"Polygon","coordinates":[[[-58.73,-27.28],[-58.48,-27.28],[-58.48,-27.48],[-58.73,-27.45],[-58.73,-27.28]]]}},
+        {"type":"Feature","properties":{"nombre":"Itatí"},"geometry":{"type":"Polygon","coordinates":[[[-58.48,-27.20],[-58.00,-27.22],[-58.02,-27.45],[-58.48,-27.48],[-58.48,-27.20]]]}},
+        {"type":"Feature","properties":{"nombre":"Berón de Astrada"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-27.22],[-57.50,-27.35],[-57.55,-27.55],[-58.02,-27.45],[-58.00,-27.22]]]}},
+        {"type":"Feature","properties":{"nombre":"General Paz"},"geometry":{"type":"Polygon","coordinates":[[[-57.90,-27.45],[-57.30,-27.60],[-57.45,-27.95],[-58.00,-27.80],[-57.90,-27.45]]]}},
+        {"type":"Feature","properties":{"nombre":"San Luis del Palmar"},"geometry":{"type":"Polygon","coordinates":[[[-58.73,-27.45],[-58.02,-27.45],[-58.00,-27.80],[-58.60,-27.70],[-58.73,-27.45]]]}},
+        {"type":"Feature","properties":{"nombre":"Empedrado"},"geometry":{"type":"Polygon","coordinates":[[[-58.85,-27.75],[-58.50,-27.70],[-58.45,-28.15],[-58.80,-28.05],[-58.85,-27.75]]]}},
+        {"type":"Feature","properties":{"nombre":"Mburucuyá"},"geometry":{"type":"Polygon","coordinates":[[[-58.45,-27.95],[-58.00,-27.90],[-58.00,-28.25],[-58.40,-28.20],[-58.45,-27.95]]]}},
+        {"type":"Feature","properties":{"nombre":"Saladas"},"geometry":{"type":"Polygon","coordinates":[[[-58.50,-28.15],[-58.00,-28.20],[-58.00,-28.45],[-58.40,-28.45],[-58.50,-28.15]]]}},
+        {"type":"Feature","properties":{"nombre":"Bella Vista"},"geometry":{"type":"Polygon","coordinates":[[[-59.05,-28.30],[-58.40,-28.30],[-58.40,-28.70],[-58.95,-28.70],[-59.05,-28.30]]]}},
+        {"type":"Feature","properties":{"nombre":"San Roque"},"geometry":{"type":"Polygon","coordinates":[[[-58.40,-28.45],[-57.90,-28.40],[-57.90,-28.80],[-58.40,-28.75],[-58.40,-28.45]]]}},
+        {"type":"Feature","properties":{"nombre":"Concepción"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-28.00],[-57.30,-28.00],[-57.30,-28.60],[-57.90,-28.50],[-58.00,-28.00]]]}},
+        {"type":"Feature","properties":{"nombre":"San Miguel"},"geometry":{"type":"Polygon","coordinates":[[[-57.60,-27.60],[-56.90,-27.70],[-57.00,-28.20],[-57.60,-28.00],[-57.60,-27.60]]]}},
+        {"type":"Feature","properties":{"nombre":"Ituzaingó"},"geometry":{"type":"Polygon","coordinates":[[[-57.50,-27.35],[-56.00,-27.50],[-56.30,-28.20],[-57.00,-28.10],[-57.50,-27.35]]]}},
+        {"type":"Feature","properties":{"nombre":"Santo Tomé"},"geometry":{"type":"Polygon","coordinates":[[[-56.30,-27.80],[-55.60,-28.00],[-56.10,-28.80],[-56.60,-28.60],[-56.30,-27.80]]]}},
+        {"type":"Feature","properties":{"nombre":"General Alvear"},"geometry":{"type":"Polygon","coordinates":[[[-56.60,-28.60],[-56.30,-28.80],[-56.60,-29.20],[-56.90,-29.00],[-56.60,-28.60]]]}},
+        {"type":"Feature","properties":{"nombre":"San Martín"},"geometry":{"type":"Polygon","coordinates":[[[-57.10,-28.50],[-56.60,-28.60],[-56.80,-29.30],[-57.20,-29.10],[-57.10,-28.50]]]}},
+        {"type":"Feature","properties":{"nombre":"Mercedes"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-28.60],[-57.10,-28.50],[-57.30,-29.30],[-58.20,-29.20],[-58.00,-28.60]]]}},
+        {"type":"Feature","properties":{"nombre":"Lavalle"},"geometry":{"type":"Polygon","coordinates":[[[-59.10,-28.70],[-58.70,-28.70],[-58.70,-29.10],[-59.20,-29.10],[-59.10,-28.70]]]}},
+        {"type":"Feature","properties":{"nombre":"Goya"},"geometry":{"type":"Polygon","coordinates":[[[-59.30,-29.00],[-58.60,-29.00],[-58.60,-29.60],[-59.60,-29.60],[-59.30,-29.00]]]}},
+        {"type":"Feature","properties":{"nombre":"Curuzú Cuatiá"},"geometry":{"type":"Polygon","coordinates":[[[-58.60,-29.20],[-57.60,-29.20],[-57.70,-29.80],[-58.60,-29.80],[-58.60,-29.20]]]}},
+        {"type":"Feature","properties":{"nombre":"Paso de los Libres"},"geometry":{"type":"Polygon","coordinates":[[[-57.60,-29.20],[-56.80,-29.30],[-57.00,-30.00],[-57.70,-29.80],[-57.60,-29.20]]]}},
+        {"type":"Feature","properties":{"nombre":"Sauce"},"geometry":{"type":"Polygon","coordinates":[[[-58.80,-29.60],[-58.00,-29.70],[-58.10,-30.30],[-58.90,-30.10],[-58.80,-29.60]]]}},
+        {"type":"Feature","properties":{"nombre":"Monte Caseros"},"geometry":{"type":"Polygon","coordinates":[[[-58.10,-29.80],[-57.50,-29.90],[-57.60,-30.70],[-58.00,-30.60],[-58.10,-29.80]]]}},
+        {"type":"Feature","properties":{"nombre":"Esquina"},"geometry":{"type":"Polygon","coordinates":[[[-59.60,-29.60],[-58.80,-29.60],[-58.90,-30.40],[-59.60,-30.20],[-59.60,-29.60]]]}}
+      ]
+    };
 
-    const ESTACIONES_LISTA = [
-      { id: 1, nombre: "Corrientes", pna: "CORRIENTES", rio: "Paraná", lat: -27.469, lng: -58.830, alerta: 6.50, evacuacion: 7.00, ina_id: 14, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 2, nombre: "Paso de la Patria", pna: "PASO DE LA PATRIA", rio: "Paraná", lat: -27.317, lng: -58.570, alerta: 6.50, evacuacion: 7.00, ina_id: 16, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 3, nombre: "Itatí", pna: "ITATI", rio: "Paraná", lat: -27.270, lng: -58.250, alerta: 6.80, evacuacion: 7.50, ina_id: 17, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 4, nombre: "Ita Ibate", pna: "ITA IBATE", rio: "Paraná", lat: -27.420, lng: -57.330, alerta: 7.00, evacuacion: 7.50, ina_id: 30, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 5, nombre: "Ituzaingó", pna: "ITUZAINGO", rio: "Paraná", lat: -27.580, lng: -56.680, alerta: 3.50, evacuacion: 4.00, ina_id: 15, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 6, nombre: "Bella Vista", pna: "BELLA VISTA", rio: "Paraná", lat: -28.510, lng: -59.050, alerta: 5.50, evacuacion: 6.00, ina_id: 19, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 7, nombre: "Goya", pna: "GOYA", rio: "Paraná", lat: -29.140, lng: -59.260, alerta: 5.20, evacuacion: 5.70, ina_id: 18, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 8, nombre: "Esquina", pna: "ESQUINA", rio: "Paraná", lat: -30.010, lng: -59.530, alerta: 4.80, evacuacion: 5.00, ina_id: 25, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 9, nombre: "Santo Tomé", pna: "SANTO TOME", rio: "Uruguay", lat: -28.550, lng: -56.030, alerta: 11.50, evacuacion: 12.50, ina_id: 21, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 10, nombre: "Alvear", pna: "ALVEAR", rio: "Uruguay", lat: -29.100, lng: -56.550, alerta: 9.50, evacuacion: 10.50, ina_id: 22, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 11, nombre: "La Cruz", pna: "LA CRUZ", rio: "Uruguay", lat: -29.170, lng: -56.640, alerta: 9.00, evacuacion: 10.00, ina_id: 23, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 12, nombre: "Yapeyú", pna: "YAPEYU", rio: "Uruguay", lat: -29.470, lng: -56.810, alerta: 9.50, evacuacion: 10.50, ina_id: 24, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 13, nombre: "Paso de los Libres", pna: "PASO DE LOS LIBRES", rio: "Uruguay", lat: -29.710, lng: -57.080, alerta: 7.50, evacuacion: 8.50, ina_id: 20, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 14, nombre: "Monte Caseros", pna: "MONTE CASEROS", rio: "Uruguay", lat: -30.250, lng: -57.630, alerta: 6.00, evacuacion: 7.50, ina_id: 26, var_id: 2, altura: 0, tendencia: "permanece" }
+    const ESTACIONES_BASE = [
+      { id: 1, ina_id: 14, var_id: 2, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 0, tendencia: "permanece", alerta: 6.50, evacuacion: 7.00 },
+      { id: 2, ina_id: 16, var_id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 0, tendencia: "permanece", alerta: 6.50, evacuacion: 7.00 },
+      { id: 3, ina_id: 17, var_id: 2, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, altura: 0, tendencia: "permanece", alerta: 6.80, evacuacion: 7.50 },
+      { id: 4, ina_id: 61, var_id: 2, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, altura: 0, tendencia: "permanece", alerta: 7.00, evacuacion: 7.50 },
+      { id: 5, ina_id: 15, var_id: 2, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 0, tendencia: "permanece", alerta: 3.50, evacuacion: 4.00 },
+      { id: 6, ina_id: 19, var_id: 2, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, altura: 0, tendencia: "permanece", alerta: 5.50, evacuacion: 6.00 },
+      { id: 7, ina_id: 18, var_id: 2, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 0, tendencia: "permanece", alerta: 5.20, evacuacion: 5.70 },
+      { id: 8, ina_id: 62, var_id: 2, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, altura: 0, tendencia: "permanece", alerta: 4.80, evacuacion: 5.00 },
+      { id: 9, ina_id: 63, var_id: 2, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, altura: 0, tendencia: "permanece", alerta: 11.50, evacuacion: 12.50 },
+      { id: 10, ina_id: 64, var_id: 2, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, altura: 0, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
+      { id: 11, ina_id: 65, var_id: 2, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, altura: 0, tendencia: "permanece", alerta: 9.00, evacuacion: 10.00 },
+      { id: 12, ina_id: 66, var_id: 2, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, altura: 0, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
+      { id: 13, ina_id: 20, var_id: 2, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, altura: 0, tendencia: "permanece", alerta: 7.50, evacuacion: 8.50 },
+      { id: 14, ina_id: 67, var_id: 2, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, altura: 0, tendencia: "permanece", alerta: 6.00, evacuacion: 7.50 }
     ];
+
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiDT41ttULzciZZJqgAr6EDnx49sMLS9CqepAbOCin3oSzfXJBoE3gMM3oDhYZW9ZqWw/exec";
 
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
@@ -322,111 +375,35 @@
         abrirModal('modalCentro');
       });
 
-      cargarTodo();
+      cargarDatosActualizados();
       cargarDepartamentos();
       actualizarTextoBoton();
     }
 
-    async function cargarTodo() {
-  document.getElementById('loading').classList.remove('off');
-  estacionesData = JSON.parse(JSON.stringify(ESTACIONES_LISTA));
-
-  // 1. Cargar Centros/Personas de Google Apps Script
-  try {
-    const res = await fetch(APPS_SCRIPT_URL);
-    const data = await res.json();
-    centrosData = data.centros || [];
-    personasData = data.personas || [];
-    monitoreoData = data.monitoreos || [];
-    
-    actualizarSelectsCentros();
-    renderCentros(centrosData);
-    renderIngresos(personasData);
-    renderMonitoreo(monitoreoData);
-  } catch (err) {
-    console.error("Error al cargar centros/personas:", err);
-  }
-
-  // 2. Consulta unificada a la API de Tabla del INA
-  try {
-    const targetUrl = "https://alerta.ina.gob.ar/siyah/api/obs/puntual/tabla";
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-
-    const res = await fetch(proxyUrl);
-    const proxyData = await res.json();
-    const datosTabla = typeof proxyData.contents === 'string' ? JSON.parse(proxyData.contents) : proxyData.contents;
-
-    if (Array.isArray(datosTabla)) {
-      estacionesData.forEach(est => {
-        // Buscar por id de estación (ina_id) o por coincidencia de nombre
-        const coincidencia = datosTabla.find(item => 
-          (item.estacion && item.estacion.id === est.ina_id) || 
-          (item.estacion && item.estacion.nombre && item.estacion.nombre.toLowerCase().includes(est.nombre.toLowerCase()))
-        );
-
-        if (coincidencia && coincidencia.valor !== undefined && coincidencia.valor !== null) {
-          est.altura = parseFloat(coincidencia.valor);
-
-          // Obtener tendencia directamente si la API la provee o asignarla
-          if (coincidencia.tendencia) {
-            const tend = coincidencia.tendencia.toLowerCase();
-            if (tend.includes('crece') || tend.includes('sube')) est.tendencia = 'crece';
-            else if (tend.includes('baja')) est.tendencia = 'baja';
-            else est.tendencia = 'permanece';
-          }
+    function cargarDepartamentos() {
+      capaDepartamentos = L.geoJSON(departamentosCorrientesGeoJSON, {
+        style: function(feature) {
+          return {
+            color: '#0a84ff',
+            weight: 2,
+            opacity: 0.9,
+            fillColor: '#0a84ff',
+            fillOpacity: 0.12
+          };
+        },
+        onEachFeature: function(feature, layer) {
+          const nombreDpto = feature.properties.nombre;
+          layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
+          layer.on({
+            mouseover: function(e) { e.target.setStyle({ weight: 3.5, color: '#5ac8fa', fillOpacity: 0.3 }); },
+            mouseout: function(e) { capaDepartamentos.resetStyle(e.target); }
+          });
         }
       });
-    }
-  } catch (e) {
-    console.warn("Error consultando la API de Tabla INA, intentando por serie individual...", e);
-    
-    // Método alternativo serie por serie
-    const promesas = estacionesData.map(async (est) => {
-      try {
-        const urlSerie = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${est.ina_id}/${est.var_id}/datos`;
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlSerie)}`;
-        const res = await fetch(proxyUrl);
-        const pData = await res.json();
-        const lecturas = JSON.parse(pData.contents);
 
-        if (Array.isArray(lecturas) && lecturas.length > 0) {
-          const ult = lecturas[lecturas.length - 1];
-          if (ult && ult.valor !== null) est.altura = parseFloat(ult.valor);
-        }
-      } catch (err) {
-        console.warn(`Error en estación ${est.nombre}:`, err);
-      }
-    });
-    await Promise.all(promesas);
-  }
-
-  renderEstaciones(estacionesData);
-  document.getElementById('loading').classList.add('off');
-}
-
-    function cargarDepartamentos() {
-      fetch('./corrientes.json')
-        .then(res => res.json())
-        .then(data => {
-          capaDepartamentos = L.geoJSON(data, {
-            style: function() {
-              return { color: '#0a84ff', weight: 1.8, opacity: 0.9, fillColor: '#0a84ff', fillOpacity: 0.15 };
-            },
-            onEachFeature: function(feature, layer) {
-              const p = feature.properties || {};
-              const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
-              layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
-              layer.on({
-                mouseover: (e) => e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 }),
-                mouseout: (e) => capaDepartamentos.resetStyle(e.target)
-              });
-            }
-          });
-          capaDepartamentos.addTo(map);
-          departamentosVisibles = true;
-          actualizarEstiloBotonDptos();
-        })
-        .catch(err => console.error("Error al cargar corrientes.json:", err));
+      capaDepartamentos.addTo(map);
+      departamentosVisibles = true;
+      actualizarEstiloBotonDptos();
     }
 
     function toggleCapaDepartamentos() {
@@ -447,6 +424,84 @@
         btn.style.background = departamentosVisibles ? '#0a84ff' : '#2c2c2e';
         btn.style.borderColor = departamentosVisibles ? '#005bb5' : '#3a3a3c';
       }
+    }
+
+    async function cargarDatosActualizados() {
+      document.getElementById('loading').classList.remove('off');
+
+      // 1. Obtener datos de Centros y Personas de Google Apps Script
+      fetch(APPS_SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          centrosData = data.centros || [];
+          personasData = data.personas || [];
+          monitoreoData = data.monitoreos || [];
+          
+          actualizarSelectsCentros();
+          renderCentros(centrosData);
+          renderIngresos(personasData);
+          renderMonitoreo(monitoreoData);
+        })
+        .catch(err => console.error("Error al cargar backend de Google Apps Script:", err));
+
+      // 2. Conexión en vivo con la API oficial del INA para actualizar alturas
+      await cargarAlturasINA();
+      document.getElementById('loading').classList.add('off');
+    }
+
+    async function cargarAlturasINA() {
+      estacionesData = JSON.parse(JSON.stringify(ESTACIONES_BASE));
+      
+      try {
+        const targetUrl = "https://alerta.ina.gob.ar/siyah/api/obs/puntual/tabla";
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
+        const res = await fetch(proxyUrl);
+        const proxyData = await res.json();
+        const datosTabla = typeof proxyData.contents === 'string' ? JSON.parse(proxyData.contents) : proxyData.contents;
+
+        if (Array.isArray(datosTabla)) {
+          estacionesData.forEach(est => {
+            const coincidencia = datosTabla.find(item => 
+              (item.estacion && item.estacion.id === est.ina_id) || 
+              (item.estacion && item.estacion.nombre && item.estacion.nombre.toLowerCase().includes(est.nombre.toLowerCase()))
+            );
+
+            if (coincidencia && coincidencia.valor !== undefined && coincidencia.valor !== null) {
+              est.altura = parseFloat(coincidencia.valor);
+
+              if (coincidencia.tendencia) {
+                const tend = coincidencia.tendencia.toLowerCase();
+                if (tend.includes('crece') || tend.includes('sube')) est.tendencia = 'crece';
+                else if (tend.includes('baja')) est.tendencia = 'baja';
+                else est.tendencia = 'permanece';
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("Fallo al obtener tabla completa del INA, realizando fallback serie por serie...", e);
+        
+        const promesas = estacionesData.map(async (est) => {
+          try {
+            const urlSerie = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${est.ina_id}/${est.var_id}/datos`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlSerie)}`;
+            const res = await fetch(proxyUrl);
+            const pData = await res.json();
+            const lecturas = JSON.parse(pData.contents);
+
+            if (Array.isArray(lecturas) && lecturas.length > 0) {
+              const ult = lecturas[lecturas.length - 1];
+              if (ult && ult.valor !== null) est.altura = parseFloat(ult.valor);
+            }
+          } catch (err) {
+            console.warn(`Error obteniendo lectura de ${est.nombre}:`, err);
+          }
+        });
+        await Promise.all(promesas);
+      }
+
+      renderEstaciones(estacionesData);
     }
 
     function actualizarSelectsCentros() {
@@ -543,7 +598,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: "delete_centro", id: idCentro })
       })
-      .then(() => setTimeout(() => { cargarTodo(); }, 1200))
+      .then(() => setTimeout(() => { cargarDatosActualizados(); }, 1200))
       .catch(err => console.error(err));
     }
 
@@ -554,7 +609,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      .then(() => setTimeout(() => { cargarTodo(); cambiarPestana(pestanaDestino); }, 1200))
+      .then(() => setTimeout(() => { cargarDatosActualizados(); cambiarPestana(pestanaDestino); }, 1200))
       .catch(err => console.error(err));
     }
 
@@ -565,21 +620,9 @@
       markersEstaciones = [];
 
       estaciones.forEach(est => {
-        let colorEstado = '#28a745';
-
-        if (est.altura >= est.evacuacion) {
-          colorEstado = '#F4492E';
-        } else if (est.altura >= est.alerta) {
-          colorEstado = '#FAAE05';
-        } else {
-          if (est.tendencia === 'baja') {
-            colorEstado = '#00D2FF';
-          } else if (est.tendencia === 'permanece') {
-            colorEstado = '#28a745';
-          } else {
-            colorEstado = '#0a84ff';
-          }
-        }
+        let color = '#719C29';
+        if (est.altura >= est.evacuacion) color = '#F4492E';
+        else if (est.altura >= est.alerta) color = '#FAAE05';
 
         let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
 
@@ -593,7 +636,7 @@
           <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
             <span class="altura">${est.altura.toFixed(2)}</span>
             <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
-            <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
+            <span style="margin-left:auto; font-size:0.8rem;">${flecha} ${est.tendencia}</span>
           </div>
           <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.ina_id}, ${est.var_id}, ${est.alerta}, ${est.evacuacion})" 
                   style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
@@ -601,35 +644,21 @@
           </button>
         `;
         card.onclick = () => {
-          map.flyTo([est.lat, est.lng], 12);
+          map.flyTo([est.lat, est.lng], 11);
           if (window.innerWidth <= 768) toggleSidebar();
         };
         listaEl.appendChild(card);
 
         const customIcon = L.divIcon({
-          className: 'custom-river-pin',
-          html: `
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer;">
-              <img src="./Rio-removebg-preview.png" style="width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6)); margin-bottom: 2px;" alt="Alerta Río">
-              <div style="background: rgba(18, 18, 18, 0.90); color: #ffffff; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); line-height: 1.2;">
-                ${est.nombre}
-              </div>
-              <div style="background: rgba(18, 18, 18, 0.95); color: ${colorEstado}; font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 4px; white-space: nowrap; margin-top: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); border: 1px solid ${colorEstado}; line-height: 1.2;">
-                ${est.altura.toFixed(2)}m ${flecha}
-              </div>
-            </div>
-          `,
-          iconSize: [110, 70],
-          iconAnchor: [55, 15]
+          className: 'custom-pin',
+          html: `<div style="background:rgba(30,30,30,0.9); border:2px solid ${color}; color:${color}; padding:2px 6px; border-radius:8px; font-weight:bold; font-size:11px; white-space:nowrap;">${est.nombre}: ${est.altura.toFixed(2)}m ${flecha}</div>`,
+          iconSize: [80, 25]
         });
 
         const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
         marker.bindPopup(`
           <div style="color:#000;">
-            <b>${est.nombre}</b><br>
-            Río: ${est.rio}<br>
-            Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
-            Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
+            <b>${est.nombre}</b><br>Río: ${est.rio}<br>Altura actual: ${est.altura.toFixed(2)}m<br>Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
             <button onclick="mostrarGraficoINA('${est.nombre}', ${est.ina_id}, ${est.var_id}, ${est.alerta}, ${est.evacuacion})" 
                     style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
               📈 Ver Gráfica de Evolución
@@ -651,18 +680,22 @@
       abrirModal('modalGrafico');
 
       const ctx = prepararCanvasGrafico();
+
       const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlTarget)}`;
+      const urlProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(urlTarget)}`;
 
-      fetch(proxyUrl)
+      fetch(urlProxy)
         .then(res => res.json())
-        .then(dataProxy => {
-          const data = JSON.parse(dataProxy.contents);
-          if (!Array.isArray(data) || data.length === 0) throw new Error("Sin datos de serie");
+        .then(proxyData => {
+          const data = typeof proxyData.contents === 'string' ? JSON.parse(proxyData.contents) : proxyData.contents;
 
-          const lecturas = data.filter(d => d.valor !== null && d.valor !== undefined).slice(-15);
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("Formato de datos no válido");
+          }
+
+          const lecturas = data.slice(-15);
           const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
-          const valores = lecturas.map(d => d.valor);
+          const valores = lecturas.map(d => parseFloat(d.valor));
 
           if (miChart) miChart.destroy();
 
@@ -684,14 +717,16 @@
                   data: Array(valores.length).fill(nivelAlerta),
                   borderColor: '#FAAE05',
                   borderDash: [5, 5],
-                  pointRadius: 0
+                  pointRadius: 0,
+                  fill: false
                 },
                 {
                   label: 'Nivel Evacuación',
                   data: Array(valores.length).fill(nivelEvac),
                   borderColor: '#F4492E',
                   borderDash: [5, 5],
-                  pointRadius: 0
+                  pointRadius: 0,
+                  fill: false
                 }
               ]
             },
@@ -699,7 +734,7 @@
               responsive: true,
               maintainAspectRatio: false,
               scales: {
-                y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
+                y: { beginAtZero: false, grid: { color: '#333' }, ticks: { color: '#fff' } },
                 x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
               },
               plugins: { legend: { labels: { color: '#fff' } } }
@@ -707,7 +742,7 @@
           });
         })
         .catch(err => {
-          console.warn("No se pudo descargar la serie temporal del INA:", err);
+          console.warn("No se pudieron cargar datos en vivo del INA:", err);
         });
     }
 
@@ -733,36 +768,31 @@
           <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
         `;
         card.onclick = () => {
-          map.flyTo([c.lat, c.lng], 15);
+          map.flyTo([c.lat, c.lng], 13);
           if (window.innerWidth <= 768) toggleSidebar();
         };
         listEl.appendChild(card);
 
-        const iconoSalud = L.icon({
-          iconUrl: './3304549.png',
-          iconSize: [36, 36],
-          iconAnchor: [18, 36],
-          popupAnchor: [0, -32]
+        const iconoCasa = L.divIcon({
+          className: 'custom-house-pin',
+          html: `<div style="background:${colorPin}; color:#fff; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px; border:2px solid #fff; white-space:nowrap; box-shadow:0 2px 5px rgba(0,0,0,0.4);">🏠 ${c.evacuados} evac.</div>`,
+          iconSize: [85, 25]
         });
 
-        const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
+        const marker = L.marker([c.lat, c.lng], { icon: iconoCasa }).addTo(map);
         marker.bindPopup(`
-          <div style="color:#000; min-width: 180px;">
-            <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; margin-bottom: 2px;">Centro de Evacuados</div>
-            <div style="font-size:1.05rem; font-weight:bold; color:#111; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">${c.nombre}</div>
-            <div style="font-size: 0.8rem; line-height: 1.4;">
-              <b>Municipio:</b> ${c.municipio}<br>
-              <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
-              <b>Contacto:</b> ${c.contacto}<br>
-              <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+          <div style="color:#000;">
+            <b style="font-size:0.95rem;">${c.nombre}</b><br>
+            <b>Municipio:</b> ${c.municipio}<br>
+            <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
+            <b>Contacto:</b> ${c.contacto}<br>
+            <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p<br><br>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
               <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
               <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
             </div>
           </div>
         `);
-
         markersCentros.push(marker);
       });
     }
@@ -775,7 +805,7 @@
 
     function renderIngresos(personas) {
       const listEl = document.getElementById('list-ingresos');
-      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros</div>';
+      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros en Hoja 2</div>';
       
       personas.forEach(p => {
         const centro = centrosData.find(c => String(c.id) === String(p.idCentro)) || { nombre: 'Centro General' };
@@ -793,7 +823,7 @@
 
     function renderMonitoreo(monitoreos) {
       const listEl = document.getElementById('list-monitoreo');
-      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros</div>';
+      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros en Hoja 3</div>';
       
       monitoreos.forEach(m => {
         const centro = centrosData.find(c => String(c.id) === String(m.idCentro)) || { nombre: 'Centro General' };
