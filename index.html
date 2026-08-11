@@ -303,10 +303,10 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    // URL exacta de tu implementación activa en Apps Script
+    // URL oficial y única del Apps Script que guarda centros e historial
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8VoZ7nFqUgCpBZMppWg8ZmES5174k7k8e3d6oPvWLf3GHEclpQDAZOOdeiFRgpBAx9A/exec";
 
-    // Mapeo base de coordenadas y umbrales por estación
+    // Estaciones base de la provincia
     const estacionesBase = [
       { id: 48, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, alerta: 3.50, evacuacion: 4.00 },
       { id: 46, nombre: "Itá Ibaté", rio: "Paraná", lat: -27.420, lng: -57.330, alerta: 7.00, evacuacion: 7.50 },
@@ -412,543 +412,29 @@
         .finally(() => document.getElementById('loading').classList.add('off'));
     }
 
-    function procesarEstacionesConIna(data) {
-      estacionesData = estacionesBase.map(est => {
-        const info = data[est.id];
-        let alturaVal = 2.00;
-        let tendenciaVal = "permanece";
-
-        if (info && info.historico && info.historico.length > 0) {
-          const ult = info.historico[info.historico.length - 1];
-          alturaVal = parseFloat(ult.nivel) || 2.00;
-
-          if (info.historico.length > 1) {
-            const ant = info.historico[info.historico.length - 2];
-            const diff = alturaVal - (parseFloat(ant.nivel) || alturaVal);
-            if (diff > 0.02) tendenciaVal = "crece";
-            else if (diff < -0.02) tendenciaVal = "baja";
-          }
-        }
-
-        return { ...est, altura: alturaVal, tendencia: tendenciaVal };
-      });
-
-      renderEstaciones(estacionesData);
-    }
-
-    function renderEstaciones(estaciones) {
-      const listaEl = document.getElementById('list-estaciones');
-      listaEl.innerHTML = '';
-      markersEstaciones.forEach(m => map.removeLayer(m));
-      markersEstaciones = [];
-
-      estaciones.forEach(est => {
-        let colorEstado = '#28a745';
-        if (est.altura >= est.evacuacion) colorEstado = '#F4492E';
-        else if (est.altura >= est.alerta) colorEstado = '#FAAE05';
-        else colorEstado = est.tendencia === 'baja' ? '#00D2FF' : '#0a84ff';
-
-        let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div style="display:flex; justify-content:space-between;">
-            <span class="muni">${est.nombre}</span>
-            <span class="rio">Río ${est.rio}</span>
-          </div>
-          <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-            <span class="altura">${est.altura.toFixed(2)}</span>
-            <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
-            <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
-          </div>
-          <button onclick="event.stopPropagation(); mostrarGraficoINA(${est.id}, '${est.nombre}', ${est.alerta}, ${est.evacuacion})" 
-                  style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
-            📈 Ver Gráfica de Evolución
-          </button>
-        `;
-        card.onclick = () => {
-          map.flyTo([est.lat, est.lng], 12);
-          if (window.innerWidth <= 768) toggleSidebar();
-        };
-        listaEl.appendChild(card);
-
-        const customIcon = L.divIcon({
-          className: 'custom-river-pin',
-          html: `
-            <div style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-              <img src="./Rio-removebg-preview.png" style="width:30px; height:30px; object-fit:contain; filter:drop-shadow(0px 2px 4px rgba(0,0,0,0.6)); margin-bottom:2px;" alt="Río">
-              <div style="background:rgba(18,18,18,0.90); color:#fff; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; white-space:nowrap;">
-                ${est.nombre}
-              </div>
-              <div style="background:rgba(18,18,18,0.95); color:${colorEstado}; font-size:11px; font-weight:800; padding:1px 6px; border-radius:4px; margin-top:2px; border:1px solid ${colorEstado};">
-                ${est.altura.toFixed(2)}m ${flecha}
-              </div>
-            </div>
-          `,
-          iconSize: [110, 70],
-          iconAnchor: [55, 15]
-        });
-
-        const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
-        marker.bindPopup(`
-          <div style="color:#000;">
-            <b>${est.nombre}</b><br>
-            Río: ${est.rio}<br>
-            Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
-            Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
-            <button onclick="mostrarGraficoINA(${est.id}, '${est.nombre}', ${est.alerta}, ${est.evacuacion})" 
-                    style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
-              📈 Ver Gráfica de Evolución
-            </button>
-          </div>
-        `);
-        markersEstaciones.push(marker);
-      });
-    }
-
-    function mostrarGraficoINA(idEstacion, nombreEstacion, nivelAlerta, nivelEvac) {
-      document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
-      abrirModal('modalGrafico');
-
-      const container = document.getElementById('chartContainer');
-      container.innerHTML = '<canvas id="chartEvolucion"></canvas>';
-      const ctx = document.getElementById('chartEvolucion').getContext('2d');
-
-      const info = backendInaData[idEstacion] || { historico: [] };
-      const lecturas = info.historico || [];
-
-      const labels = lecturas.map(item => String(item.fecha).split(' ')[0]);
-      const valores = lecturas.map(item => parseFloat(item.nivel));
-
-      if (miChart) miChart.destroy();
-
-      miChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels.length ? labels : ['Sin datos'],
-          datasets: [
-            {
-              label: 'Nivel (m)',
-              data: valores.length ? valores : [0],
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              fill: true,
-              tension: 0.3,
-              pointRadius: 4
-            },
-            {
-              label: 'Alerta',
-              data: Array(labels.length || 1).fill(nivelAlerta),
-              borderColor: '#f59e0b',
-              borderDash: [5, 5],
-              pointRadius: 0
-            },
-            {
-              label: 'Evacuación',
-              data: Array(labels.length || 1).fill(nivelEvac),
-              borderColor: '#ef4444',
-              borderDash: [5, 5],
-              pointRadius: 0
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#e5e7eb' } } },
-          scales: {
-            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
-          }
-        }
-      });
-    }
-
-    function actualizarSelectsCentros() {
-      const selects = [document.getElementById('p-centro'), document.getElementById('m-centro')];
-      selects.forEach(s => {
-        if (centrosData.length > 0) {
-          s.innerHTML = centrosData.map(c => `<option value="${c.id}">${c.nombre} (${c.municipio})</option>`).join('');
-        } else {
-          s.innerHTML = '<option value="">Sin centros registrados</option>';
-        }
-      });
-    }
-
-    function cambiarPestana(pestana) {
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar.classList.contains('collapsed')) {
-        sidebar.classList.remove('collapsed');
-        actualizarTextoBoton();
-      }
-
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.sec-tab').forEach(s => s.style.display = 'none');
-
-      document.getElementById(`btn-tab-${pestana}`).classList.add('active');
-      document.getElementById(`sec-${pestana}`).style.display = 'flex';
-    }
-
-    function abrirModal(id) { document.getElementById(id).classList.add('active'); }
-    function cerrarModal(id) { 
-      document.getElementById(id).classList.remove('active');
-      if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
-    }
-
-    function guardarCentro(e) {
-      e.preventDefault();
-      const nuevo = {
-        action: "add_centro",
-        id: Date.now(),
-        nombre: document.getElementById('c-nombre').value,
-        municipio: document.getElementById('c-muni').value,
-        evacuados: parseInt(document.getElementById('c-evacuados').value)||0,
-        capacidad: parseInt(document.getElementById('c-capacidad').value)||0,
-        lat: parseFloat(document.getElementById('c-lat').value),
-        lng: parseFloat(document.getElementById('c-lng').value),
-        contacto: document.getElementById('c-contacto').value || "Sin dato",
-        banos: parseInt(document.getElementById('c-banos').value)||0,
-        agua: parseFloat(document.getElementById('c-agua').value)||0
-      };
-      cerrarModal('modalCentro');
-      enviarAData(nuevo, "centros");
-    }
-
-    function guardarPersona(e) {
-      e.preventDefault();
-      const nuevaP = {
-        action: "add_persona",
-        idCentro: document.getElementById('p-centro').value,
-        nombreApellido: document.getElementById('p-nombre').value,
-        dni: document.getElementById('p-dni').value,
-        fechaIngreso: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
-        fechaNac: document.getElementById('p-nac').value,
-        sexo: document.getElementById('p-sexo').value,
-        cronicas: document.getElementById('p-cronicas').value,
-        sintomas: document.getElementById('p-sintomas').value
-      };
-      cerrarModal('modalPersona');
-      enviarAData(nuevaP, "ingresos");
-    }
-
-    function guardarMonitoreo(e) {
-      e.preventDefault();
-      const nuevoM = {
-        action: "add_monitoreo",
-        idCentro: document.getElementById('m-centro').value,
-        nombreApellido: document.getElementById('m-nombre').value,
-        dni: document.getElementById('m-dni').value,
-        edad: document.getElementById('m-edad').value,
-        embarazada: document.getElementById('m-embarazada').value,
-        discapacidad: document.getElementById('m-discapacidad').value,
-        medicacion: document.getElementById('m-medicacion').value,
-        sintomas: document.getElementById('m-sintomas').value,
-        fechaIngreso: new Date().toISOString().split('T')[0]
-      };
-      cerrarModal('modalMonitoreo');
-      enviarAData(nuevoM, "monitoreo");
-    }
-
-    function eliminarCentro(idCentro, event) {
-      if (event) event.stopPropagation();
-      if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
-
-      document.getElementById('loading').classList.remove('off');
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: "delete_centro", id: idCentro })
-      })
-      .then(() => setTimeout(() => { cargarDatosActualizados(); }, 1200))
-      .catch(err => console.error(err));
-    }
-
-    function enviarAData(payload, pestanaDestino) {
-      document.getElementById('loading').classList.remove('off');
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      .then(() => setTimeout(() => { cargarDatosActualizados(); cambiarPestana(pestanaDestino); }, 1200))
-      .catch(err => console.error(err));
-    }
-
-    function renderCentros(centros) {
-      const listEl = document.getElementById('list-centros');
-      listEl.innerHTML = '';
-      markersCentros.forEach(m => map.removeLayer(m));
-      markersCentros = [];
-
-      centros.forEach(c => {
-        const pctOcupacion = c.capacidad > 0 ? Math.round((c.evacuados / c.capacidad) * 100) : 0;
-        let colorPin = '#0a84ff';
-        if (pctOcupacion >= 100) colorPin = '#F4492E';
-        else if (pctOcupacion >= 80) colorPin = '#FAAE05';
-
-        const card = document.createElement('div');
-        card.className = 'item-card';
-        card.style.borderLeft = `4px solid ${colorPin}`;
-        card.innerHTML = `
-          <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
-          <div class="item-title">🏠 ${c.nombre}</div>
-          <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
-          <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
-        `;
-        card.onclick = () => {
-          map.flyTo([c.lat, c.lng], 15);
-          if (window.innerWidth <= 768) toggleSidebar();
-        };
-        listEl.appendChild(card);
-
-        const iconoSalud = L.icon({
-          iconUrl: './3304549.png',
-          iconSize: [36, 36],
-          iconAnchor: [18, 36],
-          popupAnchor: [0, -32]
-        });
-
-        const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
-        marker.bindPopup(`
-          <div style="color:#000; min-width: 180px;">
-            <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
-              Centro de Evacuados
-            </div>
-            <div style="font-size:1.05rem; font-weight:bold; color:#111; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">
-              ${c.nombre}
-            </div>
-            <div style="font-size: 0.8rem; line-height: 1.4;">
-              <b>Municipio:</b> ${c.municipio}<br>
-              <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
-              <b>Contacto:</b> ${c.contacto}<br>
-              <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-              <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
-              <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
-            </div>
-          </div>
-        `);
-        markersCentros.push(marker);
-      });
-    }
-
-    function verEvacuadosCentro(idCentro) {
-      cambiarPestana('ingresos');
-      const filtrados = personasData.filter(p => String(p.idCentro) === String(idCentro));
-      renderIngresos(filtrados);
-    }
-
-    function renderIngresos(personas) {
-      const listEl = document.getElementById('list-ingresos');
-      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros de ingresos</div>';
-      
-      personas.forEach(p => {
-        const centro = centrosData.find(c => String(c.id) === String(p.idCentro)) || { nombre: 'Centro General' };
-        const card = document.createElement('div');
-        card.className = 'item-card';
-        card.innerHTML = `
-          <div class="item-title">👤 ${p.nombreApellido}</div>
-          <div class="item-sub">DNI: ${p.dni} | Centro: ${centro.nombre}</div>
-          <div class="item-sub">Fecha Ingreso: ${p.fechaIngreso || 'S/D'} | Sexo: ${p.sexo || 'S/D'}</div>
-          <div class="item-badge">Síntomas: ${p.sintomas || 'Ninguno'}</div>
-        `;
-        listEl.appendChild(card);
-      });
-    }
-
-    function renderMonitoreo(monitoreos) {
-      const listEl = document.getElementById('list-monitoreo');
-      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros de monitoreo</div>';
-      
-      monitoreos.forEach(m => {
-        const centro = centrosData.find(c => String(c.id) === String(m.idCentro)) || { nombre: 'Centro General' };
-        const card = document.createElement('div');
-        card.className = 'item-card';
-        card.innerHTML = `
-          <div class="item-title">🩺 ${m.nombreApellido} (Edad: ${m.edad || 'S/D'})</div>
-          <div class="item-sub">DNI: ${m.dni} | Centro: ${centro.nombre}</div>
-          <div class="item-sub">Embarazada: ${m.embarazada} | Discapacidad: ${m.discapacidad}</div>
-          <div class="item-badge">Medicación: ${m.medicacion || 'Ninguna'}</div>
-        `;
-        listEl.appendChild(card);
-      });
-    }
-
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('collapsed');
-      actualizarTextoBoton();
-      setTimeout(() => map.invalidateSize(), 300);
-    }
-
-    function actualizarTextoBoton() {
-      const sidebar = document.getElementById('sidebar');
-      const toggleBtn = document.getElementById('toggleBtn');
-      const isMobile = window.innerWidth <= 768;
-      const isCollapsed = sidebar.classList.contains('collapsed');
-
-      if (isMobile) {
-        toggleBtn.innerHTML = isCollapsed ? '▲ Lista' : '▼ Ocultar';
-      } else {
-        toggleBtn.innerHTML = isCollapsed ? '▶' : '◀';
-      }
-    }
-
-    function filtrar(rio, btn) {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (rio === 'todos') renderEstaciones(estacionesData);
-      else renderEstaciones(estacionesData.filter(e => e.rio.toLowerCase().includes(rio.toLowerCase())));
-    }
-
-    window.onresize = actualizarTextoBoton;
-    window.onload = initApp;
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-  <script>
-    let map, tempMarker = null;
-    let markersEstaciones = [], markersCentros = [];
-    let estacionesData = [], centrosData = [], personasData = [], monitoreoData = [];
-    let backendInaData = {};
-    let miChart = null;
-    let capaDepartamentos = null;
-    let departamentosVisibles = false;
-
-    // URL exacta de la implementación en Apps Script
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8VoZ7nFqUgCpBZMppWg8ZmES5174k7k8e3d6oPvWLf3GHEclpQDAZOOdeiFRgpBAx9A/exec";
-
-    // Mapeo base de coordenadas y umbrales por estación
-    const estacionesBase = [
-      { id: 48, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, alerta: 3.50, evacuacion: 4.00 },
-      { id: 46, nombre: "Itá Ibaté", rio: "Paraná", lat: -27.420, lng: -57.330, alerta: 7.00, evacuacion: 7.50 },
-      { id: 45, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, alerta: 6.80, evacuacion: 7.50 },
-      { id: 44, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, alerta: 6.50, evacuacion: 7.00 },
-      { id: 43, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, alerta: 6.50, evacuacion: 7.00 },
-      { id: 42, nombre: "Empedrado", rio: "Paraná", lat: -27.950, lng: -58.800, alerta: 6.50, evacuacion: 7.00 },
-      { id: 41, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, alerta: 5.50, evacuacion: 6.00 },
-      { id: 40, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, alerta: 5.20, evacuacion: 5.70 },
-      { id: 39, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, alerta: 4.80, evacuacion: 5.00 },
-      { id: 67, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, alerta: 11.50, evacuacion: 12.50 },
-      { id: 68, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, alerta: 9.50, evacuacion: 10.50 },
-      { id: 69, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, alerta: 9.00, evacuacion: 10.00 },
-      { id: 70, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, alerta: 7.50, evacuacion: 8.00 },
-      { id: 71, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, alerta: 7.50, evacuacion: 8.50 }
-    ];
-
-    function initApp() {
-      map = L.map('map').setView([-28.5, -57.8], 7);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-      map.on('click', function(e) {
-        const lat = e.latlng.lat.toFixed(5);
-        const lng = e.latlng.lng.toFixed(5);
-        if (tempMarker) map.removeLayer(tempMarker);
-        tempMarker = L.marker([lat, lng]).addTo(map);
-        document.getElementById('c-lat').value = lat;
-        document.getElementById('c-lng').value = lng;
-        abrirModal('modalCentro');
-      });
-
-      cargarDatosActualizados();
-      cargarDepartamentos();
-      actualizarTextoBoton();
-    }
-
-    function cargarDepartamentos() {
-      fetch('./corrientes.json')
-        .then(res => res.json())
-        .then(data => {
-          capaDepartamentos = L.geoJSON(data, {
-            style: function() {
-              return { color: '#0a84ff', weight: 1.8, opacity: 0.9, fillColor: '#0a84ff', fillOpacity: 0.15 };
-            },
-            onEachFeature: function(feature, layer) {
-              const p = feature.properties || {};
-              const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
-              layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
-              layer.on({
-                mouseover: function(e) { e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 }); },
-                mouseout: function(e) { capaDepartamentos.resetStyle(e.target); }
-              });
-            }
-          });
-
-          capaDepartamentos.addTo(map);
-          departamentosVisibles = true;
-          actualizarEstiloBotonDptos();
-        })
-        .catch(err => console.error("Error al cargar corrientes.json:", err));
-    }
-
-    function toggleCapaDepartamentos() {
-      if (!capaDepartamentos) return;
-      if (departamentosVisibles) {
-        map.removeLayer(capaDepartamentos);
-        departamentosVisibles = false;
-      } else {
-        map.addLayer(capaDepartamentos);
-        departamentosVisibles = true;
-      }
-      actualizarEstiloBotonDptos();
-    }
-
-    function actualizarEstiloBotonDptos() {
-      const btn = document.getElementById('btn-toggle-dptos');
-      if (btn) {
-        btn.style.background = departamentosVisibles ? '#0a84ff' : '#2c2c2e';
-        btn.style.borderColor = departamentosVisibles ? '#005bb5' : '#3a3a3c';
-      }
-    }
-
-    function cargarDatosActualizados() {
-      document.getElementById('loading').classList.remove('off');
-      fetch(APPS_SCRIPT_URL)
-        .then(res => res.json())
-        .then(data => {
-          console.log("Datos recibidos desde Apps Script:", data);
-          backendInaData = data;
-          centrosData = data.centros || [];
-          personasData = data.personas || [];
-          monitoreoData = data.monitoreos || [];
-
-          procesarEstacionesConIna(data);
-          actualizarSelectsCentros();
-          renderCentros(centrosData);
-          renderIngresos(personasData);
-          renderMonitoreo(monitoreoData);
-        })
-        .catch(err => {
-          console.error("Error al cargar backend:", err);
-          renderEstaciones(estacionesBase.map(e => ({ ...e, altura: 2.00, tendencia: 'permanece' })));
-        })
-        .finally(() => document.getElementById('loading').classList.add('off'));
-    }
-
-    // Busca los datos de historial tanto por ID como por Nombre de municipio
+    // Búsqueda inteligente del historial por Nombre y por ID
     function obtenerHistoricoEstacion(dataBackend, idEstacion, nombreEstacion) {
       if (!dataBackend) return [];
       
-      // 1. Búsqueda por ID numérico o cadena de ID
-      if (dataBackend[idEstacion]) {
-        const est = dataBackend[idEstacion];
-        if (Array.isArray(est)) return est;
-        if (est.historico && Array.isArray(est.historico)) return est.historico;
+      const normalizar = s => String(s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const nomBuscado = normalizar(nombreEstacion);
+
+      // Búsqueda en objeto mapeado por clave de Nombre o ID
+      for (let key in dataBackend) {
+        if (normalizar(key) === nomBuscado || String(key) === String(idEstacion)) {
+          const item = dataBackend[key];
+          if (Array.isArray(item)) return item;
+          if (item.historico && Array.isArray(item.historico)) return item.historico;
+        }
       }
 
-      // 2. Búsqueda por clave de Nombre
-      if (dataBackend[nombreEstacion]) {
-        const est = dataBackend[nombreEstacion];
-        if (Array.isArray(est)) return est;
-        if (est.historico && Array.isArray(est.historico)) return est.historico;
-      }
-
-      // 3. Búsqueda en arreglo global si el backend devuelve un arreglo plano
+      // Búsqueda en array global de historial
       if (Array.isArray(dataBackend.historicoINA)) {
-        return dataBackend.historicoINA.filter(row => 
-          String(row.estacion_id || row.id) === String(idEstacion) || 
-          String(row.estacion || row.nombre || "").toLowerCase() === nombreEstacion.toLowerCase()
-        );
+        return dataBackend.historicoINA.filter(row => {
+          const nomRow = normalizar(row.estacion || row.nombre || row.Nombre_Estacion || "");
+          const idRow = String(row.estacion_id || row.id || row.ID_Estacion || "");
+          return nomRow === nomBuscado || idRow === String(idEstacion);
+        });
       }
 
       return [];
@@ -962,11 +448,11 @@
 
         if (historico && historico.length > 0) {
           const ult = historico[historico.length - 1];
-          alturaVal = parseFloat(ult.nivel || ult.altura || ult.valor) || 2.00;
+          alturaVal = parseFloat(ult.nivel || ult.altura || ult.valor || ult.Nivel) || 2.00;
 
           if (historico.length > 1) {
             const ant = historico[historico.length - 2];
-            const prevNivel = parseFloat(ant.nivel || ant.altura || ant.valor) || alturaVal;
+            const prevNivel = parseFloat(ant.nivel || ant.altura || ant.valor || ant.Nivel) || alturaVal;
             const diff = alturaVal - prevNivel;
             if (diff > 0.02) tendenciaVal = "crece";
             else if (diff < -0.02) tendenciaVal = "baja";
@@ -1061,11 +547,11 @@
       const lecturas = obtenerHistoricoEstacion(backendInaData, idEstacion, nombreEstacion);
 
       const labels = lecturas.map(item => {
-        const rawFecha = item.fecha || item.timestamp || item.timestart || "";
+        const rawFecha = item.fecha || item.Fecha || item.timestamp || item.timestart || "";
         return String(rawFecha).split('T')[0].split(' ')[0];
       });
 
-      const valores = lecturas.map(item => parseFloat(item.nivel || item.altura || item.valor) || 0);
+      const valores = lecturas.map(item => parseFloat(item.nivel || item.Nivel || item.altura || item.valor) || 0);
 
       if (miChart) miChart.destroy();
 
@@ -1352,3 +838,5 @@
     window.onresize = actualizarTextoBoton;
     window.onload = initApp;
   </script>
+</body>
+</html>
