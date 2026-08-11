@@ -311,6 +311,7 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
+    // GeoJSON embebido directamente para garantizar disponibilidad y evitar bloqueos CORS
     const departamentosCorrientesGeoJSON = {
       "type": "FeatureCollection",
       "features": [
@@ -342,6 +343,7 @@
       ]
     };
 
+    // Estaciones de Corrientes configuradas con sus correspondientes IDs del INA
     const ESTACIONES_BASE = [
       { id: 1, ina_id: 14, var_id: 2, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 0, tendencia: "permanece", alerta: 6.50, evacuacion: 7.00 },
       { id: 2, ina_id: 16, var_id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 0, tendencia: "permanece", alerta: 6.50, evacuacion: 7.00 },
@@ -429,7 +431,7 @@
     async function cargarDatosActualizados() {
       document.getElementById('loading').classList.remove('off');
 
-      // 1. Obtener datos de Centros y Personas de Google Apps Script
+      // 1. Obtener datos de Centros y Personas desde Google Apps Script
       fetch(APPS_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
@@ -444,7 +446,7 @@
         })
         .catch(err => console.error("Error al cargar backend de Google Apps Script:", err));
 
-      // 2. Conexión en vivo con la API oficial del INA para actualizar alturas
+      // 2. Consulta en vivo a la API oficial del INA para actualizar las alturas
       await cargarAlturasINA();
       document.getElementById('loading').classList.add('off');
     }
@@ -480,7 +482,7 @@
           });
         }
       } catch (e) {
-        console.warn("Fallo al obtener tabla completa del INA, realizando fallback serie por serie...", e);
+        console.warn("Fallo al obtener la tabla del INA, realizando fallback serie por serie...", e);
         
         const promesas = estacionesData.map(async (est) => {
           try {
@@ -488,7 +490,7 @@
             const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlSerie)}`;
             const res = await fetch(proxyUrl);
             const pData = await res.json();
-            const lecturas = JSON.parse(pData.contents);
+            const lecturas = typeof pData.contents === 'string' ? JSON.parse(pData.contents) : pData.contents;
 
             if (Array.isArray(lecturas) && lecturas.length > 0) {
               const ult = lecturas[lecturas.length - 1];
