@@ -292,20 +292,20 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFOfKygZl5X1dWrp3dQ0SMWpkeIKA-Rb5f-o1hOILJ2ZU_y8W-rzT6WQk0YjBHtBUzZw/exec";
 
     const ESTACIONES_LISTA = [
-      { id: 1, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, alerta: 6.50, evacuacion: 7.00, ina_id: 14, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, alerta: 6.50, evacuacion: 7.00, ina_id: 16, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 3, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, alerta: 6.80, evacuacion: 7.50, ina_id: 17, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 4, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, alerta: 7.00, evacuacion: 7.50, ina_id: 30, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 5, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, alerta: 3.50, evacuacion: 4.00, ina_id: 15, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 6, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, alerta: 5.50, evacuacion: 6.00, ina_id: 19, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 7, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, alerta: 5.20, evacuacion: 5.70, ina_id: 18, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 8, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, alerta: 4.80, evacuacion: 5.00, ina_id: 25, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 9, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, alerta: 11.50, evacuacion: 12.50, ina_id: 21, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 10, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, alerta: 9.50, evacuacion: 10.50, ina_id: 22, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 11, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, alerta: 9.00, evacuacion: 10.00, ina_id: 23, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 12, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, alerta: 9.50, evacuacion: 10.50, ina_id: 24, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 13, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, alerta: 7.50, evacuacion: 8.50, ina_id: 20, var_id: 2, altura: 0, tendencia: "permanece" },
-      { id: 14, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, alerta: 6.00, evacuacion: 7.50, ina_id: 26, var_id: 2, altura: 0, tendencia: "permanece" }
+      { id: 1, nombre: "Corrientes", pna: "CORRIENTES", rio: "Paraná", lat: -27.469, lng: -58.830, alerta: 6.50, evacuacion: 7.00, ina_id: 14, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 2, nombre: "Paso de la Patria", pna: "PASO DE LA PATRIA", rio: "Paraná", lat: -27.317, lng: -58.570, alerta: 6.50, evacuacion: 7.00, ina_id: 16, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 3, nombre: "Itatí", pna: "ITATI", rio: "Paraná", lat: -27.270, lng: -58.250, alerta: 6.80, evacuacion: 7.50, ina_id: 17, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 4, nombre: "Ita Ibate", pna: "ITA IBATE", rio: "Paraná", lat: -27.420, lng: -57.330, alerta: 7.00, evacuacion: 7.50, ina_id: 30, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 5, nombre: "Ituzaingó", pna: "ITUZAINGO", rio: "Paraná", lat: -27.580, lng: -56.680, alerta: 3.50, evacuacion: 4.00, ina_id: 15, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 6, nombre: "Bella Vista", pna: "BELLA VISTA", rio: "Paraná", lat: -28.510, lng: -59.050, alerta: 5.50, evacuacion: 6.00, ina_id: 19, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 7, nombre: "Goya", pna: "GOYA", rio: "Paraná", lat: -29.140, lng: -59.260, alerta: 5.20, evacuacion: 5.70, ina_id: 18, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 8, nombre: "Esquina", pna: "ESQUINA", rio: "Paraná", lat: -30.010, lng: -59.530, alerta: 4.80, evacuacion: 5.00, ina_id: 25, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 9, nombre: "Santo Tomé", pna: "SANTO TOME", rio: "Uruguay", lat: -28.550, lng: -56.030, alerta: 11.50, evacuacion: 12.50, ina_id: 21, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 10, nombre: "Alvear", pna: "ALVEAR", rio: "Uruguay", lat: -29.100, lng: -56.550, alerta: 9.50, evacuacion: 10.50, ina_id: 22, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 11, nombre: "La Cruz", pna: "LA CRUZ", rio: "Uruguay", lat: -29.170, lng: -56.640, alerta: 9.00, evacuacion: 10.00, ina_id: 23, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 12, nombre: "Yapeyú", pna: "YAPEYU", rio: "Uruguay", lat: -29.470, lng: -56.810, alerta: 9.50, evacuacion: 10.50, ina_id: 24, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 13, nombre: "Paso de los Libres", pna: "PASO DE LOS LIBRES", rio: "Uruguay", lat: -29.710, lng: -57.080, alerta: 7.50, evacuacion: 8.50, ina_id: 20, var_id: 2, altura: 0, tendencia: "permanece" },
+      { id: 14, nombre: "Monte Caseros", pna: "MONTE CASEROS", rio: "Uruguay", lat: -30.250, lng: -57.630, alerta: 6.00, evacuacion: 7.50, ina_id: 26, var_id: 2, altura: 0, tendencia: "permanece" }
     ];
 
     function initApp() {
@@ -331,10 +331,10 @@
       document.getElementById('loading').classList.remove('off');
       estacionesData = JSON.parse(JSON.stringify(ESTACIONES_LISTA));
 
+      // 1. Cargar Centros/Personas de tu Google Apps Script
       try {
         const res = await fetch(APPS_SCRIPT_URL);
         const data = await res.json();
-        
         centrosData = data.centros || [];
         personasData = data.personas || [];
         monitoreoData = data.monitoreos || [];
@@ -343,23 +343,35 @@
         renderCentros(centrosData);
         renderIngresos(personasData);
         renderMonitoreo(monitoreoData);
+      } catch (err) {
+        console.error("Error al cargar centros/personas:", err);
+      }
 
-        // Procesar estaciones procesadas en el backend (Google Apps Script)
-        if (data.estacionesINA && Array.isArray(data.estacionesINA)) {
-          estacionesData.forEach(estacion => {
-            const datosEnVivo = data.estacionesINA.find(e => Number(e.id_estacion || e.id) === Number(estacion.ina_id));
-            if (datosEnVivo) {
-              if (datosEnVivo.altura !== undefined && !isNaN(datosEnVivo.altura)) {
-                estacion.altura = parseFloat(datosEnVivo.altura);
-              }
-              if (datosEnVivo.tendencia) {
-                estacion.tendencia = datosEnVivo.tendencia;
-              }
+      // 2. Cargar Alturas en Vivo directamente mediante Proxy CORS desde Prefectura
+      try {
+        const targetUrl = "https://www.argentina.gob.ar/prefecturanaval/altura-de-los-rios";
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+        
+        const resPna = await fetch(proxyUrl);
+        const dataPna = await resPna.json();
+
+        if (dataPna && dataPna.contents) {
+          const htmlText = dataPna.contents;
+          
+          estacionesData.forEach(est => {
+            const reg = new RegExp(est.pna + "[\\s\\S]*?<td[^>]*>\\s*([0-9]+[\\.,][0-9]+)\\s*<\\/td>[\\s\\S]*?<td[^>]*>\\s*([A-Za-z]+)\\s*<\\/td>", "i");
+            const match = reg.exec(htmlText);
+            if (match && match[1]) {
+              est.altura = parseFloat(match[1].replace(',', '.'));
+              const tendStr = match[2].toLowerCase();
+              if (tendStr.includes("crece")) est.tendencia = "crece";
+              else if (tendStr.includes("baja")) est.tendencia = "baja";
+              else est.tendencia = "permanece";
             }
           });
         }
-      } catch (err) {
-        console.error("Error al cargar datos desde backend:", err);
+      } catch(e) {
+        console.warn("No se pudieron actualizar en vivo las alturas por el proxy:", e);
       }
 
       renderEstaciones(estacionesData);
@@ -613,66 +625,64 @@
       abrirModal('modalGrafico');
 
       const ctx = prepararCanvasGrafico();
+      const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlTarget)}`;
 
-      // Petición al servidor Apps Script (Proxy) en lugar de llamar directo al INA desde el navegador
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: "obtener_grafico", idEstacion: idEstacion, idVar: idVar })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!Array.isArray(data) || data.length === 0) throw new Error("Sin datos de serie");
+      fetch(proxyUrl)
+        .then(res => res.json())
+        .then(dataProxy => {
+          const data = JSON.parse(dataProxy.contents);
+          if (!Array.isArray(data) || data.length === 0) throw new Error("Sin datos de serie");
 
-        const lecturas = data.filter(d => d.valor !== null && d.valor !== undefined).slice(-15);
-        const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
-        const valores = lecturas.map(d => d.valor);
+          const lecturas = data.filter(d => d.valor !== null && d.valor !== undefined).slice(-15);
+          const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
+          const valores = lecturas.map(d => d.valor);
 
-        if (miChart) miChart.destroy();
+          if (miChart) miChart.destroy();
 
-        miChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: etiquetas,
-            datasets: [
-              {
-                label: 'Nivel Hidrométrico (m)',
-                data: valores,
-                borderColor: '#0a84ff',
-                backgroundColor: 'rgba(10, 132, 255, 0.1)',
-                fill: true,
-                tension: 0.3
-              },
-              {
-                label: 'Nivel Alerta',
-                data: Array(valores.length).fill(nivelAlerta),
-                borderColor: '#FAAE05',
-                borderDash: [5, 5],
-                pointRadius: 0
-              },
-              {
-                label: 'Nivel Evacuación',
-                data: Array(valores.length).fill(nivelEvac),
-                borderColor: '#F4492E',
-                borderDash: [5, 5],
-                pointRadius: 0
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
-              x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
+          miChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: etiquetas,
+              datasets: [
+                {
+                  label: 'Nivel Hidrométrico (m)',
+                  data: valores,
+                  borderColor: '#0a84ff',
+                  backgroundColor: 'rgba(10, 132, 255, 0.1)',
+                  fill: true,
+                  tension: 0.3
+                },
+                {
+                  label: 'Nivel Alerta',
+                  data: Array(valores.length).fill(nivelAlerta),
+                  borderColor: '#FAAE05',
+                  borderDash: [5, 5],
+                  pointRadius: 0
+                },
+                {
+                  label: 'Nivel Evacuación',
+                  data: Array(valores.length).fill(nivelEvac),
+                  borderColor: '#F4492E',
+                  borderDash: [5, 5],
+                  pointRadius: 0
+                }
+              ]
             },
-            plugins: { legend: { labels: { color: '#fff' } } }
-          }
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
+                x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
+              },
+              plugins: { legend: { labels: { color: '#fff' } } }
+            }
+          });
+        })
+        .catch(err => {
+          console.warn("No se pudo descargar la serie temporal del INA:", err);
         });
-      })
-      .catch(err => {
-        console.warn("Fallo en la carga remota del gráfico:", err);
-      });
     }
 
     function renderCentros(centros) {
