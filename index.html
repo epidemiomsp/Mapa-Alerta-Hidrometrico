@@ -86,7 +86,6 @@
     .btn-action { background: var(--primary); color: #fff; border: none; padding: 5px 8px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
     .btn-sec { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:5px 8px; border-radius:5px; cursor:pointer; font-size: 0.7rem; }
 
-    /* Tooltip para Departamentos */
     .dept-tooltip {
       background: rgba(0, 0, 0, 0.85);
       border: 1px solid #0a84ff;
@@ -97,7 +96,6 @@
       border-radius: 4px;
     }
 
-    /* Modales */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: 0.2s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
@@ -155,7 +153,6 @@
         <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
       </div>
 
-      <!-- Pestaña 1: Ríos (Paraná y Uruguay) -->
       <div id="sec-estaciones" class="sec-tab">
         <div class="filter-bar">
           <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
@@ -165,17 +162,14 @@
         <div class="list" id="list-estaciones"></div>
       </div>
 
-      <!-- Pestaña 2: Centros de Evacuados -->
       <div id="sec-centros" class="sec-tab" style="display:none;">
         <div class="list" id="list-centros"></div>
       </div>
 
-      <!-- Pestaña 3: Ingreso de Personas (Hoja 2) -->
       <div id="sec-ingresos" class="sec-tab" style="display:none;">
         <div class="list" id="list-ingresos"></div>
       </div>
 
-      <!-- Pestaña 4: Monitoreo Diario (Hoja 3) -->
       <div id="sec-monitoreo" class="sec-tab" style="display:none;">
         <div class="list" id="list-monitoreo"></div>
       </div>
@@ -184,7 +178,7 @@
     <div id="map"></div>
   </div>
 
-  <!-- Modal 1: Agregar Centro -->
+  <!-- Modales -->
   <div class="modal-overlay" id="modalCentro">
     <div class="modal-box">
       <div class="modal-header">
@@ -215,7 +209,6 @@
     </div>
   </div>
 
-  <!-- Modal 2: Ingreso Personas (Hoja 2) -->
   <div class="modal-overlay" id="modalPersona">
     <div class="modal-box">
       <div class="modal-header">
@@ -249,7 +242,6 @@
     </div>
   </div>
 
-  <!-- Modal 3: Monitoreo Diario (Hoja 3) -->
   <div class="modal-overlay" id="modalMonitoreo">
     <div class="modal-box">
       <div class="modal-header">
@@ -286,7 +278,6 @@
     </div>
   </div>
 
-  <!-- Modal 4: Gráfica de Evolución Hidrométrica (INA) -->
   <div class="modal-overlay" id="modalGrafico">
     <div class="modal-box" style="width: 600px;">
       <div class="modal-header">
@@ -307,22 +298,31 @@
     let map, tempMarker = null;
     let markersEstaciones = [], markersCentros = [];
     let estacionesData = [], centrosData = [], personasData = [], monitoreoData = [];
+    let backendInaData = {};
     let miChart = null;
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    // Mapa de IDs oficiales del INA para vincular cada puerto
-    const inaEstacionesIds = {
-      "Ituzaingó": { estacion_id: 15, var_id: 2 },
-      "Corrientes": { estacion_id: 14, var_id: 2 },
-      "Paso de la Patria": { estacion_id: 16, var_id: 2 },
-      "Itatí": { estacion_id: 17, var_id: 2 },
-      "Goya": { estacion_id: 18, var_id: 2 },
-      "Bella Vista": { estacion_id: 19, var_id: 2 },
-      "Paso de los Libres": { estacion_id: 20, var_id: 2 }
-    };
+    // URL exacta de tu implementación activa en Apps Script
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8VoZ7nFqUgCpBZMppWg8ZmES5174k7k8e3d6oPvWLf3GHEclpQDAZOOdeiFRgpBAx9A/exec";
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypx3DAHcibB5FNSgHq8CenTVttVn9pzKHfjxbvFYf-BopHmWeEjQkY4bKe21y3vi-BWA/exec";
+    // Mapeo base de coordenadas y umbrales por estación
+    const estacionesBase = [
+      { id: 48, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, alerta: 3.50, evacuacion: 4.00 },
+      { id: 46, nombre: "Itá Ibaté", rio: "Paraná", lat: -27.420, lng: -57.330, alerta: 7.00, evacuacion: 7.50 },
+      { id: 45, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, alerta: 6.80, evacuacion: 7.50 },
+      { id: 44, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, alerta: 6.50, evacuacion: 7.00 },
+      { id: 43, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, alerta: 6.50, evacuacion: 7.00 },
+      { id: 42, nombre: "Empedrado", rio: "Paraná", lat: -27.950, lng: -58.800, alerta: 6.50, evacuacion: 7.00 },
+      { id: 41, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, alerta: 5.50, evacuacion: 6.00 },
+      { id: 40, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, alerta: 5.20, evacuacion: 5.70 },
+      { id: 39, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, alerta: 4.80, evacuacion: 5.00 },
+      { id: 67, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, alerta: 11.50, evacuacion: 12.50 },
+      { id: 68, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, alerta: 9.50, evacuacion: 10.50 },
+      { id: 69, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, alerta: 9.00, evacuacion: 10.00 },
+      { id: 70, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, alerta: 7.50, evacuacion: 8.00 },
+      { id: 71, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, alerta: 7.50, evacuacion: 8.50 }
+    ];
 
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
@@ -338,44 +338,26 @@
         abrirModal('modalCentro');
       });
 
-      cargarEstaciones();
       cargarDatosActualizados();
       cargarDepartamentos();
       actualizarTextoBoton();
     }
 
     function cargarDepartamentos() {
-      // Carga directa del archivo corrientes.json recién subido al repositorio
       fetch('./corrientes.json')
         .then(res => res.json())
         .then(data => {
           capaDepartamentos = L.geoJSON(data, {
-            style: function(feature) {
-              return {
-                color: '#0a84ff',
-                weight: 1.8,
-                opacity: 0.9,
-                fillColor: '#0a84ff',
-                fillOpacity: 0.15
-              };
+            style: function() {
+              return { color: '#0a84ff', weight: 1.8, opacity: 0.9, fillColor: '#0a84ff', fillOpacity: 0.15 };
             },
             onEachFeature: function(feature, layer) {
               const p = feature.properties || {};
               const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
-              
-              layer.bindTooltip(`Dpto. ${nombreDpto}`, {
-                permanent: false,
-                direction: 'center',
-                className: 'dept-tooltip'
-              });
-
+              layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
               layer.on({
-                mouseover: function(e) {
-                  e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 });
-                },
-                mouseout: function(e) {
-                  capaDepartamentos.resetStyle(e.target);
-                }
+                mouseover: function(e) { e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 }); },
+                mouseout: function(e) { capaDepartamentos.resetStyle(e.target); }
               });
             }
           });
@@ -384,14 +366,11 @@
           departamentosVisibles = true;
           actualizarEstiloBotonDptos();
         })
-        .catch(err => {
-          console.error("Error al cargar corrientes.json:", err);
-        });
+        .catch(err => console.error("Error al cargar corrientes.json:", err));
     }
 
     function toggleCapaDepartamentos() {
       if (!capaDepartamentos) return;
-
       if (departamentosVisibles) {
         map.removeLayer(capaDepartamentos);
         departamentosVisibles = false;
@@ -415,17 +394,175 @@
       fetch(APPS_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
+          backendInaData = data;
           centrosData = data.centros || [];
           personasData = data.personas || [];
           monitoreoData = data.monitoreos || [];
-          
+
+          procesarEstacionesConIna(data);
           actualizarSelectsCentros();
           renderCentros(centrosData);
           renderIngresos(personasData);
           renderMonitoreo(monitoreoData);
         })
-        .catch(err => console.error("Error al cargar backend:", err))
+        .catch(err => {
+          console.error("Error al cargar backend:", err);
+          renderEstaciones(estacionesBase.map(e => ({ ...e, altura: 2.00, tendencia: 'permanece' })));
+        })
         .finally(() => document.getElementById('loading').classList.add('off'));
+    }
+
+    function procesarEstacionesConIna(data) {
+      estacionesData = estacionesBase.map(est => {
+        const info = data[est.id];
+        let alturaVal = 2.00;
+        let tendenciaVal = "permanece";
+
+        if (info && info.historico && info.historico.length > 0) {
+          const ult = info.historico[info.historico.length - 1];
+          alturaVal = parseFloat(ult.nivel) || 2.00;
+
+          if (info.historico.length > 1) {
+            const ant = info.historico[info.historico.length - 2];
+            const diff = alturaVal - (parseFloat(ant.nivel) || alturaVal);
+            if (diff > 0.02) tendenciaVal = "crece";
+            else if (diff < -0.02) tendenciaVal = "baja";
+          }
+        }
+
+        return { ...est, altura: alturaVal, tendencia: tendenciaVal };
+      });
+
+      renderEstaciones(estacionesData);
+    }
+
+    function renderEstaciones(estaciones) {
+      const listaEl = document.getElementById('list-estaciones');
+      listaEl.innerHTML = '';
+      markersEstaciones.forEach(m => map.removeLayer(m));
+      markersEstaciones = [];
+
+      estaciones.forEach(est => {
+        let colorEstado = '#28a745';
+        if (est.altura >= est.evacuacion) colorEstado = '#F4492E';
+        else if (est.altura >= est.alerta) colorEstado = '#FAAE05';
+        else colorEstado = est.tendencia === 'baja' ? '#00D2FF' : '#0a84ff';
+
+        let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between;">
+            <span class="muni">${est.nombre}</span>
+            <span class="rio">Río ${est.rio}</span>
+          </div>
+          <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+            <span class="altura">${est.altura.toFixed(2)}</span>
+            <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
+            <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
+          </div>
+          <button onclick="event.stopPropagation(); mostrarGraficoINA(${est.id}, '${est.nombre}', ${est.alerta}, ${est.evacuacion})" 
+                  style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
+            📈 Ver Gráfica de Evolución
+          </button>
+        `;
+        card.onclick = () => {
+          map.flyTo([est.lat, est.lng], 12);
+          if (window.innerWidth <= 768) toggleSidebar();
+        };
+        listaEl.appendChild(card);
+
+        const customIcon = L.divIcon({
+          className: 'custom-river-pin',
+          html: `
+            <div style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
+              <img src="./Rio-removebg-preview.png" style="width:30px; height:30px; object-fit:contain; filter:drop-shadow(0px 2px 4px rgba(0,0,0,0.6)); margin-bottom:2px;" alt="Río">
+              <div style="background:rgba(18,18,18,0.90); color:#fff; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; white-space:nowrap;">
+                ${est.nombre}
+              </div>
+              <div style="background:rgba(18,18,18,0.95); color:${colorEstado}; font-size:11px; font-weight:800; padding:1px 6px; border-radius:4px; margin-top:2px; border:1px solid ${colorEstado};">
+                ${est.altura.toFixed(2)}m ${flecha}
+              </div>
+            </div>
+          `,
+          iconSize: [110, 70],
+          iconAnchor: [55, 15]
+        });
+
+        const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
+        marker.bindPopup(`
+          <div style="color:#000;">
+            <b>${est.nombre}</b><br>
+            Río: ${est.rio}<br>
+            Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
+            Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
+            <button onclick="mostrarGraficoINA(${est.id}, '${est.nombre}', ${est.alerta}, ${est.evacuacion})" 
+                    style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
+              📈 Ver Gráfica de Evolución
+            </button>
+          </div>
+        `);
+        markersEstaciones.push(marker);
+      });
+    }
+
+    function mostrarGraficoINA(idEstacion, nombreEstacion, nivelAlerta, nivelEvac) {
+      document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
+      abrirModal('modalGrafico');
+
+      const container = document.getElementById('chartContainer');
+      container.innerHTML = '<canvas id="chartEvolucion"></canvas>';
+      const ctx = document.getElementById('chartEvolucion').getContext('2d');
+
+      const info = backendInaData[idEstacion] || { historico: [] };
+      const lecturas = info.historico || [];
+
+      const labels = lecturas.map(item => String(item.fecha).split(' ')[0]);
+      const valores = lecturas.map(item => parseFloat(item.nivel));
+
+      if (miChart) miChart.destroy();
+
+      miChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.length ? labels : ['Sin datos'],
+          datasets: [
+            {
+              label: 'Nivel (m)',
+              data: valores.length ? valores : [0],
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4
+            },
+            {
+              label: 'Alerta',
+              data: Array(labels.length || 1).fill(nivelAlerta),
+              borderColor: '#f59e0b',
+              borderDash: [5, 5],
+              pointRadius: 0
+            },
+            {
+              label: 'Evacuación',
+              data: Array(labels.length || 1).fill(nivelEvac),
+              borderColor: '#ef4444',
+              borderDash: [5, 5],
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#e5e7eb' } } },
+          scales: {
+            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+          }
+        }
+      });
     }
 
     function actualizarSelectsCentros() {
@@ -462,6 +599,7 @@
     function guardarCentro(e) {
       e.preventDefault();
       const nuevo = {
+        action: "add_centro",
         id: Date.now(),
         nombre: document.getElementById('c-nombre').value,
         municipio: document.getElementById('c-muni').value,
@@ -537,313 +675,6 @@
       .catch(err => console.error(err));
     }
 
-    // Lista Completa de Puertos de Corrientes (INA / Prefectura)
-    function cargarEstaciones() {
-      estacionesData = [
-        { id: 1, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 3.42, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
-        { id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 3.25, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
-        { id: 3, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, altura: 3.10, tendencia: "permanece", alerta: 6.80, evacuacion: 7.50 },
-        { id: 4, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, altura: 2.95, tendencia: "baja", alerta: 7.00, evacuacion: 7.50 },
-        { id: 5, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 1.80, tendencia: "crece", alerta: 3.50, evacuacion: 4.00 },
-        { id: 6, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, altura: 3.65, tendencia: "baja", alerta: 5.50, evacuacion: 6.00 },
-        { id: 7, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 3.80, tendencia: "baja", alerta: 5.20, evacuacion: 5.70 },
-        { id: 8, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, altura: 3.90, tendencia: "permanece", alerta: 4.80, evacuacion: 5.00 },
-        { id: 9, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, altura: 4.10, tendencia: "baja", alerta: 11.50, evacuacion: 12.50 },
-        { id: 10, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, altura: 4.50, tendencia: "baja", alerta: 9.50, evacuacion: 10.50 },
-        { id: 11, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, altura: 4.60, tendencia: "baja", alerta: 9.00, evacuacion: 10.00 },
-        { id: 12, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, altura: 4.20, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
-        { id: 13, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, altura: 3.85, tendencia: "baja", alerta: 7.50, evacuacion: 8.50 },
-        { id: 14, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, altura: 3.20, tendencia: "baja", alerta: 6.00, evacuacion: 7.50 }
-      ];
-      renderEstaciones(estacionesData);
-    }
-
-    function renderEstaciones(estaciones) {
-      const listaEl = document.getElementById('list-estaciones');
-      listaEl.innerHTML = '';
-      markersEstaciones.forEach(m => map.removeLayer(m));
-      markersEstaciones = [];
-
-      estaciones.forEach(est => {
-        // 1. Asignación dinámica de colores según nivel de alerta y tendencia
-        let colorEstado = '#28a745'; // Verde por defecto
-
-        if (est.altura >= est.evacuacion) {
-          colorEstado = '#F4492E'; // Rojo: Evacuación
-        } else if (est.altura >= est.alerta) {
-          colorEstado = '#FAAE05'; // Amarillo: Alerta
-        } else {
-          // Niveles normales según tendencia
-          if (est.tendencia === 'baja') {
-            colorEstado = '#00D2FF'; // Celeste: Baja
-          } else if (est.tendencia === 'permanece') {
-            colorEstado = '#28a745'; // Verde: Permanece
-          } else {
-            colorEstado = '#0a84ff'; // Azul: Crece (normal)
-          }
-        }
-
-        let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
-        const inaInfo = inaEstacionesIds[est.nombre] || { estacion_id: 15, var_id: 2 };
-
-        // 2. Tarjeta para el panel lateral
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div style="display:flex; justify-content:space-between;">
-            <span class="muni">${est.nombre}</span>
-            <span class="rio">Río ${est.rio}</span>
-          </div>
-          <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-            <span class="altura">${est.altura.toFixed(2)}</span>
-            <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
-            <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
-          </div>
-          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
-                  style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
-            📈 Ver Gráfica de Evolución
-          </button>
-        `;
-        card.onclick = () => {
-          map.flyTo([est.lat, est.lng], 12);
-          if (window.innerWidth <= 768) toggleSidebar();
-        };
-        listaEl.appendChild(card);
-
-        // 3. Marcador con la imagen del triángulo de advertencia y etiquetas apiladas
-        const customIcon = L.divIcon({
-          className: 'custom-river-pin',
-          html: `
-            <div style="
-              display: flex; 
-              flex-direction: column; 
-              align-items: center; 
-              justify-content: center; 
-              text-align: center;
-              cursor: pointer;
-            ">
-              <!-- Icono de la imagen del triángulo de advertencia de río -->
-              <img src="./Rio-removebg-preview.png" style="
-                width: 30px; 
-                height: 30px; 
-                object-fit: contain;
-                filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
-                margin-bottom: 2px;
-              " alt="Alerta Río">
-
-              <!-- Nombre del Municipio -->
-              <div style="
-                background: rgba(18, 18, 18, 0.90); 
-                color: #ffffff; 
-                font-size: 10.5px; 
-                font-weight: 700; 
-                padding: 2px 6px; 
-                border-radius: 4px; 
-                white-space: nowrap; 
-                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-                border: 1px solid rgba(255,255,255,0.15);
-                line-height: 1.2;
-              ">
-                ${est.nombre}
-              </div>
-
-              <!-- Altura y Flecha etiquetada con el color dinámico de estado -->
-              <div style="
-                background: rgba(18, 18, 18, 0.95); 
-                color: ${colorEstado}; 
-                font-size: 11px; 
-                font-weight: 800; 
-                padding: 1px 6px; 
-                border-radius: 4px; 
-                white-space: nowrap; 
-                margin-top: 2px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-                border: 1px solid ${colorEstado};
-                line-height: 1.2;
-              ">
-                ${est.altura.toFixed(2)}m ${flecha}
-              </div>
-            </div>
-          `,
-          iconSize: [110, 70],
-          iconAnchor: [55, 15]
-        });
-
-        const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
-        marker.bindPopup(`
-          <div style="color:#000;">
-            <b>${est.nombre}</b><br>
-            Río: ${est.rio}<br>
-            Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
-            Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
-            <button onclick="mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
-                    style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
-              📈 Ver Gráfica de Evolución
-            </button>
-          </div>
-        `);
-        markersEstaciones.push(marker);
-      });
-    }
-
-    function prepararCanvasGrafico() {
-      const container = document.getElementById('chartContainer');
-      container.innerHTML = '<canvas id="chartEvolucion"></canvas>';
-      return document.getElementById('chartEvolucion').getContext('2d');
-    }
-
-async function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta, nivelEvac) {
-  document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
-  abrirModal('modalGrafico');
-
-  const ctx = prepararCanvasGrafico();
-  const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
-
-  // Lista de proxies de respaldo en orden de prioridad
-  const proxies = [
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlTarget)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(urlTarget)}`
-  ];
-
-  let data = null;
-
-  for (const proxy of proxies) {
-    try {
-      const res = await fetch(proxy);
-      if (!res.ok) continue;
-
-      const responseText = await res.text();
-      const parsed = JSON.parse(responseText);
-
-      // Si AllOrigins devuelve { contents: "..." }
-      const rawData = parsed.contents ? JSON.parse(parsed.contents) : parsed;
-      
-      data = Array.isArray(rawData) ? rawData : (rawData.datos || rawData.series || []);
-
-      if (Array.isArray(data) && data.length > 0) {
-        console.log("Datos obtenidos con éxito desde proxy:", proxy, data);
-        break; // Éxito: salimos del bucle
-      }
-    } catch (e) {
-      console.warn("Intento de proxy fallido:", proxy, e);
-    }
-  }
-
-  // Si ninguno de los dos proxies obtuvo datos reales, recién ahí cargamos el respaldo
-  if (!data || data.length === 0) {
-    console.error("No se pudo conectar con el INA a través de ningún proxy.");
-    renderGraficoEjemplo(ctx, nivelAlerta, nivelEvac);
-    return;
-  }
-
-  // Procesar y renderizar las últimas 15 lecturas reales
-  const lecturas = data.slice(-15);
-
-  const labels = lecturas.map(item => {
-    const fechaRaw = item.timestart || item.fecha || item.timestamp;
-    if (!fechaRaw) return '';
-    const d = new Date(fechaRaw);
-    return isNaN(d.getTime()) 
-      ? String(fechaRaw) 
-      : `${d.getDate()} ${d.toLocaleString('es-ES', { month: 'short' })}`;
-  });
-
-  const valores = lecturas.map(item => parseFloat(item.valor));
-
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Nivel (m)',
-          data: valores,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 4,
-          pointBackgroundColor: '#3b82f6'
-        },
-        {
-          label: 'Alerta',
-          data: Array(labels.length).fill(nivelAlerta),
-          borderColor: '#f59e0b',
-          borderDash: [5, 5],
-          pointRadius: 0,
-          fill: false
-        },
-        {
-          label: 'Evacuación',
-          data: Array(labels.length).fill(nivelEvac),
-          borderColor: '#ef4444',
-          borderDash: [5, 5],
-          pointRadius: 0,
-          fill: false
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#e5e7eb' } }
-      },
-      scales: {
-        x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-        y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
-      }
-    }
-  });
-}
-    function renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac) {
-      const ctx = prepararCanvasGrafico();
-      if (miChart) miChart.destroy();
-
-      const etiquetas = ['1 Ago', '2 Ago', '3 Ago', '4 Ago', '5 Ago', '6 Ago', '7 Ago'];
-      const valores = [1.85, 1.72, 1.50, 1.60, 1.68, 1.70, 1.55];
-
-      miChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: etiquetas,
-          datasets: [
-            {
-              label: 'Nivel (m)',
-              data: valores,
-              borderColor: '#0a84ff',
-              backgroundColor: 'rgba(10, 132, 255, 0.1)',
-              fill: true,
-              tension: 0.3
-            },
-            {
-              label: 'Alerta',
-              data: Array(7).fill(nivelAlerta),
-              borderColor: '#FAAE05',
-              borderDash: [5, 5],
-              pointRadius: 0
-            },
-            {
-              label: 'Evacuación',
-              data: Array(7).fill(nivelEvac),
-              borderColor: '#F4492E',
-              borderDash: [5, 5],
-              pointRadius: 0
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
-            x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
-          },
-          plugins: { legend: { labels: { color: '#fff' } } }
-        }
-      });
-    }
-
     function renderCentros(centros) {
       const listEl = document.getElementById('list-centros');
       listEl.innerHTML = '';
@@ -856,7 +687,6 @@ async function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta,
         if (pctOcupacion >= 100) colorPin = '#F4492E';
         else if (pctOcupacion >= 80) colorPin = '#FAAE05';
 
-        // 1. Tarjeta en la lista lateral
         const card = document.createElement('div');
         card.className = 'item-card';
         card.style.borderLeft = `4px solid ${colorPin}`;
@@ -872,17 +702,14 @@ async function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta,
         };
         listEl.appendChild(card);
 
-        // 2. Icono personalizado de la imagen
         const iconoSalud = L.icon({
-          iconUrl: './3304549.png', // Ruta de la imagen en tu repositorio
-          iconSize: [36, 36],       // Tamaño del pin
-          iconAnchor: [18, 36],     // Punto del icono que apunta a las coordenadas
-          popupAnchor: [0, -32]     // Posición donde se despliega el popup respecto al pin
+          iconUrl: './3304549.png',
+          iconSize: [36, 36],
+          iconAnchor: [18, 36],
+          popupAnchor: [0, -32]
         });
 
-        // 3. Creación del marcador con el popup estructurado
         const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
-        
         marker.bindPopup(`
           <div style="color:#000; min-width: 180px;">
             <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
@@ -903,7 +730,6 @@ async function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta,
             </div>
           </div>
         `);
-
         markersCentros.push(marker);
       });
     }
@@ -916,7 +742,7 @@ async function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta,
 
     function renderIngresos(personas) {
       const listEl = document.getElementById('list-ingresos');
-      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros en Hoja 2</div>';
+      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros de ingresos</div>';
       
       personas.forEach(p => {
         const centro = centrosData.find(c => String(c.id) === String(p.idCentro)) || { nombre: 'Centro General' };
@@ -934,7 +760,7 @@ async function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta,
 
     function renderMonitoreo(monitoreos) {
       const listEl = document.getElementById('list-monitoreo');
-      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros en Hoja 3</div>';
+      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros de monitoreo</div>';
       
       monitoreos.forEach(m => {
         const centro = centrosData.find(c => String(c.id) === String(m.idCentro)) || { nombre: 'Centro General' };
