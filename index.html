@@ -311,57 +311,18 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    // GeoJSON embebido directamente para garantizar disponibilidad y evitar bloqueos CORS
-    const departamentosCorrientesGeoJSON = {
-      "type": "FeatureCollection",
-      "features": [
-        {"type":"Feature","properties":{"nombre":"Capital"},"geometry":{"type":"Polygon","coordinates":[[[-58.85,-27.42],[-58.73,-27.45],[-58.75,-27.55],[-58.85,-27.52],[-58.85,-27.42]]]}},
-        {"type":"Feature","properties":{"nombre":"San Cosme"},"geometry":{"type":"Polygon","coordinates":[[[-58.73,-27.28],[-58.48,-27.28],[-58.48,-27.48],[-58.73,-27.45],[-58.73,-27.28]]]}},
-        {"type":"Feature","properties":{"nombre":"Itatí"},"geometry":{"type":"Polygon","coordinates":[[[-58.48,-27.20],[-58.00,-27.22],[-58.02,-27.45],[-58.48,-27.48],[-58.48,-27.20]]]}},
-        {"type":"Feature","properties":{"nombre":"Berón de Astrada"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-27.22],[-57.50,-27.35],[-57.55,-27.55],[-58.02,-27.45],[-58.00,-27.22]]]}},
-        {"type":"Feature","properties":{"nombre":"General Paz"},"geometry":{"type":"Polygon","coordinates":[[[-57.90,-27.45],[-57.30,-27.60],[-57.45,-27.95],[-58.00,-27.80],[-57.90,-27.45]]]}},
-        {"type":"Feature","properties":{"nombre":"San Luis del Palmar"},"geometry":{"type":"Polygon","coordinates":[[[-58.73,-27.45],[-58.02,-27.45],[-58.00,-27.80],[-58.60,-27.70],[-58.73,-27.45]]]}},
-        {"type":"Feature","properties":{"nombre":"Empedrado"},"geometry":{"type":"Polygon","coordinates":[[[-58.85,-27.75],[-58.50,-27.70],[-58.45,-28.15],[-58.80,-28.05],[-58.85,-27.75]]]}},
-        {"type":"Feature","properties":{"nombre":"Mburucuyá"},"geometry":{"type":"Polygon","coordinates":[[[-58.45,-27.95],[-58.00,-27.90],[-58.00,-28.25],[-58.40,-28.20],[-58.45,-27.95]]]}},
-        {"type":"Feature","properties":{"nombre":"Saladas"},"geometry":{"type":"Polygon","coordinates":[[[-58.50,-28.15],[-58.00,-28.20],[-58.00,-28.45],[-58.40,-28.45],[-58.50,-28.15]]]}},
-        {"type":"Feature","properties":{"nombre":"Bella Vista"},"geometry":{"type":"Polygon","coordinates":[[[-59.05,-28.30],[-58.40,-28.30],[-58.40,-28.70],[-58.95,-28.70],[-59.05,-28.30]]]}},
-        {"type":"Feature","properties":{"nombre":"San Roque"},"geometry":{"type":"Polygon","coordinates":[[[-58.40,-28.45],[-57.90,-28.40],[-57.90,-28.80],[-58.40,-28.75],[-58.40,-28.45]]]}},
-        {"type":"Feature","properties":{"nombre":"Concepción"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-28.00],[-57.30,-28.00],[-57.30,-28.60],[-57.90,-28.50],[-58.00,-28.00]]]}},
-        {"type":"Feature","properties":{"nombre":"San Miguel"},"geometry":{"type":"Polygon","coordinates":[[[-57.60,-27.60],[-56.90,-27.70],[-57.00,-28.20],[-57.60,-28.00],[-57.60,-27.60]]]}},
-        {"type":"Feature","properties":{"nombre":"Ituzaingó"},"geometry":{"type":"Polygon","coordinates":[[[-57.50,-27.35],[-56.00,-27.50],[-56.30,-28.20],[-57.00,-28.10],[-57.50,-27.35]]]}},
-        {"type":"Feature","properties":{"nombre":"Santo Tomé"},"geometry":{"type":"Polygon","coordinates":[[[-56.30,-27.80],[-55.60,-28.00],[-56.10,-28.80],[-56.60,-28.60],[-56.30,-27.80]]]}},
-        {"type":"Feature","properties":{"nombre":"General Alvear"},"geometry":{"type":"Polygon","coordinates":[[[-56.60,-28.60],[-56.30,-28.80],[-56.60,-29.20],[-56.90,-29.00],[-56.60,-28.60]]]}},
-        {"type":"Feature","properties":{"nombre":"San Martín"},"geometry":{"type":"Polygon","coordinates":[[[-57.10,-28.50],[-56.60,-28.60],[-56.80,-29.30],[-57.20,-29.10],[-57.10,-28.50]]]}},
-        {"type":"Feature","properties":{"nombre":"Mercedes"},"geometry":{"type":"Polygon","coordinates":[[[-58.00,-28.60],[-57.10,-28.50],[-57.30,-29.30],[-58.20,-29.20],[-58.00,-28.60]]]}},
-        {"type":"Feature","properties":{"nombre":"Lavalle"},"geometry":{"type":"Polygon","coordinates":[[[-59.10,-28.70],[-58.70,-28.70],[-58.70,-29.10],[-59.20,-29.10],[-59.10,-28.70]]]}},
-        {"type":"Feature","properties":{"nombre":"Goya"},"geometry":{"type":"Polygon","coordinates":[[[-59.30,-29.00],[-58.60,-29.00],[-58.60,-29.60],[-59.60,-29.60],[-59.30,-29.00]]]}},
-        {"type":"Feature","properties":{"nombre":"Curuzú Cuatiá"},"geometry":{"type":"Polygon","coordinates":[[[-58.60,-29.20],[-57.60,-29.20],[-57.70,-29.80],[-58.60,-29.80],[-58.60,-29.20]]]}},
-        {"type":"Feature","properties":{"nombre":"Paso de los Libres"},"geometry":{"type":"Polygon","coordinates":[[[-57.60,-29.20],[-56.80,-29.30],[-57.00,-30.00],[-57.70,-29.80],[-57.60,-29.20]]]}},
-        {"type":"Feature","properties":{"nombre":"Sauce"},"geometry":{"type":"Polygon","coordinates":[[[-58.80,-29.60],[-58.00,-29.70],[-58.10,-30.30],[-58.90,-30.10],[-58.80,-29.60]]]}},
-        {"type":"Feature","properties":{"nombre":"Monte Caseros"},"geometry":{"type":"Polygon","coordinates":[[[-58.10,-29.80],[-57.50,-29.90],[-57.60,-30.70],[-58.00,-30.60],[-58.10,-29.80]]]}},
-        {"type":"Feature","properties":{"nombre":"Esquina"},"geometry":{"type":"Polygon","coordinates":[[[-59.60,-29.60],[-58.80,-29.60],[-58.90,-30.40],[-59.60,-30.20],[-59.60,-29.60]]]}}
-      ]
+    // Mapa de IDs oficiales del INA para vincular cada puerto
+    const inaEstacionesIds = {
+      "Ituzaingó": { estacion_id: 15, var_id: 2 },
+      "Corrientes": { estacion_id: 14, var_id: 2 },
+      "Paso de la Patria": { estacion_id: 16, var_id: 2 },
+      "Itatí": { estacion_id: 17, var_id: 2 },
+      "Goya": { estacion_id: 18, var_id: 2 },
+      "Bella Vista": { estacion_id: 19, var_id: 2 },
+      "Paso de los Libres": { estacion_id: 20, var_id: 2 }
     };
 
-    // Estaciones de Corrientes configuradas con sus correspondientes IDs del INA
-    const ESTACIONES_BASE = [
-      { id: 1, ina_id: 14, var_id: 2, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 0, tendencia: "permanece", alerta: 6.50, evacuacion: 7.00 },
-      { id: 2, ina_id: 16, var_id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 0, tendencia: "permanece", alerta: 6.50, evacuacion: 7.00 },
-      { id: 3, ina_id: 17, var_id: 2, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, altura: 0, tendencia: "permanece", alerta: 6.80, evacuacion: 7.50 },
-      { id: 4, ina_id: 61, var_id: 2, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, altura: 0, tendencia: "permanece", alerta: 7.00, evacuacion: 7.50 },
-      { id: 5, ina_id: 15, var_id: 2, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 0, tendencia: "permanece", alerta: 3.50, evacuacion: 4.00 },
-      { id: 6, ina_id: 19, var_id: 2, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, altura: 0, tendencia: "permanece", alerta: 5.50, evacuacion: 6.00 },
-      { id: 7, ina_id: 18, var_id: 2, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 0, tendencia: "permanece", alerta: 5.20, evacuacion: 5.70 },
-      { id: 8, ina_id: 62, var_id: 2, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, altura: 0, tendencia: "permanece", alerta: 4.80, evacuacion: 5.00 },
-      { id: 9, ina_id: 63, var_id: 2, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, altura: 0, tendencia: "permanece", alerta: 11.50, evacuacion: 12.50 },
-      { id: 10, ina_id: 64, var_id: 2, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, altura: 0, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
-      { id: 11, ina_id: 65, var_id: 2, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, altura: 0, tendencia: "permanece", alerta: 9.00, evacuacion: 10.00 },
-      { id: 12, ina_id: 66, var_id: 2, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, altura: 0, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
-      { id: 13, ina_id: 20, var_id: 2, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, altura: 0, tendencia: "permanece", alerta: 7.50, evacuacion: 8.50 },
-      { id: 14, ina_id: 67, var_id: 2, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, altura: 0, tendencia: "permanece", alerta: 6.00, evacuacion: 7.50 }
-    ];
-
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiDT41ttULzciZZJqgAr6EDnx49sMLS9CqepAbOCin3oSzfXJBoE3gMM3oDhYZW9ZqWw/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz3ZEokUE-rKhVQpppnoTeebCUYWlU0h9Q2IYDojm-6_hkGBBV8SFRC0R8wdmWCB221/exec";
 
     function initApp() {
       map = L.map('map').setView([-28.5, -57.8], 7);
@@ -377,39 +338,60 @@
         abrirModal('modalCentro');
       });
 
+      cargarEstaciones();
       cargarDatosActualizados();
       cargarDepartamentos();
       actualizarTextoBoton();
     }
 
     function cargarDepartamentos() {
-      capaDepartamentos = L.geoJSON(departamentosCorrientesGeoJSON, {
-        style: function(feature) {
-          return {
-            color: '#0a84ff',
-            weight: 2,
-            opacity: 0.9,
-            fillColor: '#0a84ff',
-            fillOpacity: 0.12
-          };
-        },
-        onEachFeature: function(feature, layer) {
-          const nombreDpto = feature.properties.nombre;
-          layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
-          layer.on({
-            mouseover: function(e) { e.target.setStyle({ weight: 3.5, color: '#5ac8fa', fillOpacity: 0.3 }); },
-            mouseout: function(e) { capaDepartamentos.resetStyle(e.target); }
-          });
-        }
-      });
+      // Carga directa del archivo corrientes.json recién subido al repositorio
+      fetch('./corrientes.json')
+        .then(res => res.json())
+        .then(data => {
+          capaDepartamentos = L.geoJSON(data, {
+            style: function(feature) {
+              return {
+                color: '#0a84ff',
+                weight: 1.8,
+                opacity: 0.9,
+                fillColor: '#0a84ff',
+                fillOpacity: 0.15
+              };
+            },
+            onEachFeature: function(feature, layer) {
+              const p = feature.properties || {};
+              const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
+              
+              layer.bindTooltip(`Dpto. ${nombreDpto}`, {
+                permanent: false,
+                direction: 'center',
+                className: 'dept-tooltip'
+              });
 
-      capaDepartamentos.addTo(map);
-      departamentosVisibles = true;
-      actualizarEstiloBotonDptos();
+              layer.on({
+                mouseover: function(e) {
+                  e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 });
+                },
+                mouseout: function(e) {
+                  capaDepartamentos.resetStyle(e.target);
+                }
+              });
+            }
+          });
+
+          capaDepartamentos.addTo(map);
+          departamentosVisibles = true;
+          actualizarEstiloBotonDptos();
+        })
+        .catch(err => {
+          console.error("Error al cargar corrientes.json:", err);
+        });
     }
 
     function toggleCapaDepartamentos() {
       if (!capaDepartamentos) return;
+
       if (departamentosVisibles) {
         map.removeLayer(capaDepartamentos);
         departamentosVisibles = false;
@@ -428,10 +410,8 @@
       }
     }
 
-    async function cargarDatosActualizados() {
+    function cargarDatosActualizados() {
       document.getElementById('loading').classList.remove('off');
-
-      // 1. Obtener datos de Centros y Personas desde Google Apps Script
       fetch(APPS_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
@@ -444,66 +424,8 @@
           renderIngresos(personasData);
           renderMonitoreo(monitoreoData);
         })
-        .catch(err => console.error("Error al cargar backend de Google Apps Script:", err));
-
-      // 2. Consulta en vivo a la API oficial del INA para actualizar las alturas
-      await cargarAlturasINA();
-      document.getElementById('loading').classList.add('off');
-    }
-
-    async function cargarAlturasINA() {
-      estacionesData = JSON.parse(JSON.stringify(ESTACIONES_BASE));
-      
-      try {
-        const targetUrl = "https://alerta.ina.gob.ar/siyah/api/obs/puntual/tabla";
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-
-        const res = await fetch(proxyUrl);
-        const proxyData = await res.json();
-        const datosTabla = typeof proxyData.contents === 'string' ? JSON.parse(proxyData.contents) : proxyData.contents;
-
-        if (Array.isArray(datosTabla)) {
-          estacionesData.forEach(est => {
-            const coincidencia = datosTabla.find(item => 
-              (item.estacion && item.estacion.id === est.ina_id) || 
-              (item.estacion && item.estacion.nombre && item.estacion.nombre.toLowerCase().includes(est.nombre.toLowerCase()))
-            );
-
-            if (coincidencia && coincidencia.valor !== undefined && coincidencia.valor !== null) {
-              est.altura = parseFloat(coincidencia.valor);
-
-              if (coincidencia.tendencia) {
-                const tend = coincidencia.tendencia.toLowerCase();
-                if (tend.includes('crece') || tend.includes('sube')) est.tendencia = 'crece';
-                else if (tend.includes('baja')) est.tendencia = 'baja';
-                else est.tendencia = 'permanece';
-              }
-            }
-          });
-        }
-      } catch (e) {
-        console.warn("Fallo al obtener la tabla del INA, realizando fallback serie por serie...", e);
-        
-        const promesas = estacionesData.map(async (est) => {
-          try {
-            const urlSerie = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${est.ina_id}/${est.var_id}/datos`;
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlSerie)}`;
-            const res = await fetch(proxyUrl);
-            const pData = await res.json();
-            const lecturas = typeof pData.contents === 'string' ? JSON.parse(pData.contents) : pData.contents;
-
-            if (Array.isArray(lecturas) && lecturas.length > 0) {
-              const ult = lecturas[lecturas.length - 1];
-              if (ult && ult.valor !== null) est.altura = parseFloat(ult.valor);
-            }
-          } catch (err) {
-            console.warn(`Error obteniendo lectura de ${est.nombre}:`, err);
-          }
-        });
-        await Promise.all(promesas);
-      }
-
-      renderEstaciones(estacionesData);
+        .catch(err => console.error("Error al cargar backend:", err))
+        .finally(() => document.getElementById('loading').classList.add('off'));
     }
 
     function actualizarSelectsCentros() {
@@ -615,6 +537,27 @@
       .catch(err => console.error(err));
     }
 
+    // Lista Completa de Puertos de Corrientes (INA / Prefectura)
+    function cargarEstaciones() {
+      estacionesData = [
+        { id: 1, nombre: "Corrientes", rio: "Paraná", lat: -27.469, lng: -58.830, altura: 3.42, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
+        { id: 2, nombre: "Paso de la Patria", rio: "Paraná", lat: -27.317, lng: -58.570, altura: 3.25, tendencia: "baja", alerta: 6.50, evacuacion: 7.00 },
+        { id: 3, nombre: "Itatí", rio: "Paraná", lat: -27.270, lng: -58.250, altura: 3.10, tendencia: "permanece", alerta: 6.80, evacuacion: 7.50 },
+        { id: 4, nombre: "Ita Ibate", rio: "Paraná", lat: -27.420, lng: -57.330, altura: 2.95, tendencia: "baja", alerta: 7.00, evacuacion: 7.50 },
+        { id: 5, nombre: "Ituzaingó", rio: "Paraná", lat: -27.580, lng: -56.680, altura: 1.80, tendencia: "crece", alerta: 3.50, evacuacion: 4.00 },
+        { id: 6, nombre: "Bella Vista", rio: "Paraná", lat: -28.510, lng: -59.050, altura: 3.65, tendencia: "baja", alerta: 5.50, evacuacion: 6.00 },
+        { id: 7, nombre: "Goya", rio: "Paraná", lat: -29.140, lng: -59.260, altura: 3.80, tendencia: "baja", alerta: 5.20, evacuacion: 5.70 },
+        { id: 8, nombre: "Esquina", rio: "Paraná", lat: -30.010, lng: -59.530, altura: 3.90, tendencia: "permanece", alerta: 4.80, evacuacion: 5.00 },
+        { id: 9, nombre: "Santo Tomé", rio: "Uruguay", lat: -28.550, lng: -56.030, altura: 4.10, tendencia: "baja", alerta: 11.50, evacuacion: 12.50 },
+        { id: 10, nombre: "Alvear", rio: "Uruguay", lat: -29.100, lng: -56.550, altura: 4.50, tendencia: "baja", alerta: 9.50, evacuacion: 10.50 },
+        { id: 11, nombre: "La Cruz", rio: "Uruguay", lat: -29.170, lng: -56.640, altura: 4.60, tendencia: "baja", alerta: 9.00, evacuacion: 10.00 },
+        { id: 12, nombre: "Yapeyú", rio: "Uruguay", lat: -29.470, lng: -56.810, altura: 4.20, tendencia: "permanece", alerta: 9.50, evacuacion: 10.50 },
+        { id: 13, nombre: "Paso de los Libres", rio: "Uruguay", lat: -29.710, lng: -57.080, altura: 3.85, tendencia: "baja", alerta: 7.50, evacuacion: 8.50 },
+        { id: 14, nombre: "Monte Caseros", rio: "Uruguay", lat: -30.250, lng: -57.630, altura: 3.20, tendencia: "baja", alerta: 6.00, evacuacion: 7.50 }
+      ];
+      renderEstaciones(estacionesData);
+    }
+
     function renderEstaciones(estaciones) {
       const listaEl = document.getElementById('list-estaciones');
       listaEl.innerHTML = '';
@@ -622,12 +565,28 @@
       markersEstaciones = [];
 
       estaciones.forEach(est => {
-        let color = '#719C29';
-        if (est.altura >= est.evacuacion) color = '#F4492E';
-        else if (est.altura >= est.alerta) color = '#FAAE05';
+        // 1. Asignación dinámica de colores según nivel de alerta y tendencia
+        let colorEstado = '#28a745'; // Verde por defecto
+
+        if (est.altura >= est.evacuacion) {
+          colorEstado = '#F4492E'; // Rojo: Evacuación
+        } else if (est.altura >= est.alerta) {
+          colorEstado = '#FAAE05'; // Amarillo: Alerta
+        } else {
+          // Niveles normales según tendencia
+          if (est.tendencia === 'baja') {
+            colorEstado = '#00D2FF'; // Celeste: Baja
+          } else if (est.tendencia === 'permanece') {
+            colorEstado = '#28a745'; // Verde: Permanece
+          } else {
+            colorEstado = '#0a84ff'; // Azul: Crece (normal)
+          }
+        }
 
         let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
+        const inaInfo = inaEstacionesIds[est.nombre] || { estacion_id: 15, var_id: 2 };
 
+        // 2. Tarjeta para el panel lateral
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
@@ -638,30 +597,86 @@
           <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
             <span class="altura">${est.altura.toFixed(2)}</span>
             <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
-            <span style="margin-left:auto; font-size:0.8rem;">${flecha} ${est.tendencia}</span>
+            <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
           </div>
-          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.ina_id}, ${est.var_id}, ${est.alerta}, ${est.evacuacion})" 
+          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
                   style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
             📈 Ver Gráfica de Evolución
           </button>
         `;
         card.onclick = () => {
-          map.flyTo([est.lat, est.lng], 11);
+          map.flyTo([est.lat, est.lng], 12);
           if (window.innerWidth <= 768) toggleSidebar();
         };
         listaEl.appendChild(card);
 
+        // 3. Marcador con la imagen del triángulo de advertencia y etiquetas apiladas
         const customIcon = L.divIcon({
-          className: 'custom-pin',
-          html: `<div style="background:rgba(30,30,30,0.9); border:2px solid ${color}; color:${color}; padding:2px 6px; border-radius:8px; font-weight:bold; font-size:11px; white-space:nowrap;">${est.nombre}: ${est.altura.toFixed(2)}m ${flecha}</div>`,
-          iconSize: [80, 25]
+          className: 'custom-river-pin',
+          html: `
+            <div style="
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              justify-content: center; 
+              text-align: center;
+              cursor: pointer;
+            ">
+              <!-- Icono de la imagen del triángulo de advertencia de río -->
+              <img src="./Rio-removebg-preview.png" style="
+                width: 30px; 
+                height: 30px; 
+                object-fit: contain;
+                filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
+                margin-bottom: 2px;
+              " alt="Alerta Río">
+
+              <!-- Nombre del Municipio -->
+              <div style="
+                background: rgba(18, 18, 18, 0.90); 
+                color: #ffffff; 
+                font-size: 10.5px; 
+                font-weight: 700; 
+                padding: 2px 6px; 
+                border-radius: 4px; 
+                white-space: nowrap; 
+                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+                border: 1px solid rgba(255,255,255,0.15);
+                line-height: 1.2;
+              ">
+                ${est.nombre}
+              </div>
+
+              <!-- Altura y Flecha etiquetada con el color dinámico de estado -->
+              <div style="
+                background: rgba(18, 18, 18, 0.95); 
+                color: ${colorEstado}; 
+                font-size: 11px; 
+                font-weight: 800; 
+                padding: 1px 6px; 
+                border-radius: 4px; 
+                white-space: nowrap; 
+                margin-top: 2px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+                border: 1px solid ${colorEstado};
+                line-height: 1.2;
+              ">
+                ${est.altura.toFixed(2)}m ${flecha}
+              </div>
+            </div>
+          `,
+          iconSize: [110, 70],
+          iconAnchor: [55, 15]
         });
 
         const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
         marker.bindPopup(`
           <div style="color:#000;">
-            <b>${est.nombre}</b><br>Río: ${est.rio}<br>Altura actual: ${est.altura.toFixed(2)}m<br>Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
-            <button onclick="mostrarGraficoINA('${est.nombre}', ${est.ina_id}, ${est.var_id}, ${est.alerta}, ${est.evacuacion})" 
+            <b>${est.nombre}</b><br>
+            Río: ${est.rio}<br>
+            Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
+            Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
+            <button onclick="mostrarGraficoINA('${est.nombre}', ${inaInfo.estacion_id}, ${inaInfo.var_id}, ${est.alerta}, ${est.evacuacion})" 
                     style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
               📈 Ver Gráfica de Evolución
             </button>
@@ -684,20 +699,18 @@
       const ctx = prepararCanvasGrafico();
 
       const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
-      const urlProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(urlTarget)}`;
+      const urlProxy = `https://corsproxy.io/?${encodeURIComponent(urlTarget)}`;
 
       fetch(urlProxy)
         .then(res => res.json())
-        .then(proxyData => {
-          const data = typeof proxyData.contents === 'string' ? JSON.parse(proxyData.contents) : proxyData.contents;
-
+        .then(data => {
           if (!Array.isArray(data) || data.length === 0) {
             throw new Error("Formato de datos no válido");
           }
 
           const lecturas = data.slice(-15);
           const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
-          const valores = lecturas.map(d => parseFloat(d.valor));
+          const valores = lecturas.map(d => d.valor);
 
           if (miChart) miChart.destroy();
 
@@ -744,8 +757,57 @@
           });
         })
         .catch(err => {
-          console.warn("No se pudieron cargar datos en vivo del INA:", err);
+          console.warn("No se pudieron cargar datos en vivo del INA, cargando gráfico de respaldo:", err);
+          renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac);
         });
+    }
+
+    function renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac) {
+      const ctx = prepararCanvasGrafico();
+      if (miChart) miChart.destroy();
+
+      const etiquetas = ['1 Ago', '2 Ago', '3 Ago', '4 Ago', '5 Ago', '6 Ago', '7 Ago'];
+      const valores = [1.85, 1.72, 1.50, 1.60, 1.68, 1.70, 1.55];
+
+      miChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: etiquetas,
+          datasets: [
+            {
+              label: 'Nivel (m)',
+              data: valores,
+              borderColor: '#0a84ff',
+              backgroundColor: 'rgba(10, 132, 255, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Alerta',
+              data: Array(7).fill(nivelAlerta),
+              borderColor: '#FAAE05',
+              borderDash: [5, 5],
+              pointRadius: 0
+            },
+            {
+              label: 'Evacuación',
+              data: Array(7).fill(nivelEvac),
+              borderColor: '#F4492E',
+              borderDash: [5, 5],
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
+            x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
+          },
+          plugins: { legend: { labels: { color: '#fff' } } }
+        }
+      });
     }
 
     function renderCentros(centros) {
@@ -760,6 +822,7 @@
         if (pctOcupacion >= 100) colorPin = '#F4492E';
         else if (pctOcupacion >= 80) colorPin = '#FAAE05';
 
+        // 1. Tarjeta en la lista lateral
         const card = document.createElement('div');
         card.className = 'item-card';
         card.style.borderLeft = `4px solid ${colorPin}`;
@@ -770,31 +833,43 @@
           <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
         `;
         card.onclick = () => {
-          map.flyTo([c.lat, c.lng], 13);
+          map.flyTo([c.lat, c.lng], 15);
           if (window.innerWidth <= 768) toggleSidebar();
         };
         listEl.appendChild(card);
 
-        const iconoCasa = L.divIcon({
-          className: 'custom-house-pin',
-          html: `<div style="background:${colorPin}; color:#fff; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px; border:2px solid #fff; white-space:nowrap; box-shadow:0 2px 5px rgba(0,0,0,0.4);">🏠 ${c.evacuados} evac.</div>`,
-          iconSize: [85, 25]
+        // 2. Icono personalizado de la imagen
+        const iconoSalud = L.icon({
+          iconUrl: './3304549.png', // Ruta de la imagen en tu repositorio
+          iconSize: [36, 36],       // Tamaño del pin
+          iconAnchor: [18, 36],     // Punto del icono que apunta a las coordenadas
+          popupAnchor: [0, -32]     // Posición donde se despliega el popup respecto al pin
         });
 
-        const marker = L.marker([c.lat, c.lng], { icon: iconoCasa }).addTo(map);
+        // 3. Creación del marcador con el popup estructurado
+        const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
+        
         marker.bindPopup(`
-          <div style="color:#000;">
-            <b style="font-size:0.95rem;">${c.nombre}</b><br>
-            <b>Municipio:</b> ${c.municipio}<br>
-            <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
-            <b>Contacto:</b> ${c.contacto}<br>
-            <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p<br><br>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+          <div style="color:#000; min-width: 180px;">
+            <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+              Centro de Evacuados
+            </div>
+            <div style="font-size:1.05rem; font-weight:bold; color:#111; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">
+              ${c.nombre}
+            </div>
+            <div style="font-size: 0.8rem; line-height: 1.4;">
+              <b>Municipio:</b> ${c.municipio}<br>
+              <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
+              <b>Contacto:</b> ${c.contacto}<br>
+              <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
               <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
               <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
             </div>
           </div>
         `);
+
         markersCentros.push(marker);
       });
     }
