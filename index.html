@@ -542,7 +542,12 @@
       const est = estacionesData.find(e => e.seriesId === seriesId) || {};
       const obs = est.historico || [];
 
-      const labels = obs.map(item => String(item.timestart || "").split('T')[0]);
+      const labels = obs.map(item => {
+        const str = String(item.timestart || "").split('T')[0];
+        if (!str) return "";
+        const partes = str.split('-'); // Separa en [YYYY, MM, DD]
+        return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : str; // Retorna DD-MM-YYYY
+      });
       const valores = obs.map(item => parseFloat(item.valor) || 0);
 
       if (miChart) miChart.destroy();
