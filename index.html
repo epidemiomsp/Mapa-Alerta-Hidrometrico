@@ -349,24 +349,11 @@
           estacionesData.forEach(estacion => {
             const datosEnVivo = data.estacionesINA.find(e => Number(e.id_estacion || e.id) === Number(estacion.ina_id));
             if (datosEnVivo) {
-              let val = null;
-              if (datosEnVivo.ultimo_valor && datosEnVivo.ultimo_valor.valor !== undefined) {
-                val = datosEnVivo.ultimo_valor.valor;
-              } else if (datosEnVivo.altura !== undefined) {
-                val = datosEnVivo.altura;
-              } else if (datosEnVivo.valor !== undefined) {
-                val = datosEnVivo.valor;
+              if (datosEnVivo.altura !== undefined && !isNaN(datosEnVivo.altura)) {
+                estacion.altura = parseFloat(datosEnVivo.altura);
               }
-
-              if (val !== null && !isNaN(val)) {
-                estacion.altura = parseFloat(val);
-              }
-
               if (datosEnVivo.tendencia) {
-                const t = String(datosEnVivo.tendencia).toLowerCase();
-                if (t.includes('crece')) estacion.tendencia = 'crece';
-                else if (t.includes('baja')) estacion.tendencia = 'baja';
-                else estacion.tendencia = 'permanece';
+                estacion.tendencia = datosEnVivo.tendencia;
               }
             }
           });
@@ -626,92 +613,65 @@
       abrirModal('modalGrafico');
 
       const ctx = prepararCanvasGrafico();
-      const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlTarget)}`;
 
-      fetch(proxyUrl)
-        .then(res => res.json())
-        .then(data => {
-          if (!Array.isArray(data) || data.length === 0) throw new Error("Sin datos de serie");
+      // Petición al servidor Apps Script (Proxy) en lugar de llamar directo al INA desde el navegador
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: "obtener_grafico", idEstacion: idEstacion, idVar: idVar })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) throw new Error("Sin datos de serie");
 
-          const lecturas = data.filter(d => d.valor !== null && d.valor !== undefined).slice(-15);
-          const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
-          const valores = lecturas.map(d => d.valor);
+        const lecturas = data.filter(d => d.valor !== null && d.valor !== undefined).slice(-15);
+        const etiquetas = lecturas.map(d => new Date(d.timestart).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit' }));
+        const valores = lecturas.map(d => d.valor);
 
-          if (miChart) miChart.destroy();
+        if (miChart) miChart.destroy();
 
-          miChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: etiquetas,
-              datasets: [
-                {
-                  label: 'Nivel Hidrométrico (m)',
-                  data: valores,
-                  borderColor: '#0a84ff',
-                  backgroundColor: 'rgba(10, 132, 255, 0.1)',
-                  fill: true,
-                  tension: 0.3
-                },
-                {
-                  label: 'Nivel Alerta',
-                  data: Array(valores.length).fill(nivelAlerta),
-                  borderColor: '#FAAE05',
-                  borderDash: [5, 5],
-                  pointRadius: 0
-                },
-                {
-                  label: 'Nivel Evacuación',
-                  data: Array(valores.length).fill(nivelEvac),
-                  borderColor: '#F4492E',
-                  borderDash: [5, 5],
-                  pointRadius: 0
-                }
-              ]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
-                x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
+        miChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: etiquetas,
+            datasets: [
+              {
+                label: 'Nivel Hidrométrico (m)',
+                data: valores,
+                borderColor: '#0a84ff',
+                backgroundColor: 'rgba(10, 132, 255, 0.1)',
+                fill: true,
+                tension: 0.3
               },
-              plugins: { legend: { labels: { color: '#fff' } } }
-            }
-          });
-        })
-        .catch(err => {
-          console.warn("Cargando gráfico simulado por restricción de API:", err);
-          renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac);
-        });
-    }
-
-    function renderGraficoEjemplo(nombreEstacion, nivelAlerta, nivelEvac) {
-      const ctx = prepararCanvasGrafico();
-      if (miChart) miChart.destroy();
-
-      const etiquetas = ['04/08', '05/08', '06/08', '07/08', '08/08', '09/08', '10/08'];
-      const valores = [1.85, 1.72, 1.50, 1.60, 1.68, 1.70, 1.55];
-
-      miChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: etiquetas,
-          datasets: [
-            { label: 'Nivel (m)', data: valores, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', fill: true, tension: 0.3 },
-            { label: 'Alerta', data: Array(7).fill(nivelAlerta), borderColor: '#FAAE05', borderDash: [5, 5], pointRadius: 0 },
-            { label: 'Evacuación', data: Array(7).fill(nivelEvac), borderColor: '#F4492E', borderDash: [5, 5], pointRadius: 0 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
-            x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
+              {
+                label: 'Nivel Alerta',
+                data: Array(valores.length).fill(nivelAlerta),
+                borderColor: '#FAAE05',
+                borderDash: [5, 5],
+                pointRadius: 0
+              },
+              {
+                label: 'Nivel Evacuación',
+                data: Array(valores.length).fill(nivelEvac),
+                borderColor: '#F4492E',
+                borderDash: [5, 5],
+                pointRadius: 0
+              }
+            ]
           },
-          plugins: { legend: { labels: { color: '#fff' } } }
-        }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { grid: { color: '#333' }, ticks: { color: '#fff' } },
+              x: { grid: { color: '#333' }, ticks: { color: '#fff' } }
+            },
+            plugins: { legend: { labels: { color: '#fff' } } }
+          }
+        });
+      })
+      .catch(err => {
+        console.warn("Fallo en la carga remota del gráfico:", err);
       });
     }
 
