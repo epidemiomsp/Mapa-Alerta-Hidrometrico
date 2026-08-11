@@ -692,7 +692,7 @@
       return document.getElementById('chartEvolucion').getContext('2d');
     }
 
-    function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta, nivelEvac) {
+function mostrarGraficoINA(nombreEstacion, idEstacion, idVar, nivelAlerta, nivelEvac) {
   document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
   abrirModal('modalGrafico');
 
@@ -700,8 +700,9 @@
 
   // Endpoint oficial del INA
   const urlTarget = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${idEstacion}/${idVar}/datos`;
-  // Proxy compatible directo
-  const urlProxy = `https://corsproxy.org/?${encodeURIComponent(urlTarget)}`;
+  
+  // Proxy libre de redirecciones (CodeTabs)
+  const urlProxy = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlTarget)}`;
 
   fetch(urlProxy)
     .then(res => {
@@ -711,7 +712,6 @@
     .then(data => {
       console.log("Datos recibidos del INA:", data);
 
-      // Si viene envuelto en una propiedad interna
       let registros = Array.isArray(data) ? data : (data.datos || data.series || []);
 
       if (!registros || registros.length === 0) {
@@ -730,7 +730,7 @@
 
       const valores = lecturas.map(item => parseFloat(item.valor));
 
-      // Construcción del gráfico real
+      // Renderizar el gráfico
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -779,7 +779,6 @@
     })
     .catch(err => {
       console.error("Error al conectar con el INA:", err);
-      // Gráfico de respaldo en caso de fallo de red
       renderGraficoEjemplo(ctx, nivelAlerta, nivelEvac);
     });
 }
