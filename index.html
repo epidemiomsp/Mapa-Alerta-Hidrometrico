@@ -331,7 +331,7 @@
   document.getElementById('loading').classList.remove('off');
   estacionesData = JSON.parse(JSON.stringify(ESTACIONES_LISTA));
 
-  // 1. Cargar Centros/Personas desde Google Apps Script
+  // 1. Cargar Centros/Personas de Google Apps Script
   try {
     const res = await fetch(APPS_SCRIPT_URL);
     const data = await res.json();
@@ -347,35 +347,58 @@
     console.error("Error al cargar centros/personas:", err);
   }
 
-  // 2. Cargar Alturas en Vivo directamente desde la API pública del INA
-  const promesasINA = estacionesData.map(async (est) => {
-    try {
-      const urlINA = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${est.ina_id}/${est.var_id}/datos`;
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlINA)}`;
-      
-      const res = await fetch(proxyUrl);
-      const dataProxy = await res.json();
-      const lecturas = JSON.parse(dataProxy.contents);
+  // 2. Consulta unificada a la API de Tabla del INA
+  try {
+    const targetUrl = "https://alerta.ina.gob.ar/siyah/api/obs/puntual/tabla";
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
 
-      if (Array.isArray(lecturas) && lecturas.length >= 2) {
-        const ultima = lecturas[lecturas.length - 1];
-        const penultima = lecturas[lecturas.length - 2];
+    const res = await fetch(proxyUrl);
+    const proxyData = await res.json();
+    const datosTabla = typeof proxyData.contents === 'string' ? JSON.parse(proxyData.contents) : proxyData.contents;
 
-        if (ultima && ultima.valor !== null) {
-          est.altura = parseFloat(ultima.valor);
-          
-          const diff = ultima.valor - penultima.valor;
-          if (diff > 0.01) est.tendencia = "crece";
-          else if (diff < -0.01) est.tendencia = "baja";
-          else est.tendencia = "permanece";
+    if (Array.isArray(datosTabla)) {
+      estacionesData.forEach(est => {
+        // Buscar por id de estación (ina_id) o por coincidencia de nombre
+        const coincidencia = datosTabla.find(item => 
+          (item.estacion && item.estacion.id === est.ina_id) || 
+          (item.estacion && item.estacion.nombre && item.estacion.nombre.toLowerCase().includes(est.nombre.toLowerCase()))
+        );
+
+        if (coincidencia && coincidencia.valor !== undefined && coincidencia.valor !== null) {
+          est.altura = parseFloat(coincidencia.valor);
+
+          // Obtener tendencia directamente si la API la provee o asignarla
+          if (coincidencia.tendencia) {
+            const tend = coincidencia.tendencia.toLowerCase();
+            if (tend.includes('crece') || tend.includes('sube')) est.tendencia = 'crece';
+            else if (tend.includes('baja')) est.tendencia = 'baja';
+            else est.tendencia = 'permanece';
+          }
         }
-      }
-    } catch (e) {
-      console.warn(`No se pudo actualizar la estación ${est.nombre} desde INA:`, e);
+      });
     }
-  });
+  } catch (e) {
+    console.warn("Error consultando la API de Tabla INA, intentando por serie individual...", e);
+    
+    // Método alternativo serie por serie
+    const promesas = estacionesData.map(async (est) => {
+      try {
+        const urlSerie = `https://alerta.ina.gob.ar/siyah/api/obs/puntual/series/${est.ina_id}/${est.var_id}/datos`;
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlSerie)}`;
+        const res = await fetch(proxyUrl);
+        const pData = await res.json();
+        const lecturas = JSON.parse(pData.contents);
 
-  await Promise.all(promesasINA);
+        if (Array.isArray(lecturas) && lecturas.length > 0) {
+          const ult = lecturas[lecturas.length - 1];
+          if (ult && ult.valor !== null) est.altura = parseFloat(ult.valor);
+        }
+      } catch (err) {
+        console.warn(`Error en estación ${est.nombre}:`, err);
+      }
+    });
+    await Promise.all(promesas);
+  }
 
   renderEstaciones(estacionesData);
   document.getElementById('loading').classList.add('off');
