@@ -304,8 +304,8 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    // URL de Apps Script para guardar centros, ingresos y verificar usuarios
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyM3Gv_IG68PpTpUxQP0ql_xurTuPVTUIXSCAD4FtGNiO5JXz3Pa6P5sCRGXaZm_kt/exec";
+    // URL de Apps Script actualizada a la versión activa
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKZMXDAnDTfhMWxSerBMKIIfbtCxXHDWtzqTwH8J5SlcNP-0Oxa_aWqvG3PUOp6YB6pA/exec";
 
     let usuarioAutorizado = false;
 
@@ -588,8 +588,8 @@
       const labels = obs.map(item => {
         const str = String(item.timestart || "").split('T')[0];
         if (!str) return "";
-        const partes = str.split('-'); // Separa en [YYYY, MM, DD]
-        return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : str; // Retorna DD-MM-YYYY
+        const partes = str.split('-');
+        return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : str;
       });
       const valores = obs.map(item => parseFloat(item.valor) || 0);
 
@@ -669,23 +669,23 @@
     }
 
     function guardarCentro(e) {
-  e.preventDefault();
-  const nuevo = {
-    action: "add_centro",
-    id: Date.now(),
-    nombre: document.getElementById('c-nombre').value,
-    municipio: document.getElementById('c-muni').value,
-    evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
-    capacidad: parseInt(document.getElementById('c-capacidad').value) || 0,
-    lat: parseFloat(document.getElementById('c-lat').value),
-    lng: parseFloat(document.getElementById('c-lng').value),
-    contacto: document.getElementById('c-contacto').value || "Sin dato",
-    banos: parseInt(document.getElementById('c-banos').value) || 0,
-    agua: parseFloat(document.getElementById('c-agua').value) || 0
-  };
-  cerrarModal('modalCentro');
-  enviarAData(nuevo, "centros");
-}
+      e.preventDefault();
+      const nuevo = {
+        action: "add_centro",
+        id: Date.now(),
+        nombre: document.getElementById('c-nombre').value,
+        municipio: document.getElementById('c-muni').value,
+        evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
+        capacidad: parseInt(document.getElementById('c-capacidad').value) || 0,
+        lat: parseFloat(document.getElementById('c-lat').value),
+        lng: parseFloat(document.getElementById('c-lng').value),
+        contacto: document.getElementById('c-contacto').value || "Sin dato",
+        banos: parseInt(document.getElementById('c-banos').value) || 0,
+        agua: parseFloat(document.getElementById('c-agua').value) || 0
+      };
+      cerrarModal('modalCentro');
+      enviarAData(nuevo, "centros");
+    }
 
     function guardarPersona(e) {
       e.preventDefault();
@@ -727,24 +727,43 @@
       if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
 
       document.getElementById('loading').classList.remove('off');
+
+      const formData = new URLSearchParams();
+      formData.append("action", "delete_centro");
+      formData.append("id", idCentro);
+
       fetch(APPS_SCRIPT_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: "delete_centro", id: idCentro })
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
       })
-      .then(() => setTimeout(() => { cargarDatosActualizados(); }, 1200))
-      .catch(err => console.error(err));
+      .then(() => setTimeout(() => { cargarDatosActualizados(); }, 1500))
+      .catch(err => {
+        console.error("Error al eliminar centro:", err);
+        document.getElementById('loading').classList.add('off');
+      });
     }
 
     function enviarAData(payload, pestanaDestino) {
       document.getElementById('loading').classList.remove('off');
+      
+      const formData = new URLSearchParams();
+      for (const key in payload) {
+        formData.append(key, payload[key]);
+      }
+
       fetch(APPS_SCRIPT_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
       })
-      .then(() => setTimeout(() => { cargarDatosActualizados(); cambiarPestana(pestanaDestino); }, 1200))
-      .catch(err => console.error(err));
+      .then(() => setTimeout(() => { cargarDatosActualizados(); cambiarPestana(pestanaDestino); }, 1500))
+      .catch(err => {
+        console.error("Error al enviar datos:", err);
+        document.getElementById('loading').classList.add('off');
+      });
     }
 
     function renderCentros(centros) {
