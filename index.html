@@ -20,7 +20,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--txt); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     
-    header { background: #1a1a1a; border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; min-height: 50px; flex-wrap: wrap; gap: 6px; }
+    header { background: #1a1a1a; border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; z-index: 2000; min-height: 50px; flex-wrap: wrap; gap: 6px; }
     .title-area h1 { font-size: 0.95rem; color: #fff; line-height: 1.2; }
     .title-area p { font-size: 0.68rem; color: var(--txt-dim); }
     
@@ -38,10 +38,10 @@
       z-index: 1500; 
       height: 100%; 
       position: relative;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.3s ease-in-out;
     }
 
-    #sidebar.collapsed { margin-left: -380px; }
+    #sidebar.collapsed { transform: translateX(-380px); margin-right: -380px; }
 
     .toggle-sidebar-btn {
       position: absolute; top: 10px; right: -32px; width: 32px; height: 38px;
@@ -52,7 +52,7 @@
     }
     
     .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #181818; min-height: 42px; align-items: center; }
-    .tab-btn { flex: 1; padding: 12px 2px; font-size: 0.72rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; text-align: center; white-space: nowrap; }
+    .tab-btn { flex: 1; padding: 10px 2px; font-size: 0.72rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; text-align: center; white-space: nowrap; }
     .tab-btn.active { color: #fff; border-bottom-color: var(--primary); background: var(--card); font-weight: bold; }
     
     .filter-bar { padding: 6px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; background: var(--bg); }
@@ -115,47 +115,35 @@
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
 
-    /* REGLAS MÓVIL OPTIMIZADAS */
+    /* REGLAS MÓVIL OPTIMIZADAS CON PANEL COMPLETO / DESPLEGABLE */
     @media (max-width: 768px) {
       .title-area p { display: none; }
-      header { padding: 6px 10px; }
+      header { padding: 6px 8px; }
       
       .container { flex-direction: column; }
       
       #sidebar { 
         width: 100% !important; 
-        height: 45vh !important; 
+        height: 70vh !important; 
         border-right: none; 
         border-top: 1px solid var(--border); 
         position: absolute; 
         bottom: 0; 
         left: 0; 
         margin-left: 0 !important;
+        margin-right: 0 !important;
         z-index: 1500; 
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.6);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.8);
         transform: translateY(0);
       }
 
-      /* OCULTAR EN MÓVIL: Muestra solo la barra superior de 42px con las pestañas y botón */
+      /* OCULTAR PANEL COMPLETAMENTE EN MÓVIL */
       #sidebar.collapsed { 
-        transform: translateY(calc(100% - 42px)) !important; 
+        transform: translateY(100%) !important; 
       }
 
       .toggle-sidebar-btn { 
-        position: relative; 
-        top: 0; 
-        right: 0; 
-        width: auto; 
-        height: 42px; 
-        padding: 0 10px; 
-        border-radius: 0; 
-        border: none; 
-        border-left: 1px solid var(--border); 
-        font-size: 0.75rem; 
-        background: #252525; 
-        color: var(--primary);
-        font-weight: bold;
-        white-space: nowrap;
+        display: none !important; /* Ocultamos el botón que molestaba en móvil */
       }
 
       .tab-bar {
@@ -167,7 +155,7 @@
       }
 
       .sec-tab {
-        height: calc(45vh - 42px) !important;
+        height: calc(70vh - 42px) !important;
       }
     }
   </style>
@@ -184,6 +172,7 @@
       <button class="btn-action" style="background:#28a745;" onclick="abrirModal('modalPersona')">+ Persona</button>
       <button class="btn-action" style="background:#17a2b8;" onclick="abrirModal('modalMonitoreo')">+ Monitoreo</button>
       <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
+      <button class="btn-sec" id="btn-toggle-info" style="background:#0a84ff; border-color:#005bb5;" onclick="toggleSidebar()">📊 Panel Info</button>
       <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
     </div>
   </header>
@@ -191,13 +180,12 @@
   <div class="container">
     <div id="loading" class="off">Cargando datos...</div>
 
-    <div id="sidebar">
+    <div id="sidebar" class="collapsed">
       <div class="tab-bar">
         <button class="tab-btn active" id="btn-tab-estaciones" onclick="cambiarPestana('estaciones')">🌊 Ríos</button>
         <button class="tab-btn" id="btn-tab-centros" onclick="cambiarPestana('centros')">🏠 Centros</button>
         <button class="tab-btn" id="btn-tab-ingresos" onclick="cambiarPestana('ingresos')">📋 Ingresos</button>
         <button class="tab-btn" id="btn-tab-monitoreo" onclick="cambiarPestana('monitoreo')">🩺 Monitoreo</button>
-        <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">▼ Ocultar</button>
       </div>
 
       <div id="sec-estaciones" class="sec-tab">
@@ -220,6 +208,8 @@
       <div id="sec-monitoreo" class="sec-tab" style="display:none;">
         <div class="list" id="list-monitoreo"></div>
       </div>
+      
+      <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
     </div>
 
     <div id="map"></div>
@@ -393,7 +383,7 @@
 
       cargarDatosActualizados();
       cargarDepartamentos();
-      actualizarTextoBoton();
+      actualizarEstiloBotonInfo();
     }
 
     function fetchConProxy(url) {
@@ -656,7 +646,7 @@
       const sidebar = document.getElementById('sidebar');
       if (sidebar.classList.contains('collapsed')) {
         sidebar.classList.remove('collapsed');
-        actualizarTextoBoton();
+        actualizarEstiloBotonInfo();
       }
 
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -874,19 +864,22 @@
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('collapsed');
-      actualizarTextoBoton();
+      actualizarEstiloBotonInfo();
       setTimeout(() => map.invalidateSize(), 300);
     }
 
-    function actualizarTextoBoton() {
+    function actualizarEstiloBotonInfo() {
       const sidebar = document.getElementById('sidebar');
+      const btnInfo = document.getElementById('btn-toggle-info');
       const toggleBtn = document.getElementById('toggleBtn');
-      const isMobile = window.innerWidth <= 768;
       const isCollapsed = sidebar.classList.contains('collapsed');
 
-      if (isMobile) {
-        toggleBtn.innerHTML = isCollapsed ? '▲ Mostrar' : '▼ Ocultar';
-      } else {
+      if (btnInfo) {
+        btnInfo.style.background = isCollapsed ? '#2c2c2e' : '#0a84ff';
+        btnInfo.style.borderColor = isCollapsed ? '#3a3a3c' : '#005bb5';
+      }
+
+      if (toggleBtn) {
         toggleBtn.innerHTML = isCollapsed ? '▶' : '◀';
       }
     }
@@ -898,7 +891,7 @@
       else renderEstaciones(estacionesData.filter(e => e.rio.toLowerCase().includes(rio.toLowerCase())));
     }
 
-    window.onresize = actualizarTextoBoton;
+    window.onresize = actualizarEstiloBotonInfo;
     window.onload = initApp;
   </script>
 </body>
