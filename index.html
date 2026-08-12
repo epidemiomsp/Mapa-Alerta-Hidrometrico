@@ -43,6 +43,7 @@
 
     #sidebar.collapsed { margin-left: -380px; }
 
+    /* Botón interno en desktop */
     .toggle-sidebar-btn {
       position: absolute; top: 10px; right: -32px; width: 32px; height: 38px;
       background: var(--card); border: 1px solid var(--border); border-left: none;
@@ -115,7 +116,25 @@
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
 
-    /* REDISEÑO ESPECÍFICO PARA VISTA MÓVIL */
+    /* BOTÓN FLOTANTE INDEPENDIENTE EN MÓVIL */
+    #floatingToggleBtn {
+      display: none;
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      z-index: 2500;
+      background: var(--primary);
+      color: #fff;
+      border: 1px solid #2880e6;
+      padding: 10px 16px;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      cursor: pointer;
+    }
+
+    /* ESTILOS EXCLUSIVOS MÓVIL */
     @media (max-width: 768px) {
       .title-area p { display: none; }
       header { padding: 6px 10px; }
@@ -137,34 +156,21 @@
         transition: transform 0.3s ease-in-out;
       }
 
-      /* Cuando se oculta en móvil se desplaza hacia abajo dejando la barra visible */
+      /* Cuando se oculta, se desplaza completamente fuera de pantalla */
       #sidebar.collapsed { 
-        transform: translateY(calc(100% - 42px)); 
+        transform: translateY(100%); 
       }
 
       .toggle-sidebar-btn { 
-        position: relative; 
-        top: 0; 
-        right: 0; 
-        width: auto; 
-        height: 100%; 
-        padding: 0 10px; 
-        border-radius: 0; 
-        border: none; 
-        border-left: 1px solid var(--border); 
-        font-size: 0.75rem; 
-        background: #252525; 
-        white-space: nowrap;
+        display: none !important; 
       }
 
-      .tab-bar {
-        background: #181818;
-        display: flex;
-        align-items: center;
+      #floatingToggleBtn {
+        display: block; /* Se activa en móvil */
       }
 
       .sec-tab {
-        height: calc(50vh - 42px) !important;
+        height: calc(50vh - 40px) !important;
       }
     }
   </style>
@@ -188,13 +194,16 @@
   <div class="container">
     <div id="loading" class="off">Cargando datos...</div>
 
+    <!-- Botón flotante siempre accesible en la esquina inferior derecha -->
+    <button id="floatingToggleBtn" onclick="toggleSidebar()">📊 Ocultar Panel</button>
+
     <div id="sidebar">
       <div class="tab-bar">
         <button class="tab-btn active" id="btn-tab-estaciones" onclick="cambiarPestana('estaciones')">🌊 Ríos</button>
         <button class="tab-btn" id="btn-tab-centros" onclick="cambiarPestana('centros')">🏠 Centros</button>
         <button class="tab-btn" id="btn-tab-ingresos" onclick="cambiarPestana('ingresos')">📋 Ingresos</button>
         <button class="tab-btn" id="btn-tab-monitoreo" onclick="cambiarPestana('monitoreo')">🩺 Monitoreo</button>
-        <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">▼ Ocultar</button>
+        <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
       </div>
 
       <div id="sec-estaciones" class="sec-tab">
@@ -347,10 +356,10 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    // URL del Google Apps Script
+    // URL de Apps Script
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgLrRuhtSp6jkZ8vpqt-RyVnEl7JW2zPaVq3jTNEzV9-eIxJiLtqmz509Izz14n83vZg/exec";
 
-    // Configuración con los seriesId exactos de la API /a5 del INA
+    // Configuración con los seriesId exactos del INA
     const ESTACIONES = [
       { muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00 },
       { muni:"Itá Ibaté",           depto:"General Paz",        rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50 },
@@ -470,7 +479,7 @@
         })
         .catch(err => console.error("Error al cargar backend:", err));
 
-      // 2. Cargar Niveles de Ríos directamente usando la API /a5 del INA
+      // 2. Cargar Niveles de Ríos
       const hoy = new Date().toISOString().split('T')[0];
       const hace7Dias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -878,11 +887,12 @@
     function actualizarTextoBoton() {
       const sidebar = document.getElementById('sidebar');
       const toggleBtn = document.getElementById('toggleBtn');
+      const floatingBtn = document.getElementById('floatingToggleBtn');
       const isMobile = window.innerWidth <= 768;
       const isCollapsed = sidebar.classList.contains('collapsed');
 
       if (isMobile) {
-        toggleBtn.innerHTML = isCollapsed ? '▲ Mostrar' : '▼ Ocultar';
+        floatingBtn.innerHTML = isCollapsed ? '📊 Mostrar Panel' : '📊 Ocultar Panel';
       } else {
         toggleBtn.innerHTML = isCollapsed ? '▶' : '◀';
       }
