@@ -133,10 +133,9 @@
       <p>Provincia de Corrientes - Monitoreo de Ríos y Centros de Evacuados</p>
     </div>
     <div class="header-actions">
-      <!-- Botones con clase auth-only protegidos por autorización -->
-      <button class="btn-action auth-only" style="display:none;" onclick="abrirModal('modalCentro')">+ Centro</button>
-      <button class="btn-action auth-only" style="display:none; background:#28a745;" onclick="abrirModal('modalPersona')">+ Persona</button>
-      <button class="btn-action auth-only" style="display:none; background:#17a2b8;" onclick="abrirModal('modalMonitoreo')">+ Monitoreo</button>
+      <button class="btn-action" onclick="abrirModal('modalCentro')">+ Centro</button>
+      <button class="btn-action" style="background:#28a745;" onclick="abrirModal('modalPersona')">+ Persona</button>
+      <button class="btn-action" style="background:#17a2b8;" onclick="abrirModal('modalMonitoreo')">+ Monitoreo</button>
       <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
       <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
     </div>
@@ -307,46 +306,6 @@
     // URL de Apps Script actualizada a la versión activa
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKZMXDAnDTfhMWxSerBMKIIfbtCxXHDWtzqTwH8J5SlcNP-0Oxa_aWqvG3PUOp6YB6pA/exec";
 
-    let usuarioAutorizado = false;
-
-    function verificarPermisosUsuario() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const correoUsuario = urlParams.get('user');
-
-      if (!correoUsuario) {
-        console.log("Modo Lectura: Acceso público sin usuario autenticado.");
-        desactivarModoEdicion();
-        return;
-      }
-
-      const checkUrl = `${APPS_SCRIPT_URL}?action=check_auth&user=${encodeURIComponent(correoUsuario)}`;
-
-      fetch(checkUrl)
-        .then(res => res.json())
-        .then(res => {
-          if (res && res.authorized) {
-            usuarioAutorizado = true;
-            activarModoEdicion();
-            console.log(`Usuario autorizado: ${res.nombre} (${res.user})`);
-          } else {
-            desactivarModoEdicion();
-            console.warn("Usuario no autorizado o pendiente de aprobación.");
-          }
-        })
-        .catch(err => {
-          console.error("Error verificando usuario:", err);
-          desactivarModoEdicion();
-        });
-    }
-
-    function activarModoEdicion() {
-      document.querySelectorAll('.auth-only').forEach(el => el.style.display = 'inline-block');
-    }
-
-    function desactivarModoEdicion() {
-      document.querySelectorAll('.auth-only').forEach(el => el.style.display = 'none');
-    }
-
     // Configuración real con los seriesId exactos de la API /a5 del INA
     const ESTACIONES = [
       { muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00 },
@@ -376,7 +335,6 @@
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
       map.on('click', function(e) {
-        if (!usuarioAutorizado) return; // Solo abre si el usuario está autenticado
         const lat = e.latlng.lat.toFixed(5);
         const lng = e.latlng.lng.toFixed(5);
         if (tempMarker) map.removeLayer(tempMarker);
@@ -389,7 +347,6 @@
       cargarDatosActualizados();
       cargarDepartamentos();
       actualizarTextoBoton();
-      verificarPermisosUsuario();
     }
 
     function fetchConProxy(url) {
@@ -588,7 +545,7 @@
       const labels = obs.map(item => {
         const str = String(item.timestart || "").split('T')[0];
         if (!str) return "";
-        const partes = str.split('-');
+        const partes = str.split('-'); // Separa en [YYYY, MM, DD]
         return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : str;
       });
       const valores = obs.map(item => parseFloat(item.valor) || 0);
@@ -747,7 +704,7 @@
 
     function enviarAData(payload, pestanaDestino) {
       document.getElementById('loading').classList.remove('off');
-      
+
       const formData = new URLSearchParams();
       for (const key in payload) {
         formData.append(key, payload[key]);
@@ -778,13 +735,11 @@
         if (pctOcupacion >= 100) colorPin = '#F4492E';
         else if (pctOcupacion >= 80) colorPin = '#FAAE05';
 
-        const displayDel = usuarioAutorizado ? 'inline-block' : 'none';
-
         const card = document.createElement('div');
         card.className = 'item-card';
         card.style.borderLeft = `4px solid ${colorPin}`;
         card.innerHTML = `
-          <button class="btn-delete-card auth-only" style="display:${displayDel};" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
+          <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
           <div class="item-title">🏠 ${c.nombre}</div>
           <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
           <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
@@ -819,7 +774,7 @@
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
               <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
-              <button class="auth-only" onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="display:${displayDel}; background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
+              <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
             </div>
           </div>
         `);
