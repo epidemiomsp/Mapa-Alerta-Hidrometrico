@@ -20,15 +20,15 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--txt); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     
-    header { background: #1a1a1a; border-bottom: 1px solid var(--border); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; min-height: 50px; }
-    .title-area h1 { font-size: 0.95rem; color: #fff; }
+    header { background: #1a1a1a; border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; min-height: 50px; flex-wrap: wrap; gap: 6px; }
+    .title-area h1 { font-size: 0.95rem; color: #fff; line-height: 1.2; }
     .title-area p { font-size: 0.68rem; color: var(--txt-dim); }
     
-    .header-actions { display: flex; gap: 6px; align-items: center; }
+    .header-actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); overflow: hidden; }
     
-    /* Panel Lateral */
+    /* Panel Lateral Desktop */
     #sidebar { 
       width: 380px; 
       background: var(--bg); 
@@ -38,7 +38,7 @@
       z-index: 1500; 
       height: 100%; 
       position: relative;
-      transition: margin-left 0.3s ease;
+      transition: all 0.3s ease;
     }
 
     #sidebar.collapsed { margin-left: -380px; }
@@ -51,17 +51,17 @@
       box-shadow: 2px 0 8px rgba(0,0,0,0.4);
     }
     
-    .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #181818; }
+    .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #181818; min-height: 40px; }
     .tab-btn { flex: 1; padding: 10px 2px; font-size: 0.7rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; text-align: center; white-space: nowrap; }
     .tab-btn.active { color: #fff; border-bottom-color: var(--primary); background: var(--card); font-weight: bold; }
     
     .filter-bar { padding: 6px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; background: var(--bg); }
-    .filter-btn { flex: 1; padding: 4px; font-size: 0.7rem; background: transparent; border: 1px solid var(--border); color: var(--txt-dim); border-radius: 4px; cursor: pointer; }
+    .filter-btn { flex: 1; padding: 6px 4px; font-size: 0.7rem; background: transparent; border: 1px solid var(--border); color: var(--txt-dim); border-radius: 4px; cursor: pointer; }
     .filter-btn.active { background: var(--card); color: #fff; border-color: var(--primary); }
     
-    .sec-tab { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .sec-tab { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
 
-    .list { flex: 1; overflow-y: auto !important; padding: 8px; }
+    .list { flex: 1; overflow-y: auto !important; padding: 8px; -webkit-overflow-scrolling: touch; }
     .list::-webkit-scrollbar { width: 5px; }
     .list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     
@@ -83,8 +83,8 @@
 
     #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; }
     
-    .btn-action { background: var(--primary); color: #fff; border: none; padding: 5px 8px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
-    .btn-sec { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:5px 8px; border-radius:5px; cursor:pointer; font-size: 0.7rem; }
+    .btn-action { background: var(--primary); color: #fff; border: none; padding: 6px 8px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; font-weight: bold; white-space: nowrap; }
+    .btn-sec { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:6px 8px; border-radius:5px; cursor:pointer; font-size: 0.7rem; white-space: nowrap; }
 
     .dept-tooltip {
       background: rgba(0, 0, 0, 0.85);
@@ -115,13 +115,57 @@
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
 
+    /* REDISEÑO ESPECÍFICO PARA VISTA MÓVIL */
     @media (max-width: 768px) {
-      .container { flex-direction: column-reverse; }
-      #sidebar { width: 100%; height: auto; max-height: 50vh; border-right: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; left: 0; z-index: 1500; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); }
-      #sidebar.collapsed { margin-left: 0 !important; }
-      #sidebar.collapsed .sec-tab { display: none !important; }
-      .toggle-sidebar-btn { position: relative; top: 0; right: 0; width: auto; height: 100%; padding: 0 8px; border-radius: 0; border: none; border-left: 1px solid var(--border); font-size: 0.75rem; background: #252525; }
       .title-area p { display: none; }
+      header { padding: 6px 10px; }
+      
+      .container { flex-direction: column; }
+      
+      #sidebar { 
+        width: 100% !important; 
+        height: 50vh !important; 
+        max-height: 50vh;
+        border-right: none; 
+        border-top: 1px solid var(--border); 
+        position: absolute; 
+        bottom: 0; 
+        left: 0; 
+        margin-left: 0 !important;
+        z-index: 1500; 
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.6);
+        transition: transform 0.3s ease-in-out;
+      }
+
+      /* Cuando se oculta en móvil se desplaza hacia abajo dejando la barra visible */
+      #sidebar.collapsed { 
+        transform: translateY(calc(100% - 42px)); 
+      }
+
+      .toggle-sidebar-btn { 
+        position: relative; 
+        top: 0; 
+        right: 0; 
+        width: auto; 
+        height: 100%; 
+        padding: 0 10px; 
+        border-radius: 0; 
+        border: none; 
+        border-left: 1px solid var(--border); 
+        font-size: 0.75rem; 
+        background: #252525; 
+        white-space: nowrap;
+      }
+
+      .tab-bar {
+        background: #181818;
+        display: flex;
+        align-items: center;
+      }
+
+      .sec-tab {
+        height: calc(50vh - 42px) !important;
+      }
     }
   </style>
 </head>
@@ -150,7 +194,7 @@
         <button class="tab-btn" id="btn-tab-centros" onclick="cambiarPestana('centros')">🏠 Centros</button>
         <button class="tab-btn" id="btn-tab-ingresos" onclick="cambiarPestana('ingresos')">📋 Ingresos</button>
         <button class="tab-btn" id="btn-tab-monitoreo" onclick="cambiarPestana('monitoreo')">🩺 Monitoreo</button>
-        <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
+        <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">▼ Ocultar</button>
       </div>
 
       <div id="sec-estaciones" class="sec-tab">
@@ -838,7 +882,7 @@
       const isCollapsed = sidebar.classList.contains('collapsed');
 
       if (isMobile) {
-        toggleBtn.innerHTML = isCollapsed ? '▲ Lista' : '▼ Ocultar';
+        toggleBtn.innerHTML = isCollapsed ? '▲ Mostrar' : '▼ Ocultar';
       } else {
         toggleBtn.innerHTML = isCollapsed ? '▶' : '◀';
       }
