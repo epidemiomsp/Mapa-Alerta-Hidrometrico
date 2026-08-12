@@ -626,23 +626,27 @@
     }
 
     function guardarCentro(e) {
-      e.preventDefault();
-      const nuevo = {
-        action: "add_centro",
-        id: Date.now(),
-        nombre: document.getElementById('c-nombre').value,
-        municipio: document.getElementById('c-muni').value,
-        evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
-        capacidad: parseInt(document.getElementById('c-capacidad').value) || 0,
-        lat: parseFloat(document.getElementById('c-lat').value),
-        lng: parseFloat(document.getElementById('c-lng').value),
-        contacto: document.getElementById('c-contacto').value || "Sin dato",
-        banos: parseInt(document.getElementById('c-banos').value) || 0,
-        agua: parseFloat(document.getElementById('c-agua').value) || 0
-      };
-      cerrarModal('modalCentro');
-      enviarAData(nuevo, "centros");
-    }
+  e.preventDefault();
+  
+  const rawLat = String(document.getElementById('c-lat').value).replace(',', '.');
+  const rawLng = String(document.getElementById('c-lng').value).replace(',', '.');
+
+  const nuevo = {
+    action: "add_centro",
+    id: Date.now(),
+    nombre: document.getElementById('c-nombre').value,
+    municipio: document.getElementById('c-muni').value,
+    evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
+    capacidad: parseInt(document.getElementById('c-capacidad').value) || 0,
+    lat: parseFloat(rawLat),
+    lng: parseFloat(rawLng),
+    contacto: document.getElementById('c-contacto').value || "Sin dato",
+    banos: parseInt(document.getElementById('c-banos').value) || 0,
+    agua: parseFloat(document.getElementById('c-agua').value) || 0
+  };
+  cerrarModal('modalCentro');
+  enviarAData(nuevo, "centros");
+}
 
     function guardarPersona(e) {
       e.preventDefault();
