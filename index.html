@@ -634,10 +634,17 @@
       markersEstaciones = [];
 
       estaciones.forEach(est => {
-        let colorEstado = '#28a745';
-        if (est.altura >= est.evacuacion) colorEstado = '#F4492E';
-        else if (est.altura >= est.alerta) colorEstado = '#FAAE05';
-        else colorEstado = est.tendencia === 'baja' ? '#00D2FF' : '#0a84ff';
+        let colorEstado = '#1F4A8B'; // Color azul por defecto (permanece)
+
+        if (est.tendencia === 'crece') {
+          colorEstado = '#F4492E'; // Rojo cuando crece
+        } else if (est.tendencia === 'baja') {
+          colorEstado = '#719C29'; // Verde cuando baja
+        } else if (est.altura >= est.evacuacion) {
+          colorEstado = '#F4492E'; // Rojo por evacuación
+        } else if (est.altura >= est.alerta) {
+          colorEstado = '#FAAE05'; // Amarillo por alerta
+        }
 
         let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
 
