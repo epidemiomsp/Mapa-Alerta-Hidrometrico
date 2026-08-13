@@ -786,13 +786,38 @@
       enviarAData(nuevo, "centros");
     }
 
+    // Guardar Persona con validación anti-duplicados por DNI y Nombre+Centro
     function guardarPersona(e) {
       e.preventDefault();
+      
+      const dniIngresado = document.getElementById('p-dni').value.trim();
+      const nombreIngresado = document.getElementById('p-nombre').value.trim().toLowerCase();
+      const idCentroIngresado = document.getElementById('p-centro').value;
+
+      // 1. Validar por DNI existente en general
+      const personaExistenteDNI = personasData.find(p => String(p.dni).trim() === dniIngresado);
+      if (personaExistenteDNI) {
+        alert(`⚠️ El DNI ${dniIngresado} ya se encuentra registrado a nombre de: ${personaExistenteDNI.nombreApellido}.`);
+        document.getElementById('p-dni').focus();
+        return;
+      }
+
+      // 2. Validar coincidencia exacta de Nombre + Centro de Evacuados
+      const coincidenciaNombreCentro = personasData.find(p => 
+        String(p.nombreApellido).trim().toLowerCase() === nombreIngresado && 
+        String(p.idCentro) === String(idCentroIngresado)
+      );
+      if (coincidenciaNombreCentro) {
+        alert(`⚠️ Ya existe un registro para "${document.getElementById('p-nombre').value}" en el centro seleccionado.`);
+        document.getElementById('p-nombre').focus();
+        return;
+      }
+
       const nuevaP = {
         action: "add_persona",
-        idCentro: document.getElementById('p-centro').value,
-        nombreApellido: document.getElementById('p-nombre').value,
-        dni: document.getElementById('p-dni').value,
+        idCentro: idCentroIngresado,
+        nombreApellido: document.getElementById('p-nombre').value.trim(),
+        dni: dniIngresado,
         fechaNac: document.getElementById('p-nac').value,
         fechaIngreso: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
         fechaEgreso: document.getElementById('p-egreso').value || "",
@@ -801,17 +826,43 @@
         diagnostico: document.getElementById('p-diagnostico').value,
         sintomas: document.getElementById('p-sintomas').value
       };
+
       cerrarModal('modalPersona');
       enviarAData(nuevaP, "ingresos");
     }
 
+    // Guardar Monitoreo con validación anti-duplicados por DNI y Nombre+Centro
     function guardarMonitoreo(e) {
       e.preventDefault();
+
+      const dniIngresado = document.getElementById('m-dni').value.trim();
+      const nombreIngresado = document.getElementById('m-nombre').value.trim().toLowerCase();
+      const idCentroIngresado = document.getElementById('m-centro').value;
+
+      // 1. Validar por DNI en la sección de monitoreo
+      const monitoreoExistenteDNI = monitoreoData.find(m => String(m.dni).trim() === dniIngresado);
+      if (monitoreoExistenteDNI) {
+        alert(`⚠️ El DNI ${dniIngresado} ya cuenta con un registro de monitoreo a nombre de: ${monitoreoExistenteDNI.nombreApellido}.`);
+        document.getElementById('m-dni').focus();
+        return;
+      }
+
+      // 2. Validar coincidencia de Nombre + Centro en monitoreo
+      const coincidenciaNombreCentro = monitoreoData.find(m => 
+        String(m.nombreApellido).trim().toLowerCase() === nombreIngresado && 
+        String(m.idCentro) === String(idCentroIngresado)
+      );
+      if (coincidenciaNombreCentro) {
+        alert(`⚠️ Ya existe un registro de monitoreo para "${document.getElementById('m-nombre').value}" en el centro seleccionado.`);
+        document.getElementById('m-nombre').focus();
+        return;
+      }
+
       const nuevoM = {
         action: "add_monitoreo",
-        idCentro: document.getElementById('m-centro').value,
-        nombreApellido: document.getElementById('m-nombre').value,
-        dni: document.getElementById('m-dni').value,
+        idCentro: idCentroIngresado,
+        nombreApellido: document.getElementById('m-nombre').value.trim(),
+        dni: dniIngresado,
         edad: document.getElementById('m-edad').value,
         embarazada: document.getElementById('m-embarazada').value,
         discapacidad: document.getElementById('m-discapacidad').value,
@@ -819,6 +870,7 @@
         sintomas: document.getElementById('m-sintomas').value,
         fechaIngreso: new Date().toISOString().split('T')[0]
       };
+
       cerrarModal('modalMonitoreo');
       enviarAData(nuevoM, "monitoreo");
     }
