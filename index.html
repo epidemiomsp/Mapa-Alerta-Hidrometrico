@@ -425,7 +425,6 @@
       });
 
       cargarDatosActualizados();
-      cargarDepartamentos();
       actualizarEstiloBotonInfo();
     }
 
@@ -470,16 +469,50 @@
     }
 
     function toggleCapaDepartamentos() {
-      if (!capaDepartamentos) return;
-      if (departamentosVisibles) {
-        map.removeLayer(capaDepartamentos);
-        departamentosVisibles = false;
-      } else {
-        map.addLayer(capaDepartamentos);
+  // Si la capa no existe aún, la cargamos por primera vez
+  if (!capaDepartamentos) {
+    document.getElementById('loading').classList.remove('off');
+    
+    fetch('./corrientes.json')
+      .then(res => res.json())
+      .then(data => {
+        capaDepartamentos = L.geoJSON(data, {
+          style: function() {
+            return { color: '#0a84ff', weight: 1.8, opacity: 0.9, fillColor: '#0a84ff', fillOpacity: 0.15 };
+          },
+          onEachFeature: function(feature, layer) {
+            const p = feature.properties || {};
+            const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
+            layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
+            layer.on({
+              mouseover: function(e) { e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 }); },
+              mouseout: function(e) { capaDepartamentos.resetStyle(e.target); }
+            });
+          }
+        });
+
+        capaDepartamentos.addTo(map);
         departamentosVisibles = true;
-      }
-      actualizarEstiloBotonDptos();
-    }
+        actualizarEstiloBotonDptos();
+        document.getElementById('loading').classList.add('off');
+      })
+      .catch(err => {
+        console.error("Error al cargar corrientes.json:", err);
+        document.getElementById('loading').classList.add('off');
+      });
+    return;
+  }
+
+  // Si ya estaba cargada, simplemente alternamos visibilidad
+  if (departamentosVisibles) {
+    map.removeLayer(capaDepartamentos);
+    departamentosVisibles = false;
+  } else {
+    map.addLayer(capaDepartamentos);
+    departamentosVisibles = true;
+  }
+  actualizarEstiloBotonDptos();
+}
 
     function actualizarEstiloBotonDptos() {
       const btn = document.getElementById('btn-toggle-dptos');
