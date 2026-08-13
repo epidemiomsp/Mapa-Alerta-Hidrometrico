@@ -6,10 +6,9 @@
   <title>Monitoreo Hidrométrico y Centros de Evacuados - GEOEPI</title>
 
   <!-- CSS Leaflet CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
-        onerror="this.onerror=null;this.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 
-  <!-- Chart.js -->
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -142,7 +141,7 @@
       
       #sidebar { 
         width: 100% !important; 
-        height: 55vh !important;
+        height: 55vh !important; 
         height: 55dvh !important; 
         border-right: none; 
         border-top: 1px solid var(--border); 
@@ -419,6 +418,7 @@
     </div>
   </div>
 
+  <!-- Modal Insumos -->
   <div class="modal-overlay" id="modalInsumos">
     <div class="modal-box">
       <div class="modal-header">
@@ -437,6 +437,7 @@
     </div>
   </div>
 
+  <!-- Modal Gráfica INA -->
   <div class="modal-overlay" id="modalGrafico">
     <div class="modal-box" style="width: 600px;">
       <div class="modal-header">
@@ -452,6 +453,7 @@
     </div>
   </div>
 
+  <!-- JS Leaflet -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script>
     let map, tempMarker = null;
@@ -778,7 +780,7 @@
           html: `
             <div style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
               <div style="background:rgba(18,18,18,0.90); color:#fff; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; white-space:nowrap;">
-                ${est.nombre}
+                🌊 ${est.nombre}
               </div>
               <div style="background:rgba(18,18,18,0.95); color:${colorEstado}; font-size:11px; font-weight:800; padding:1px 6px; border-radius:4px; margin-top:2px; border:1px solid ${colorEstado};">
                 ${est.altura.toFixed(2)}m ${flecha}
