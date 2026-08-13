@@ -14,7 +14,7 @@
 
   <style>
     :root {
-      --bg:#121212; --card:#1e1e1e; --border:#333; --txt:#e0e0e0; --txt-dim:#a0a0a0;
+      --bg:#121212; --card:#ffffff; --border:#e0e0e0; --txt:#1c1c1e; --txt-dim:#666666;
       --normal:#719C29; --alerta:#FAAE05; --evac:#F4492E; --primary:#0a84ff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -22,7 +22,7 @@
     
     header { 
       background: #1a1a1a; 
-      border-bottom: 1px solid var(--border); 
+      border-bottom: 1px solid #333; 
       padding: 6px 10px; 
       display: flex; 
       justify-content: space-between; 
@@ -33,16 +33,17 @@
     }
 
     .title-area h1 { font-size: 0.95rem; color: #fff; line-height: 1.2; }
-    .title-area p { font-size: 0.68rem; color: var(--txt-dim); }
+    .title-area p { font-size: 0.68rem; color: #a0a0a0; }
     
     .header-actions { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); height: calc(100dvh - 50px); overflow: hidden; }
     
-    /* Panel Lateral Desktop */
+    /* Panel Lateral Desktop con Fondo Blanco */
     #sidebar { 
       width: 380px; 
-      background: var(--bg); 
+      background: #ffffff; 
+      color: #1c1c1e;
       border-right: 1px solid var(--border); 
       display: flex; 
       flex-direction: column; 
@@ -57,38 +58,40 @@
 
     .toggle-sidebar-btn {
       position: absolute; top: 10px; right: -32px; width: 32px; height: 38px;
-      background: var(--card); border: 1px solid var(--border); border-left: none;
-      color: #fff; border-radius: 0 6px 6px 0; cursor: pointer; z-index: 1600;
+      background: #ffffff; border: 1px solid var(--border); border-left: none;
+      color: #333; border-radius: 0 6px 6px 0; cursor: pointer; z-index: 1600;
       display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.4);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.15);
     }
     
-    .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #181818; min-height: 42px; align-items: center; flex-shrink: 0; }
-    .tab-btn { flex: 1; padding: 10px 2px; font-size: 0.72rem; background: transparent; border: none; color: var(--txt-dim); cursor: pointer; border-bottom: 2px solid transparent; text-align: center; white-space: nowrap; }
-    .tab-btn.active { color: #fff; border-bottom-color: var(--primary); background: var(--card); font-weight: bold; }
+    .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #f2f2f7; min-height: 42px; align-items: center; flex-shrink: 0; }
+    .tab-btn { flex: 1; padding: 10px 2px; font-size: 0.72rem; background: transparent; border: none; color: #555; cursor: pointer; border-bottom: 2px solid transparent; text-align: center; white-space: nowrap; }
+    .tab-btn.active { color: #000; border-bottom-color: var(--primary); background: #ffffff; font-weight: bold; }
     
-    .filter-bar { padding: 6px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; background: var(--bg); flex-shrink: 0; }
-    .filter-btn { flex: 1; padding: 6px 4px; font-size: 0.7rem; background: transparent; border: 1px solid var(--border); color: var(--txt-dim); border-radius: 4px; cursor: pointer; }
-    .filter-btn.active { background: var(--card); color: #fff; border-color: var(--primary); }
+    .filter-bar { padding: 6px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; background: #ffffff; flex-shrink: 0; }
+    .filter-btn { flex: 1; padding: 6px 4px; font-size: 0.7rem; background: transparent; border: 1px solid #ccc; color: #333; border-radius: 4px; cursor: pointer; }
+    .filter-btn.active { background: #e5e5ea; color: #000; border-color: var(--primary); font-weight: bold; }
     
     .sec-tab { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
 
     .list { flex: 1; overflow-y: auto !important; padding: 8px; padding-bottom: 40px; -webkit-overflow-scrolling: touch; }
     .list::-webkit-scrollbar { width: 5px; }
-    .list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    .list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
     
-    /* Tarjetas */
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
-    .card:hover { border-color: #555; }
-    .muni { font-weight: 600; font-size: 0.88rem; }
-    .rio { font-size: 0.68rem; color: var(--txt-dim); background: #2a2a2a; padding: 2px 6px; border-radius: 4px; }
-    .altura { font-size: 1.25rem; font-weight: 700; }
+    /* Tarjetas claras */
+    .card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
+    .card:hover { border-color: #0a84ff; background: #ffffff; }
+    .muni { font-weight: 600; font-size: 0.88rem; color: #1c1c1e; }
+    .rio { font-size: 0.68rem; color: #3a3a3c; background: #e5e5ea; padding: 2px 6px; border-radius: 4px; }
+    
+    /* Número de altura en azul */
+    .altura { font-size: 1.25rem; font-weight: 700; color: #0a84ff; }
 
-    .item-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; position: relative; font-size: 0.75rem; }
-    .item-card:hover { border-color: #555; }
-    .item-title { font-weight: bold; color: #fff; margin-bottom: 2px; font-size: 0.85rem; padding-right: 50px; }
-    .item-sub { color: var(--txt-dim); font-size: 0.72rem; margin-top: 2px; }
-    .item-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 0.68rem; background: #2a2a2a; color: #fff; margin-top: 5px; }
+    .item-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; margin-bottom: 8px; position: relative; font-size: 0.75rem; color: #333; }
+    .item-card:hover { border-color: #0a84ff; background: #ffffff; }
+    .item-title { font-weight: bold; color: #1c1c1e; margin-bottom: 2px; font-size: 0.85rem; padding-right: 50px; }
+    .item-sub { color: #666; font-size: 0.72rem; margin-top: 2px; }
+    .item-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 0.68rem; background: #e5e5ea; color: #333; margin-top: 5px; }
     
     .card-actions-top { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
     .btn-card-action { background: transparent; border: none; font-size: 0.95rem; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; }
@@ -112,20 +115,24 @@
       border-radius: 4px;
     }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+    /* Modales Claros */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-    .modal-header h3 { font-size: 0.9rem; color: #fff; }
-    .close-modal { background: none; border: none; color: var(--txt-dim); font-size: 1.2rem; cursor: pointer; }
+    .modal-box { background: #ffffff; border: 1px solid #ccc; border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25); color: #1c1c1e; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+    .modal-header h3 { font-size: 0.95rem; color: #1c1c1e; font-weight: bold; }
+    .close-modal { background: none; border: none; color: #666; font-size: 1.3rem; cursor: pointer; }
     
     .form-group { margin-bottom: 8px; }
-    .form-group label { display: block; font-size: 0.7rem; color: var(--txt-dim); margin-bottom: 2px; }
-    .form-group input, .form-group select { width: 100%; background: #121212; border: 1px solid var(--border); color: #fff; padding: 6px; border-radius: 4px; font-size: 0.8rem; outline: none; }
-    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+    .form-group label { display: block; font-size: 0.72rem; color: #555; margin-bottom: 2px; font-weight: 600; }
+    .form-group input, .form-group select { width: 100%; background: #f9f9f9; border: 1px solid #ccc; color: #1c1c1e; padding: 6px; border-radius: 4px; font-size: 0.8rem; outline: none; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); background: #fff; }
     .form-row-2 { display: flex; gap: 8px; }
     .form-row-2 .form-group { flex: 1; }
-    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+    /* Mensajes de Alerta/Error en Modales */
+    .alert-msg { background: #ffebe9; border: 1px solid #ffc1c0; color: #cf222e; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px; display: none; }
 
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
@@ -154,7 +161,7 @@
         margin-right: 0 !important;
         margin-left: 0 !important;
         z-index: 1500; 
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.85);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
         transform: translateY(0);
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
@@ -168,7 +175,7 @@
       }
 
       .tab-bar {
-        background: #181818;
+        background: #f2f2f7;
         display: flex;
         align-items: center;
         height: 40px;
@@ -285,6 +292,10 @@
         <h3 id="modalPersonaTitulo">Ingreso de Persona</h3>
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
+
+      <!-- Leyenda de error si se repite DNI o Nombre -->
+      <div id="alertPersona" class="alert-msg"></div>
+
       <form onsubmit="guardarPersona(event)">
         <input type="hidden" id="p-idPersona">
         <div class="form-group">
@@ -366,6 +377,10 @@
         <h3 id="modalMonitoreoTitulo">Registro Monitoreo Diario</h3>
         <button class="close-modal" onclick="cerrarModal('modalMonitoreo')">&times;</button>
       </div>
+
+      <!-- Leyenda de error si se repite DNI o Nombre -->
+      <div id="alertMonitoreo" class="alert-msg"></div>
+
       <form onsubmit="guardarMonitoreo(event)">
         <input type="hidden" id="m-idPersona">
         <div class="form-group">
@@ -403,9 +418,9 @@
         <h3 id="insumos-titulo">Detalle de Insumos</h3>
         <button class="close-modal" onclick="cerrarModal('modalInsumos')">&times;</button>
       </div>
-      <div style="padding: 10px 0; font-size: 0.9rem; color: #fff;">
-        <p style="color: var(--txt-dim); margin-bottom: 6px; font-size: 0.75rem;">Insumos y recursos registrados:</p>
-        <div id="insumos-contenido" style="background: #121212; border: 1px solid var(--border); padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace;">
+      <div style="padding: 10px 0; font-size: 0.9rem; color: #1c1c1e;">
+        <p style="color: #666; margin-bottom: 6px; font-size: 0.75rem;">Insumos y recursos registrados:</p>
+        <div id="insumos-contenido" style="background: #f8f9fa; border: 1px solid #e0e0e0; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; color: #1c1c1e;">
           Sin registrar
         </div>
       </div>
@@ -441,7 +456,6 @@
 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgLrRuhtSp6jkZ8vpqt-RyVnEl7JW2zPaVq3jTNEzV9-eIxJiLtqmz509Izz14n83vZg/exec";
 
-    // Helper para convertir fechas YYYY-MM-DD a formato latino DD/MM/YYYY
     function formatearFechaLatina(fechaStr) {
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('-');
@@ -451,7 +465,6 @@
       return fechaStr;
     }
 
-    // Helper inverso para cargar fechas DD/MM/YYYY o YYYY-MM-DD dentro de <input type="date">
     function parsearFechaParaInput(fechaStr) {
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('/');
@@ -634,16 +647,16 @@
       markersEstaciones = [];
 
       estaciones.forEach(est => {
-        let colorEstado = '#1F4A8B'; // Color azul por defecto (permanece)
+        let colorEstado = '#0a84ff';
 
         if (est.tendencia === 'crece') {
-          colorEstado = '#F4492E'; // Rojo cuando crece
+          colorEstado = '#F4492E';
         } else if (est.tendencia === 'baja') {
-          colorEstado = '#719C29'; // Verde cuando baja
+          colorEstado = '#28a745';
         } else if (est.altura >= est.evacuacion) {
-          colorEstado = '#F4492E'; // Rojo por evacuación
+          colorEstado = '#F4492E';
         } else if (est.altura >= est.alerta) {
-          colorEstado = '#FAAE05'; // Amarillo por alerta
+          colorEstado = '#FAAE05';
         }
 
         let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
@@ -657,11 +670,11 @@
           </div>
           <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
             <span class="altura">${est.altura.toFixed(2)}</span>
-            <span style="font-size:0.8rem; color:var(--txt-dim);">mts</span>
+            <span style="font-size:0.8rem; color:#666;">mts</span>
             <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
           </div>
           <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.seriesId}, ${est.alerta}, ${est.evacuacion})" 
-                  style="margin-top:8px; width:100%; background:#2c2c2e; border:1px solid #444; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
+                  style="margin-top:8px; width:100%; background:#e5e5ea; border:1px solid #ccc; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
             📈 Ver Gráfica de Evolución
           </button>
         `;
@@ -759,10 +772,10 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#e5e7eb' } } },
+          plugins: { legend: { labels: { color: '#333' } } },
           scales: {
-            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+            x: { ticks: { color: '#666' }, grid: { color: '#e0e0e0' } },
+            y: { ticks: { color: '#666' }, grid: { color: '#e0e0e0' } }
           }
         }
       });
@@ -799,7 +812,13 @@
       if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
     }
 
-    // PREPARAR NUEVOS REGISTROS (LIMPIEZA DE FORMULARIOS)
+    function ocultarAlertas() {
+      const aP = document.getElementById('alertPersona');
+      const aM = document.getElementById('alertMonitoreo');
+      if (aP) { aP.style.display = 'none'; aP.innerText = ''; }
+      if (aM) { aM.style.display = 'none'; aM.innerText = ''; }
+    }
+
     function prepararNuevoCentro(lat = '', lng = '') {
       document.getElementById('modalCentroTitulo').innerText = "Nuevo Centro de Evacuados";
       document.getElementById('c-id').value = "";
@@ -816,6 +835,7 @@
     }
 
     function prepararNuevaPersona() {
+      ocultarAlertas();
       document.getElementById('modalPersonaTitulo').innerText = "Ingreso de Persona";
       document.getElementById('p-idPersona').value = "";
       document.getElementById('p-nombre').value = "";
@@ -832,6 +852,7 @@
     }
 
     function prepararNuevoMonitoreo() {
+      ocultarAlertas();
       document.getElementById('modalMonitoreoTitulo').innerText = "Registro Monitoreo Diario";
       document.getElementById('m-idPersona').value = "";
       document.getElementById('m-nombre').value = "";
@@ -845,7 +866,6 @@
       abrirModal('modalMonitoreo');
     }
 
-    // CARGAR Y EDITAR REGISTROS
     function editarCentro(idCentro, event) {
       if (event) event.stopPropagation();
       const centro = centrosData.find(c => String(c.id) === String(idCentro));
@@ -868,6 +888,7 @@
 
     function editarPersona(dni, event) {
       if (event) event.stopPropagation();
+      ocultarAlertas();
       const persona = personasData.find(p => String(p.dni).trim() === String(dni).trim());
       if (!persona) return;
 
@@ -890,6 +911,7 @@
 
     function editarMonitoreo(dni, event) {
       if (event) event.stopPropagation();
+      ocultarAlertas();
       const monitoreo = monitoreoData.find(m => String(m.dni).trim() === String(dni).trim());
       if (!monitoreo) return;
 
@@ -908,7 +930,6 @@
       abrirModal('modalMonitoreo');
     }
 
-    // GUARDAR O ACTUALIZAR
     function guardarCentro(e) {
       e.preventDefault();
       const rawLat = String(document.getElementById('c-lat').value).replace(',', '.');
@@ -932,30 +953,35 @@
       enviarAData(nuevo, "centros");
     }
 
+    // Guardar persona con aviso directo en el modal de pantalla
     function guardarPersona(e) {
       e.preventDefault();
-      
-      const idPersona = document.getElementById('p-idPersona').value;
-      const dniIngresado = document.getElementById('p-dni').value.trim();
-      const nombreIngresado = document.getElementById('p-nombre').value.trim().toLowerCase();
-      const idCentroIngresado = document.getElementById('p-centro').value;
+      ocultarAlertas();
 
-      // Validación solo al crear un nuevo registro
+      const alertBox = document.getElementById('alertPersona');
+      const idPersona = document.getElementById('p-idPersona').value;
+      const dniIngresado = String(document.getElementById('p-dni').value).trim();
+      const nombreIngresado = String(document.getElementById('p-nombre').value).trim().toLowerCase();
+      const idCentroIngresado = String(document.getElementById('p-centro').value);
+
+      // Validación estricta solo para nuevos ingresos
       if (!idPersona) {
         const personaExistenteDNI = personasData.find(p => String(p.dni).trim() === dniIngresado);
         if (personaExistenteDNI) {
-          alert(`⚠️ El DNI ${dniIngresado} ya se encuentra registrado a nombre de: ${personaExistenteDNI.nombreApellido}.`);
-          document.getElementById('p-dni').focus();
+          alertBox.innerText = `⚠️ El DNI ${dniIngresado} ya existe a nombre de: ${personaExistenteDNI.nombreApellido}.`;
+          alertBox.style.display = 'block';
+          alert(`⚠️ El DNI ${dniIngresado} ya existe a nombre de: ${personaExistenteDNI.nombreApellido}.`);
           return;
         }
 
         const coincidenciaNombreCentro = personasData.find(p => 
           String(p.nombreApellido).trim().toLowerCase() === nombreIngresado && 
-          String(p.idCentro) === String(idCentroIngresado)
+          String(p.idCentro) === idCentroIngresado
         );
         if (coincidenciaNombreCentro) {
-          alert(`⚠️ Ya existe un registro para "${document.getElementById('p-nombre').value}" en el centro seleccionado.`);
-          document.getElementById('p-nombre').focus();
+          alertBox.innerText = `⚠️ Ya existe una persona llamada "${document.getElementById('p-nombre').value}" en el centro seleccionado.`;
+          alertBox.style.display = 'block';
+          alert(`⚠️ Ya existe una persona llamada "${document.getElementById('p-nombre').value}" en el centro seleccionado.`);
           return;
         }
       }
@@ -981,29 +1007,34 @@
       enviarAData(nuevaP, "ingresos");
     }
 
+    // Guardar monitoreo con aviso directo en el modal de pantalla
     function guardarMonitoreo(e) {
       e.preventDefault();
+      ocultarAlertas();
 
+      const alertBox = document.getElementById('alertMonitoreo');
       const idPersona = document.getElementById('m-idPersona').value;
-      const dniIngresado = document.getElementById('m-dni').value.trim();
-      const nombreIngresado = document.getElementById('m-nombre').value.trim().toLowerCase();
-      const idCentroIngresado = document.getElementById('m-centro').value;
+      const dniIngresado = String(document.getElementById('m-dni').value).trim();
+      const nombreIngresado = String(document.getElementById('m-nombre').value).trim().toLowerCase();
+      const idCentroIngresado = String(document.getElementById('m-centro').value);
 
       if (!idPersona) {
         const monitoreoExistenteDNI = monitoreoData.find(m => String(m.dni).trim() === dniIngresado);
         if (monitoreoExistenteDNI) {
-          alert(`⚠️ El DNI ${dniIngresado} ya cuenta con un registro de monitoreo a nombre de: ${monitoreoExistenteDNI.nombreApellido}.`);
-          document.getElementById('m-dni').focus();
+          alertBox.innerText = `⚠️ El DNI ${dniIngresado} ya tiene un monitoreo activo a nombre de: ${monitoreoExistenteDNI.nombreApellido}.`;
+          alertBox.style.display = 'block';
+          alert(`⚠️ El DNI ${dniIngresado} ya tiene un monitoreo activo a nombre de: ${monitoreoExistenteDNI.nombreApellido}.`);
           return;
         }
 
         const coincidenciaNombreCentro = monitoreoData.find(m => 
           String(m.nombreApellido).trim().toLowerCase() === nombreIngresado && 
-          String(m.idCentro) === String(idCentroIngresado)
+          String(m.idCentro) === idCentroIngresado
         );
         if (coincidenciaNombreCentro) {
-          alert(`⚠️ Ya existe un registro de monitoreo para "${document.getElementById('m-nombre').value}" en el centro seleccionado.`);
-          document.getElementById('m-nombre').focus();
+          alertBox.innerText = `⚠️ Ya existe un registro de monitoreo para "${document.getElementById('m-nombre').value}" en este centro.`;
+          alertBox.style.display = 'block';
+          alert(`⚠️ Ya existe un registro de monitoreo para "${document.getElementById('m-nombre').value}" en este centro.`);
           return;
         }
       }
@@ -1028,7 +1059,6 @@
       enviarAData(nuevoM, "monitoreo");
     }
 
-    // ACCIONES DE ELIMINACIÓN
     function eliminarCentro(idCentro, event) {
       if (event) event.stopPropagation();
       if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
@@ -1193,7 +1223,7 @@
 
     function renderIngresos(personas) {
       const listEl = document.getElementById('list-ingresos');
-      listEl.innerHTML = personas.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros de ingresos</div>';
+      listEl.innerHTML = personas.length ? '' : '<div style="color:#666; font-size:0.75rem; text-align:center; padding:15px;">Sin registros de ingresos</div>';
       
       personas.forEach(p => {
         const centro = centrosData.find(c => String(c.id) === String(p.idCentro)) || { nombre: 'Centro General' };
@@ -1215,7 +1245,7 @@
 
     function renderMonitoreo(monitoreos) {
       const listEl = document.getElementById('list-monitoreo');
-      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:var(--txt-dim); font-size:0.75rem; text-align:center; padding:15px;">Sin registros de monitoreo</div>';
+      listEl.innerHTML = monitoreos.length ? '' : '<div style="color:#666; font-size:0.75rem; text-align:center; padding:15px;">Sin registros de monitoreo</div>';
       
       monitoreos.forEach(m => {
         const centro = centrosData.find(c => String(c.id) === String(m.idCentro)) || { nombre: 'Centro General' };
