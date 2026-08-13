@@ -55,14 +55,6 @@
     }
 
     #sidebar.collapsed { transform: translateX(-380px); margin-right: -380px; }
-
-    .toggle-sidebar-btn {
-      position: absolute; top: 10px; right: -32px; width: 32px; height: 38px;
-      background: #ffffff; border: 1px solid var(--border); border-left: none;
-      color: #333; border-radius: 0 6px 6px 0; cursor: pointer; z-index: 1600;
-      display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.15);
-    }
     
     .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #f2f2f7; min-height: 42px; align-items: center; flex-shrink: 0; }
     .tab-btn { flex: 1; padding: 10px 2px; font-size: 0.72rem; background: transparent; border: none; color: #555; cursor: pointer; border-bottom: 2px solid transparent; text-align: center; white-space: nowrap; }
@@ -170,10 +162,6 @@
         transform: translateY(100%) !important; 
       }
 
-      .toggle-sidebar-btn { 
-        display: none !important; 
-      }
-
       .tab-bar {
         background: #f2f2f7;
         display: flex;
@@ -246,8 +234,6 @@
       <div id="sec-monitoreo" class="sec-tab" style="display:none;">
         <div class="list" id="list-monitoreo"></div>
       </div>
-      
-      <button class="toggle-sidebar-btn" id="toggleBtn" onclick="toggleSidebar()">◀</button>
     </div>
 
     <div id="map"></div>
@@ -953,7 +939,6 @@
       enviarAData(nuevo, "centros");
     }
 
-    // Guardar persona con aviso directo en el modal de pantalla
     function guardarPersona(e) {
       e.preventDefault();
       ocultarAlertas();
@@ -964,7 +949,6 @@
       const nombreIngresado = String(document.getElementById('p-nombre').value).trim().toLowerCase();
       const idCentroIngresado = String(document.getElementById('p-centro').value);
 
-      // Validación estricta solo para nuevos ingresos
       if (!idPersona) {
         const personaExistenteDNI = personasData.find(p => String(p.dni).trim() === dniIngresado);
         if (personaExistenteDNI) {
@@ -1007,7 +991,6 @@
       enviarAData(nuevaP, "ingresos");
     }
 
-    // Guardar monitoreo con aviso directo en el modal de pantalla
     function guardarMonitoreo(e) {
       e.preventDefault();
       ocultarAlertas();
@@ -1275,16 +1258,11 @@
     function actualizarEstiloBotonInfo() {
       const sidebar = document.getElementById('sidebar');
       const btnInfo = document.getElementById('btn-toggle-info');
-      const toggleBtn = document.getElementById('toggleBtn');
       const isCollapsed = sidebar.classList.contains('collapsed');
 
       if (btnInfo) {
         btnInfo.style.background = isCollapsed ? '#2c2c2e' : '#0a84ff';
         btnInfo.style.borderColor = isCollapsed ? '#3a3a3c' : '#005bb5';
-      }
-
-      if (toggleBtn) {
-        toggleBtn.innerHTML = isCollapsed ? '▶' : '◀';
       }
     }
 
