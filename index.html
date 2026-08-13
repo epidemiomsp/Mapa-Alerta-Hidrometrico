@@ -86,10 +86,13 @@
 
     .item-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; position: relative; font-size: 0.75rem; }
     .item-card:hover { border-color: #555; }
-    .item-title { font-weight: bold; color: #fff; margin-bottom: 2px; font-size: 0.85rem; padding-right: 20px; }
+    .item-title { font-weight: bold; color: #fff; margin-bottom: 2px; font-size: 0.85rem; padding-right: 50px; }
     .item-sub { color: var(--txt-dim); font-size: 0.72rem; margin-top: 2px; }
     .item-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 0.68rem; background: #2a2a2a; color: #fff; margin-top: 5px; }
-    .btn-delete-card { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #ff4d4d; font-size: 0.9rem; cursor: pointer; }
+    
+    .card-actions-top { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
+    .btn-card-action { background: transparent; border: none; font-size: 0.95rem; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; }
+    .btn-card-action:hover { opacity: 1.0; transform: scale(1.1); }
 
     #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; }
     
@@ -190,13 +193,13 @@
       <p>Provincia de Corrientes - Monitoreo de Ríos y Centros de Evacuados</p>
     </div>
     <div class="header-actions">
-      <button class="btn-action" onclick="abrirModal('modalCentro')">
+      <button class="btn-action" onclick="prepararNuevoCentro()">
         <span class="btn-text-full">+ Centro</span><span class="btn-text-short">+ 🏠</span>
       </button>
-      <button class="btn-action" style="background:#28a745;" onclick="abrirModal('modalPersona')">
+      <button class="btn-action" style="background:#28a745;" onclick="prepararNuevaPersona()">
         <span class="btn-text-full">+ Persona</span><span class="btn-text-short">+ 👤</span>
       </button>
-      <button class="btn-action" style="background:#17a2b8;" onclick="abrirModal('modalMonitoreo')">
+      <button class="btn-action" style="background:#17a2b8;" onclick="prepararNuevoMonitoreo()">
         <span class="btn-text-full">+ Monitoreo</span><span class="btn-text-short">+ 🩺</span>
       </button>
       <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
@@ -243,14 +246,15 @@
     <div id="map"></div>
   </div>
 
-  <!-- Modales -->
+  <!-- Modal Centro -->
   <div class="modal-overlay" id="modalCentro">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Nuevo Centro de Evacuados</h3>
+        <h3 id="modalCentroTitulo">Nuevo Centro de Evacuados</h3>
         <button class="close-modal" onclick="cerrarModal('modalCentro')">&times;</button>
       </div>
       <form onsubmit="guardarCentro(event)">
+        <input type="hidden" id="c-id">
         <div class="form-group"><label>Nombre del Centro *</label><input type="text" id="c-nombre" required placeholder="Ej: Hospital Billinghurst"></div>
         <div class="form-group"><label>Municipio / Localidad *</label><input type="text" id="c-muni" required placeholder="Ej: Ituzaingó"></div>
         <div class="form-row-2">
@@ -274,14 +278,15 @@
     </div>
   </div>
 
-  <!-- Modal Persona Alinear con Hoja 2 -->
+  <!-- Modal Persona -->
   <div class="modal-overlay" id="modalPersona">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Ingreso de Persona (Hoja 2)</h3>
+        <h3 id="modalPersonaTitulo">Ingreso de Persona</h3>
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
       <form onsubmit="guardarPersona(event)">
+        <input type="hidden" id="p-idPersona">
         <div class="form-group">
           <label>Centro de Evacuados *</label>
           <select id="p-centro" required></select>
@@ -348,19 +353,21 @@
 
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalPersona')">Cancelar</button>
-          <button type="submit" class="btn-action" style="background:#28a745;">Registrar Ingreso</button>
+          <button type="submit" class="btn-action" style="background:#28a745;">Guardar Registro</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Modal Monitoreo -->
   <div class="modal-overlay" id="modalMonitoreo">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Registro Monitoreo Diario (Hoja 3)</h3>
+        <h3 id="modalMonitoreoTitulo">Registro Monitoreo Diario</h3>
         <button class="close-modal" onclick="cerrarModal('modalMonitoreo')">&times;</button>
       </div>
       <form onsubmit="guardarMonitoreo(event)">
+        <input type="hidden" id="m-idPersona">
         <div class="form-group">
           <label>Centro de Evacuados *</label>
           <select id="m-centro" required></select>
@@ -465,9 +472,7 @@
         const lng = e.latlng.lng.toFixed(5);
         if (tempMarker) map.removeLayer(tempMarker);
         tempMarker = L.marker([lat, lng]).addTo(map);
-        document.getElementById('c-lat').value = lat;
-        document.getElementById('c-lng').value = lng;
-        abrirModal('modalCentro');
+        prepararNuevoCentro(lat, lng);
       });
 
       cargarDatosActualizados();
@@ -764,14 +769,125 @@
       if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
     }
 
+    // PREPARAR NUEVOS REGISTROS (LIMPIEZA DE FORMULARIOS)
+    function prepararNuevoCentro(lat = '', lng = '') {
+      document.getElementById('modalCentroTitulo').innerText = "Nuevo Centro de Evacuados";
+      document.getElementById('c-id').value = "";
+      document.getElementById('c-nombre').value = "";
+      document.getElementById('c-muni').value = "";
+      document.getElementById('c-evacuados').value = "0";
+      document.getElementById('c-capacidad').value = "100";
+      document.getElementById('c-lat').value = lat;
+      document.getElementById('c-lng').value = lng;
+      document.getElementById('c-contacto').value = "";
+      document.getElementById('c-banos').value = "0";
+      document.getElementById('c-agua').value = "";
+      abrirModal('modalCentro');
+    }
+
+    function prepararNuevaPersona() {
+      document.getElementById('modalPersonaTitulo').innerText = "Ingreso de Persona";
+      document.getElementById('p-idPersona').value = "";
+      document.getElementById('p-nombre').value = "";
+      document.getElementById('p-dni').value = "";
+      document.getElementById('p-dni').readOnly = false;
+      document.getElementById('p-nac').value = "";
+      document.getElementById('p-fecha').value = new Date().toISOString().split('T')[0];
+      document.getElementById('p-egreso').value = "";
+      document.getElementById('p-sexo').value = "Masculino";
+      document.getElementById('p-grupo-etario').value = "25 a 49 años";
+      document.getElementById('p-diagnostico').value = "";
+      document.getElementById('p-sintomas').value = "";
+      abrirModal('modalPersona');
+    }
+
+    function prepararNuevoMonitoreo() {
+      document.getElementById('modalMonitoreoTitulo').innerText = "Registro Monitoreo Diario";
+      document.getElementById('m-idPersona').value = "";
+      document.getElementById('m-nombre').value = "";
+      document.getElementById('m-dni').value = "";
+      document.getElementById('m-dni').readOnly = false;
+      document.getElementById('m-edad').value = "";
+      document.getElementById('m-embarazada').value = "NO";
+      document.getElementById('m-discapacidad').value = "NO";
+      document.getElementById('m-medicacion').value = "";
+      document.getElementById('m-sintomas').value = "";
+      abrirModal('modalMonitoreo');
+    }
+
+    // CARGAR Y EDITAR REGISTROS
+    function editarCentro(idCentro, event) {
+      if (event) event.stopPropagation();
+      const centro = centrosData.find(c => String(c.id) === String(idCentro));
+      if (!centro) return;
+
+      document.getElementById('modalCentroTitulo').innerText = "Editar Centro de Evacuados";
+      document.getElementById('c-id').value = centro.id;
+      document.getElementById('c-nombre').value = centro.nombre;
+      document.getElementById('c-muni').value = centro.municipio;
+      document.getElementById('c-evacuados').value = centro.evacuados;
+      document.getElementById('c-capacidad').value = centro.capacidad;
+      document.getElementById('c-lat').value = centro.lat;
+      document.getElementById('c-lng').value = centro.lng;
+      document.getElementById('c-contacto').value = centro.contacto;
+      document.getElementById('c-banos').value = centro.banos;
+      document.getElementById('c-agua').value = centro.insumos || centro.agua || "";
+
+      abrirModal('modalCentro');
+    }
+
+    function editarPersona(dni, event) {
+      if (event) event.stopPropagation();
+      const persona = personasData.find(p => String(p.dni).trim() === String(dni).trim());
+      if (!persona) return;
+
+      document.getElementById('modalPersonaTitulo').innerText = "Editar Ingreso de Persona";
+      document.getElementById('p-idPersona').value = persona.idPersona || "";
+      document.getElementById('p-centro').value = persona.idCentro;
+      document.getElementById('p-nombre').value = persona.nombreApellido;
+      document.getElementById('p-dni').value = persona.dni;
+      document.getElementById('p-dni').readOnly = true; // Bloquea DNI para resguardar clave primaria de actualización
+      document.getElementById('p-nac').value = persona.fechaNac || "";
+      document.getElementById('p-fecha').value = persona.fechaIngreso || "";
+      document.getElementById('p-egreso').value = persona.fechaEgreso || "";
+      document.getElementById('p-sexo').value = persona.sexo || "Masculino";
+      document.getElementById('p-grupo-etario').value = persona.grupoEtario || "25 a 49 años";
+      document.getElementById('p-diagnostico').value = persona.diagnostico || "";
+      document.getElementById('p-sintomas').value = persona.sintomas || "";
+
+      abrirModal('modalPersona');
+    }
+
+    function editarMonitoreo(dni, event) {
+      if (event) event.stopPropagation();
+      const monitoreo = monitoreoData.find(m => String(m.dni).trim() === String(dni).trim());
+      if (!monitoreo) return;
+
+      document.getElementById('modalMonitoreoTitulo').innerText = "Editar Registro de Monitoreo";
+      document.getElementById('m-idPersona').value = monitoreo.idPersona || "";
+      document.getElementById('m-centro').value = monitoreo.idCentro;
+      document.getElementById('m-nombre').value = monitoreo.nombreApellido;
+      document.getElementById('m-dni').value = monitoreo.dni;
+      document.getElementById('m-dni').readOnly = true;
+      document.getElementById('m-edad').value = monitoreo.edad || "";
+      document.getElementById('m-embarazada').value = monitoreo.embarazada || "NO";
+      document.getElementById('m-discapacidad').value = monitoreo.discapacidad || "NO";
+      document.getElementById('m-medicacion').value = monitoreo.medicacion || "";
+      document.getElementById('m-sintomas').value = monitoreo.sintomas || "";
+
+      abrirModal('modalMonitoreo');
+    }
+
+    // GUARDAR O ACTUALIZAR
     function guardarCentro(e) {
       e.preventDefault();
       const rawLat = String(document.getElementById('c-lat').value).replace(',', '.');
       const rawLng = String(document.getElementById('c-lng').value).replace(',', '.');
+      const idExistente = document.getElementById('c-id').value;
 
       const nuevo = {
         action: "add_centro",
-        id: Date.now(),
+        id: idExistente ? idExistente : Date.now(),
         nombre: document.getElementById('c-nombre').value,
         municipio: document.getElementById('c-muni').value,
         evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
@@ -786,35 +902,37 @@
       enviarAData(nuevo, "centros");
     }
 
-    // Guardar Persona con validación anti-duplicados por DNI y Nombre+Centro
     function guardarPersona(e) {
       e.preventDefault();
       
+      const idPersona = document.getElementById('p-idPersona').value;
       const dniIngresado = document.getElementById('p-dni').value.trim();
       const nombreIngresado = document.getElementById('p-nombre').value.trim().toLowerCase();
       const idCentroIngresado = document.getElementById('p-centro').value;
 
-      // 1. Validar por DNI existente en general
-      const personaExistenteDNI = personasData.find(p => String(p.dni).trim() === dniIngresado);
-      if (personaExistenteDNI) {
-        alert(`⚠️ El DNI ${dniIngresado} ya se encuentra registrado a nombre de: ${personaExistenteDNI.nombreApellido}.`);
-        document.getElementById('p-dni').focus();
-        return;
-      }
+      // Validación solo al crear un nuevo registro
+      if (!idPersona) {
+        const personaExistenteDNI = personasData.find(p => String(p.dni).trim() === dniIngresado);
+        if (personaExistenteDNI) {
+          alert(`⚠️ El DNI ${dniIngresado} ya se encuentra registrado a nombre de: ${personaExistenteDNI.nombreApellido}.`);
+          document.getElementById('p-dni').focus();
+          return;
+        }
 
-      // 2. Validar coincidencia exacta de Nombre + Centro de Evacuados
-      const coincidenciaNombreCentro = personasData.find(p => 
-        String(p.nombreApellido).trim().toLowerCase() === nombreIngresado && 
-        String(p.idCentro) === String(idCentroIngresado)
-      );
-      if (coincidenciaNombreCentro) {
-        alert(`⚠️ Ya existe un registro para "${document.getElementById('p-nombre').value}" en el centro seleccionado.`);
-        document.getElementById('p-nombre').focus();
-        return;
+        const coincidenciaNombreCentro = personasData.find(p => 
+          String(p.nombreApellido).trim().toLowerCase() === nombreIngresado && 
+          String(p.idCentro) === String(idCentroIngresado)
+        );
+        if (coincidenciaNombreCentro) {
+          alert(`⚠️ Ya existe un registro para "${document.getElementById('p-nombre').value}" en el centro seleccionado.`);
+          document.getElementById('p-nombre').focus();
+          return;
+        }
       }
 
       const nuevaP = {
         action: "add_persona",
+        idPersona: idPersona || ("PER-" + Date.now()),
         idCentro: idCentroIngresado,
         nombreApellido: document.getElementById('p-nombre').value.trim(),
         dni: dniIngresado,
@@ -831,35 +949,36 @@
       enviarAData(nuevaP, "ingresos");
     }
 
-    // Guardar Monitoreo con validación anti-duplicados por DNI y Nombre+Centro
     function guardarMonitoreo(e) {
       e.preventDefault();
 
+      const idPersona = document.getElementById('m-idPersona').value;
       const dniIngresado = document.getElementById('m-dni').value.trim();
       const nombreIngresado = document.getElementById('m-nombre').value.trim().toLowerCase();
       const idCentroIngresado = document.getElementById('m-centro').value;
 
-      // 1. Validar por DNI en la sección de monitoreo
-      const monitoreoExistenteDNI = monitoreoData.find(m => String(m.dni).trim() === dniIngresado);
-      if (monitoreoExistenteDNI) {
-        alert(`⚠️ El DNI ${dniIngresado} ya cuenta con un registro de monitoreo a nombre de: ${monitoreoExistenteDNI.nombreApellido}.`);
-        document.getElementById('m-dni').focus();
-        return;
-      }
+      if (!idPersona) {
+        const monitoreoExistenteDNI = monitoreoData.find(m => String(m.dni).trim() === dniIngresado);
+        if (monitoreoExistenteDNI) {
+          alert(`⚠️ El DNI ${dniIngresado} ya cuenta con un registro de monitoreo a nombre de: ${monitoreoExistenteDNI.nombreApellido}.`);
+          document.getElementById('m-dni').focus();
+          return;
+        }
 
-      // 2. Validar coincidencia de Nombre + Centro en monitoreo
-      const coincidenciaNombreCentro = monitoreoData.find(m => 
-        String(m.nombreApellido).trim().toLowerCase() === nombreIngresado && 
-        String(m.idCentro) === String(idCentroIngresado)
-      );
-      if (coincidenciaNombreCentro) {
-        alert(`⚠️ Ya existe un registro de monitoreo para "${document.getElementById('m-nombre').value}" en el centro seleccionado.`);
-        document.getElementById('m-nombre').focus();
-        return;
+        const coincidenciaNombreCentro = monitoreoData.find(m => 
+          String(m.nombreApellido).trim().toLowerCase() === nombreIngresado && 
+          String(m.idCentro) === String(idCentroIngresado)
+        );
+        if (coincidenciaNombreCentro) {
+          alert(`⚠️ Ya existe un registro de monitoreo para "${document.getElementById('m-nombre').value}" en el centro seleccionado.`);
+          document.getElementById('m-nombre').focus();
+          return;
+        }
       }
 
       const nuevoM = {
         action: "add_monitoreo",
+        idPersona: idPersona || ("PER-" + Date.now()),
         idCentro: idCentroIngresado,
         nombreApellido: document.getElementById('m-nombre').value.trim(),
         dni: dniIngresado,
@@ -875,6 +994,7 @@
       enviarAData(nuevoM, "monitoreo");
     }
 
+    // ACCIONES DE ELIMINACIÓN
     function eliminarCentro(idCentro, event) {
       if (event) event.stopPropagation();
       if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
@@ -888,13 +1008,52 @@
         body: JSON.stringify({ action: "delete_centro", id: idCentro })
       })
       .then(() => {
-        centrosData = centrosData.filter(c => String(c.id) !== String(idCentro));
-        renderCentros(centrosData);
-        actualizarSelectsCentros();
-        document.getElementById('loading').classList.add('off');
+        cargarDatosActualizados();
       })
       .catch(err => {
         console.error("Error al eliminar centro:", err);
+        document.getElementById('loading').classList.add('off');
+      });
+    }
+
+    function eliminarPersona(dni, event) {
+      if (event) event.stopPropagation();
+      if (!confirm("¿Confirma que desea eliminar el registro de este ingreso?")) return;
+
+      document.getElementById('loading').classList.remove('off');
+
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: "delete_persona", dni: dni })
+      })
+      .then(() => {
+        cargarDatosActualizados();
+      })
+      .catch(err => {
+        console.error("Error al eliminar persona:", err);
+        document.getElementById('loading').classList.add('off');
+      });
+    }
+
+    function eliminarMonitoreo(dni, event) {
+      if (event) event.stopPropagation();
+      if (!confirm("¿Confirma que desea eliminar este registro de monitoreo?")) return;
+
+      document.getElementById('loading').classList.remove('off');
+
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: "delete_monitoreo", dni: dni })
+      })
+      .then(() => {
+        cargarDatosActualizados();
+      })
+      .catch(err => {
+        console.error("Error al eliminar monitoreo:", err);
         document.getElementById('loading').classList.add('off');
       });
     }
@@ -934,7 +1093,10 @@
         card.className = 'item-card';
         card.style.borderLeft = `4px solid ${colorPin}`;
         card.innerHTML = `
-          <button class="btn-delete-card" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
+          <div class="card-actions-top">
+            <button class="btn-card-action" onclick="editarCentro('${c.id}', event)" title="Editar Centro">✏️</button>
+            <button class="btn-card-action" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
+          </div>
           <div class="item-title">🏠 ${c.nombre}</div>
           <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
           <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
@@ -970,6 +1132,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-top:10px;">
               <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
               <button onclick="verInsumosCentro('${c.id}')" style="background:#17a2b8; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">📦 Insumos</button>
+              <button onclick="editarCentro('${c.id}')" title="Editar Centro" style="background:#ffc107; color:#000; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">✏️</button>
               <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
             </div>
           </div>
@@ -1003,6 +1166,10 @@
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
+          <div class="card-actions-top">
+            <button class="btn-card-action" onclick="editarPersona('${p.dni}', event)" title="Editar Persona">✏️</button>
+            <button class="btn-card-action" onclick="eliminarPersona('${p.dni}', event)" title="Eliminar Persona">🗑️</button>
+          </div>
           <div class="item-title">👤 ${p.nombreApellido} (${p.grupoEtario || 'S/D'})</div>
           <div class="item-sub">DNI: ${p.dni} | Centro: ${centro.nombre}</div>
           <div class="item-sub">Ingreso: ${p.fechaIngreso || 'S/D'} ${p.fechaEgreso ? '| Egreso: ' + p.fechaEgreso : ''}</div>
@@ -1021,6 +1188,10 @@
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
+          <div class="card-actions-top">
+            <button class="btn-card-action" onclick="editarMonitoreo('${m.dni}', event)" title="Editar Monitoreo">✏️</button>
+            <button class="btn-card-action" onclick="eliminarMonitoreo('${m.dni}', event)" title="Eliminar Monitoreo">🗑️</button>
+          </div>
           <div class="item-title">🩺 ${m.nombreApellido} (Edad: ${m.edad || 'S/D'})</div>
           <div class="item-sub">DNI: ${m.dni} | Centro: ${centro.nombre}</div>
           <div class="item-sub">Embarazada: ${m.embarazada} | Discapacidad: ${m.discapacidad}</div>
