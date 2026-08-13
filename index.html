@@ -49,7 +49,8 @@
       z-index: 1500; 
       height: 100%; 
       position: relative;
-      transition: transform 0.3s ease-in-out;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
     }
 
     #sidebar.collapsed { transform: translateX(-380px); margin-right: -380px; }
@@ -108,7 +109,7 @@
       border-radius: 4px;
     }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: 0.2s; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
@@ -152,7 +153,7 @@
         z-index: 1500; 
         box-shadow: 0 -4px 20px rgba(0,0,0,0.85);
         transform: translateY(0);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       #sidebar.collapsed { 
@@ -273,6 +274,7 @@
     </div>
   </div>
 
+  <!-- Modal Persona Alinear con Hoja 2 -->
   <div class="modal-overlay" id="modalPersona">
     <div class="modal-box">
       <div class="modal-header">
@@ -284,20 +286,66 @@
           <label>Centro de Evacuados *</label>
           <select id="p-centro" required></select>
         </div>
-        <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="p-nombre" required placeholder="Ej: Juan Pérez"></div>
-        <div class="form-row-2">
-          <div class="form-group"><label>DNI / Documento *</label><input type="text" id="p-dni" required></div>
-          <div class="form-group"><label>Fecha de Ingreso</label><input type="date" id="p-fecha"></div>
+        <div class="form-group">
+          <label>Nombre y Apellido *</label>
+          <input type="text" id="p-nombre" required placeholder="Ej: Juan Pérez">
         </div>
+        
         <div class="form-row-2">
-          <div class="form-group"><label>Fecha Nacimiento</label><input type="date" id="p-nac"></div>
           <div class="form-group">
-            <label>Sexo</label>
-            <select id="p-sexo"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Otro">Otro</option></select>
+            <label>DNI / Documento *</label>
+            <input type="text" id="p-dni" required>
+          </div>
+          <div class="form-group">
+            <label>Fecha de Nacimiento</label>
+            <input type="date" id="p-nac">
           </div>
         </div>
-        <div class="form-group"><label>Enfermedades Crónicas</label><input type="text" id="p-cronicas" placeholder="Ej: Hipertensión, Diabetes"></div>
-        <div class="form-group"><label>Síntomas al Ingreso</label><input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos, Ninguno"></div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Fecha de Ingreso</label>
+            <input type="date" id="p-fecha">
+          </div>
+          <div class="form-group">
+            <label>Fecha de Egreso</label>
+            <input type="date" id="p-egreso">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Sexo</label>
+            <select id="p-sexo">
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Grupo Etario</label>
+            <select id="p-grupo-etario">
+              <option value="< 1 año">&lt; 1 año</option>
+              <option value="1 a 4 años">1 a 4 años</option>
+              <option value="5 a 14 años">5 a 14 años</option>
+              <option value="15 a 24 años">15 a 24 años</option>
+              <option value="25 a 49 años" selected>25 a 49 años</option>
+              <option value="50 a 64 años">50 a 64 años</option>
+              <option value="65+ años">65+ años</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>ENO / ECNT / Lesiones</label>
+          <input type="text" id="p-diagnostico" placeholder="Ej: Diabetes, Hipertensión, Traumatismo">
+        </div>
+
+        <div class="form-group">
+          <label>Síntomas al Ingreso</label>
+          <input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos, Ninguno">
+        </div>
+
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalPersona')">Cancelar</button>
           <button type="submit" class="btn-action" style="background:#28a745;">Registrar Ingreso</button>
@@ -342,7 +390,6 @@
     </div>
   </div>
 
-  <!-- Modal para Detalle de Insumos -->
   <div class="modal-overlay" id="modalInsumos">
     <div class="modal-box">
       <div class="modal-header">
@@ -406,12 +453,11 @@
 
     const CORS_PROXIES = [
       (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
     ];
 
     function initApp() {
-      map = L.map('map').setView([-28.5, -57.8], 7);
+      map = L.map('map', { preferCanvas: true }).setView([-28.5, -57.8], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
       map.on('click', function(e) {
@@ -428,91 +474,70 @@
       actualizarEstiloBotonInfo();
     }
 
+    function fetchWithTimeout(url, options = {}, timeout = 5000) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      return fetch(url, { ...options, signal: controller.signal })
+        .finally(() => clearTimeout(id));
+    }
+
     function fetchConProxy(url) {
       let index = 0;
       function intentar() {
-        if (index >= CORS_PROXIES.length) return fetch(url);
+        if (index >= CORS_PROXIES.length) return fetchWithTimeout(url, {}, 4000);
         const targetUrl = CORS_PROXIES[index](url);
         index++;
-        return fetch(targetUrl).then(res => {
-          if (!res.ok) throw new Error("Fallo Proxy");
-          return res.json();
-        }).catch(() => intentar());
+        return fetchWithTimeout(targetUrl, {}, 4000)
+          .then(res => {
+            if (!res.ok) throw new Error("Proxy response not OK");
+            return res.json();
+          })
+          .catch(() => intentar());
       }
       return intentar();
     }
 
-    function cargarDepartamentos() {
-      fetch('./corrientes.json')
-        .then(res => res.json())
-        .then(data => {
-          capaDepartamentos = L.geoJSON(data, {
-            style: function() {
-              return { color: '#0a84ff', weight: 1.8, opacity: 0.9, fillColor: '#0a84ff', fillOpacity: 0.15 };
-            },
-            onEachFeature: function(feature, layer) {
-              const p = feature.properties || {};
-              const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
-              layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
-              layer.on({
-                mouseover: function(e) { e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 }); },
-                mouseout: function(e) { capaDepartamentos.resetStyle(e.target); }
-              });
-            }
-          });
-
-          capaDepartamentos.addTo(map);
-          departamentosVisibles = true;
-          actualizarEstiloBotonDptos();
-        })
-        .catch(err => console.error("Error al cargar corrientes.json:", err));
-    }
-
     function toggleCapaDepartamentos() {
-  // Si la capa no existe aún, la cargamos por primera vez
-  if (!capaDepartamentos) {
-    document.getElementById('loading').classList.remove('off');
-    
-    fetch('./corrientes.json')
-      .then(res => res.json())
-      .then(data => {
-        capaDepartamentos = L.geoJSON(data, {
-          style: function() {
-            return { color: '#0a84ff', weight: 1.8, opacity: 0.9, fillColor: '#0a84ff', fillOpacity: 0.15 };
-          },
-          onEachFeature: function(feature, layer) {
-            const p = feature.properties || {};
-            const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
-            layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
-            layer.on({
-              mouseover: function(e) { e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 }); },
-              mouseout: function(e) { capaDepartamentos.resetStyle(e.target); }
+      if (!capaDepartamentos) {
+        document.getElementById('loading').classList.remove('off');
+        
+        fetch('./corrientes.json')
+          .then(res => res.json())
+          .then(data => {
+            capaDepartamentos = L.geoJSON(data, {
+              style: () => ({ color: '#0a84ff', weight: 1.8, opacity: 0.9, fillColor: '#0a84ff', fillOpacity: 0.15 }),
+              onEachFeature: (feature, layer) => {
+                const p = feature.properties || {};
+                const nombreDpto = p.nam || p.fna || p.nombre || "Departamento";
+                layer.bindTooltip(`Dpto. ${nombreDpto}`, { permanent: false, direction: 'center', className: 'dept-tooltip' });
+                layer.on({
+                  mouseover: (e) => e.target.setStyle({ weight: 3, color: '#5ac8fa', fillOpacity: 0.35 }),
+                  mouseout: (e) => capaDepartamentos.resetStyle(e.target)
+                });
+              }
             });
-          }
-        });
 
-        capaDepartamentos.addTo(map);
+            capaDepartamentos.addTo(map);
+            departamentosVisibles = true;
+            actualizarEstiloBotonDptos();
+            document.getElementById('loading').classList.add('off');
+          })
+          .catch(err => {
+            console.error("Error al cargar corrientes.json:", err);
+            document.getElementById('loading').classList.add('off');
+          });
+        return;
+      }
+
+      if (departamentosVisibles) {
+        map.removeLayer(capaDepartamentos);
+        departamentosVisibles = false;
+      } else {
+        map.addLayer(capaDepartamentos);
         departamentosVisibles = true;
-        actualizarEstiloBotonDptos();
-        document.getElementById('loading').classList.add('off');
-      })
-      .catch(err => {
-        console.error("Error al cargar corrientes.json:", err);
-        document.getElementById('loading').classList.add('off');
-      });
-    return;
-  }
-
-  // Si ya estaba cargada, simplemente alternamos visibilidad
-  if (departamentosVisibles) {
-    map.removeLayer(capaDepartamentos);
-    departamentosVisibles = false;
-  } else {
-    map.addLayer(capaDepartamentos);
-    departamentosVisibles = true;
-  }
-  actualizarEstiloBotonDptos();
-}
+      }
+      actualizarEstiloBotonDptos();
+    }
 
     function actualizarEstiloBotonDptos() {
       const btn = document.getElementById('btn-toggle-dptos');
@@ -525,7 +550,7 @@
     function cargarDatosActualizados() {
       document.getElementById('loading').classList.remove('off');
       
-      fetch(APPS_SCRIPT_URL)
+      const fetchBackend = fetch(APPS_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
           centrosData = data.centros || [];
@@ -541,7 +566,7 @@
       const hoy = new Date().toISOString().split('T')[0];
       const hace7Dias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      let promesas = ESTACIONES.map(est => {
+      const promesasEstaciones = ESTACIONES.map(est => {
         const urlIna = `https://alerta.ina.gob.ar/a5/getObservaciones?tipo=puntual&series_id=${est.seriesId}&timestart=${hace7Dias}&timeend=${hoy}`;
         return fetchConProxy(urlIna)
           .then(data => {
@@ -564,9 +589,12 @@
           .catch(() => ({ ...est, nombre: est.muni, altura: 2.00, tendencia: "permanece", historico: [] }));
       });
 
-      Promise.all(promesas).then(resultados => {
-        estacionesData = resultados;
-        renderEstaciones(estacionesData);
+      Promise.allSettled([fetchBackend, ...promesasEstaciones]).then(results => {
+        const estResults = results.slice(1).map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean);
+        if (estResults.length > 0) {
+          estacionesData = estResults;
+          renderEstaciones(estacionesData);
+        }
         document.getElementById('loading').classList.add('off');
       });
     }
@@ -612,7 +640,7 @@
           className: 'custom-river-pin',
           html: `
             <div style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-              <img src="./Rio-removebg-preview.png" style="width:30px; height:30px; object-fit:contain; filter:drop-shadow(0px 2px 4px rgba(0,0,0,0.6)); margin-bottom:2px;" alt="Río">
+              <img src="./Rio-removebg-preview.png" style="width:28px; height:28px; object-fit:contain; margin-bottom:2px;" alt="Río">
               <div style="background:rgba(18,18,18,0.90); color:#fff; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; white-space:nowrap;">
                 ${est.nombre}
               </div>
@@ -621,7 +649,7 @@
               </div>
             </div>
           `,
-          iconSize: [110, 70],
+          iconSize: [110, 65],
           iconAnchor: [55, 15]
         });
 
@@ -765,10 +793,12 @@
         idCentro: document.getElementById('p-centro').value,
         nombreApellido: document.getElementById('p-nombre').value,
         dni: document.getElementById('p-dni').value,
-        fechaIngreso: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
         fechaNac: document.getElementById('p-nac').value,
+        fechaIngreso: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
+        fechaEgreso: document.getElementById('p-egreso').value || "",
         sexo: document.getElementById('p-sexo').value,
-        cronicas: document.getElementById('p-cronicas').value,
+        grupoEtario: document.getElementById('p-grupo-etario').value,
+        diagnostico: document.getElementById('p-diagnostico').value,
         sintomas: document.getElementById('p-sintomas').value
       };
       cerrarModal('modalPersona');
@@ -799,15 +829,18 @@
 
       document.getElementById('loading').classList.remove('off');
 
-      const payload = { action: "delete_centro", id: idCentro };
-
       fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ action: "delete_centro", id: idCentro })
       })
-      .then(() => setTimeout(() => { cargarDatosActualizados(); }, 1500))
+      .then(() => {
+        centrosData = centrosData.filter(c => String(c.id) !== String(idCentro));
+        renderCentros(centrosData);
+        actualizarSelectsCentros();
+        document.getElementById('loading').classList.add('off');
+      })
       .catch(err => {
         console.error("Error al eliminar centro:", err);
         document.getElementById('loading').classList.add('off');
@@ -823,7 +856,10 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
-      .then(() => setTimeout(() => { cargarDatosActualizados(); cambiarPestana(pestanaDestino); }, 1500))
+      .then(() => {
+        cargarDatosActualizados();
+        cambiarPestana(pestanaDestino);
+      })
       .catch(err => {
         console.error("Error al enviar datos:", err);
         document.getElementById('loading').classList.add('off');
@@ -915,10 +951,10 @@
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
-          <div class="item-title">👤 ${p.nombreApellido}</div>
+          <div class="item-title">👤 ${p.nombreApellido} (${p.grupoEtario || 'S/D'})</div>
           <div class="item-sub">DNI: ${p.dni} | Centro: ${centro.nombre}</div>
-          <div class="item-sub">Fecha Ingreso: ${p.fechaIngreso || 'S/D'} | Sexo: ${p.sexo || 'S/D'}</div>
-          <div class="item-badge">Síntomas: ${p.sintomas || 'Ninguno'}</div>
+          <div class="item-sub">Ingreso: ${p.fechaIngreso || 'S/D'} ${p.fechaEgreso ? '| Egreso: ' + p.fechaEgreso : ''}</div>
+          <div class="item-badge">Diag: ${p.diagnostico || 'Ninguno'} | Síntomas: ${p.sintomas || 'Ninguno'}</div>
         `;
         listEl.appendChild(card);
       });
@@ -946,7 +982,7 @@
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('collapsed');
       actualizarEstiloBotonInfo();
-      setTimeout(() => map.invalidateSize(), 300);
+      setTimeout(() => map.invalidateSize(), 250);
     }
 
     function actualizarEstiloBotonInfo() {
