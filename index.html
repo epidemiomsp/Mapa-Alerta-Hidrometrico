@@ -263,7 +263,7 @@
         <div class="form-group"><label>Teléfono / Responsable</label><input type="text" id="c-contacto" placeholder="Ej: 3624772121"></div>
         <div class="form-row-2">
           <div class="form-group"><label>Baños Operativos</label><input type="number" id="c-banos" value="0"></div>
-          <div class="form-group"><label>Litros Agua/Día/Persona</label><input type="number" step="any" id="c-agua" value="0"></div>
+          <div class="form-group"><label>Insumos</label><input type="text" step="any" id="c-agua" placeholder="Ej: Pañales, Agua, Alimentos"></div>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalCentro')">Cancelar</button>
@@ -825,7 +825,7 @@
               <b>Municipio:</b> ${c.municipio}<br>
               <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
               <b>Contacto:</b> ${c.contacto}<br>
-              <b>Baños:</b> ${c.banos || 0} | <b>Agua:</b> ${c.agua || 0} L/día/p
+              <b>Baños:</b> ${c.banos || 0} | <b>Insumos:</b> ${c.agua || 'Sin registrar'} L/día/p
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
               <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
