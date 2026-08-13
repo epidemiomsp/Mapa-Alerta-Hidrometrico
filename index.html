@@ -127,8 +127,12 @@
     .form-row-2 .form-group { flex: 1; }
     .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 
-    #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
+    #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2500; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
+
+    /* Modal Autenticación */
+    #modalAuth { z-index: 4000; background: rgba(18,18,18,0.95); }
+    .user-info-badge { font-size: 0.7rem; color: var(--txt-dim); border-right: 1px solid var(--border); padding-right: 8px; margin-right: 4px; display: flex; align-items: center; gap: 4px; }
 
     /* MÓVIL OPTIMIZADO */
     @media (max-width: 768px) {
@@ -193,6 +197,9 @@
       <p>Provincia de Corrientes - Monitoreo de Ríos y Centros de Evacuados</p>
     </div>
     <div class="header-actions">
+      <div id="userBadge" class="user-info-badge" style="display:none;">
+        👤 <span id="lblUserEmail"></span>
+      </div>
       <button class="btn-action" onclick="prepararNuevoCentro()">
         <span class="btn-text-full">+ Centro</span><span class="btn-text-short">+ 🏠</span>
       </button>
@@ -205,6 +212,7 @@
       <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
       <button class="btn-sec" id="btn-toggle-info" onclick="toggleSidebar()">📊 Info</button>
       <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
+      <button class="btn-sec" style="background:#d9534f; border-color:#d9534f;" onclick="cerrarSesion()" title="Cerrar Sesión">🚪</button>
     </div>
   </header>
 
@@ -244,6 +252,47 @@
     </div>
 
     <div id="map"></div>
+  </div>
+
+  <!-- Modal Autenticación -->
+  <div class="modal-overlay active" id="modalAuth">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="authTitle">Acceso al Sistema GEOEPI</h3>
+      </div>
+      
+      <!-- Formulario de Acceso -->
+      <form id="formLogin" onsubmit="procesarLogin(event)">
+        <div class="form-group">
+          <label>Correo Electrónico Registrado *</label>
+          <input type="email" id="authEmail" required placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-actions" style="justify-content: space-between; align-items: center; margin-top: 15px;">
+          <button type="button" class="btn-sec" onclick="alternarModoAuth('registro')">Solicitar Registro</button>
+          <button type="submit" class="btn-action">Ingresar</button>
+        </div>
+      </form>
+
+      <!-- Formulario de Registro Solicitud -->
+      <form id="formRegistro" style="display:none;" onsubmit="procesarRegistro(event)">
+        <div class="form-group">
+          <label>Nombre y Apellido *</label>
+          <input type="text" id="regNombre" required placeholder="Ej: Juan Pérez">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico *</label>
+          <input type="email" id="regEmail" required placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-group">
+          <label>Establecimiento / Municipio *</label>
+          <input type="text" id="regEstablecimiento" required placeholder="Ej: Depto. Salud Resistencia">
+        </div>
+        <div class="form-actions" style="justify-content: space-between; align-items: center; margin-top: 15px;">
+          <button type="button" class="btn-sec" onclick="alternarModoAuth('login')">Volver al Login</button>
+          <button type="submit" class="btn-action" style="background:#28a745;">Enviar Solicitud</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Modal Centro -->
@@ -438,6 +487,7 @@
     let miChart = null;
     let capaDepartamentos = null;
     let departamentosVisibles = false;
+    let usuarioSesion = null;
 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgLrRuhtSp6jkZ8vpqt-RyVnEl7JW2zPaVq3jTNEzV9-eIxJiLtqmz509Izz14n83vZg/exec";
 
@@ -486,7 +536,96 @@
       (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
     ];
 
+    // LÓGICA DE AUTENTICACIÓN
+    function verificarSesionGuardada() {
+      const emailSesion = localStorage.getItem('geoepi_user');
+      if (emailSesion) {
+        validarUsuarioBackend(emailSesion);
+      } else {
+        abrirModal('modalAuth');
+      }
+    }
+
+    function alternarModoAuth(modo) {
+      if (modo === 'registro') {
+        document.getElementById('authTitle').innerText = "Solicitud de Registro GEOEPI";
+        document.getElementById('formLogin').style.display = 'none';
+        document.getElementById('formRegistro').style.display = 'block';
+      } else {
+        document.getElementById('authTitle').innerText = "Acceso al Sistema GEOEPI";
+        document.getElementById('formRegistro').style.display = 'none';
+        document.getElementById('formLogin').style.display = 'block';
+      }
+    }
+
+    function procesarLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value.trim();
+      if (!email) return;
+      validarUsuarioBackend(email);
+    }
+
+    function validarUsuarioBackend(email) {
+      document.getElementById('loading').classList.remove('off');
+      fetch(`${APPS_SCRIPT_URL}?action=check_auth&user=${encodeURIComponent(email)}`)
+        .then(res => res.json())
+        .then(res => {
+          document.getElementById('loading').classList.add('off');
+          if (res.authorized) {
+            usuarioSesion = email;
+            localStorage.setItem('geoepi_user', email);
+            document.getElementById('lblUserEmail').innerText = res.nombre || email;
+            document.getElementById('userBadge').style.display = 'flex';
+            cerrarModal('modalAuth');
+            initApp();
+          } else {
+            localStorage.removeItem('geoepi_user');
+            alert("⚠️ Acceso denegado: El correo no está autorizado o se encuentra en estado PENDIENTE.");
+            abrirModal('modalAuth');
+          }
+        })
+        .catch(err => {
+          document.getElementById('loading').classList.add('off');
+          alert("Error de conexión al verificar credenciales.");
+        });
+    }
+
+    function procesarRegistro(e) {
+      e.preventDefault();
+      const payload = {
+        action: 'registrar_usuario',
+        correo: document.getElementById('regEmail').value.trim(),
+        nombre: document.getElementById('regNombre').value.trim(),
+        establecimiento: document.getElementById('regEstablecimiento').value.trim()
+      };
+
+      document.getElementById('loading').classList.remove('off');
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      })
+      .then(() => {
+        document.getElementById('loading').classList.add('off');
+        alert("✅ Solicitud enviada con éxito. Un administrador deberá cambiar el estado a APROBADO o HABILITADO en la pestaña USUARIOS.");
+        alternarModoAuth('login');
+      })
+      .catch(() => {
+        document.getElementById('loading').classList.add('off');
+        alert("Error al enviar la solicitud.");
+      });
+    }
+
+    function cerrarSesion() {
+      if (confirm("¿Confirma que desea cerrar la sesión actual?")) {
+        localStorage.removeItem('geoepi_user');
+        location.reload();
+      }
+    }
+
     function initApp() {
+      if (map) return;
       map = L.map('map', { preferCanvas: true }).setView([-28.5, -57.8], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
@@ -910,6 +1049,7 @@
 
       const nuevo = {
         action: "add_centro",
+        usuario: usuarioSesion,
         id: idExistente ? idExistente : Date.now(),
         nombre: document.getElementById('c-nombre').value,
         municipio: document.getElementById('c-muni').value,
@@ -957,6 +1097,7 @@
 
       const nuevaP = {
         action: "add_persona",
+        usuario: usuarioSesion,
         idPersona: idPersona || ("PER-" + Date.now()),
         idCentro: idCentroIngresado,
         nombreApellido: document.getElementById('p-nombre').value.trim(),
@@ -1005,6 +1146,7 @@
 
       const nuevoM = {
         action: "add_monitoreo",
+        usuario: usuarioSesion,
         idPersona: idPersona || ("PER-" + Date.now()),
         idCentro: idCentroIngresado,
         nombreApellido: document.getElementById('m-nombre').value.trim(),
@@ -1032,7 +1174,7 @@
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: "delete_centro", id: idCentro })
+        body: JSON.stringify({ action: "delete_centro", id: idCentro, usuario: usuarioSesion })
       })
       .then(() => {
         cargarDatosActualizados();
@@ -1053,7 +1195,7 @@
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: "delete_persona", dni: dni })
+        body: JSON.stringify({ action: "delete_persona", dni: dni, usuario: usuarioSesion })
       })
       .then(() => {
         cargarDatosActualizados();
@@ -1074,7 +1216,7 @@
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: "delete_monitoreo", dni: dni })
+        body: JSON.stringify({ action: "delete_monitoreo", dni: dni, usuario: usuarioSesion })
       })
       .then(() => {
         cargarDatosActualizados();
@@ -1259,7 +1401,7 @@
     }
 
     window.onresize = actualizarEstiloBotonInfo;
-    window.onload = initApp;
+    window.onload = verificarSesionGuardada;
   </script>
 </body>
 </html>
