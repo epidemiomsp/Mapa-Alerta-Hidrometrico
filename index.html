@@ -441,6 +441,29 @@
 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgLrRuhtSp6jkZ8vpqt-RyVnEl7JW2zPaVq3jTNEzV9-eIxJiLtqmz509Izz14n83vZg/exec";
 
+    // Helper para convertir fechas YYYY-MM-DD a formato latino DD/MM/YYYY
+    function formatearFechaLatina(fechaStr) {
+      if (!fechaStr) return "";
+      const partes = String(fechaStr).trim().split('-');
+      if (partes.length === 3 && partes[0].length === 4) {
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+      return fechaStr;
+    }
+
+    // Helper inverso para cargar fechas DD/MM/YYYY o YYYY-MM-DD dentro de <input type="date">
+    function parsearFechaParaInput(fechaStr) {
+      if (!fechaStr) return "";
+      const partes = String(fechaStr).trim().split('/');
+      if (partes.length === 3) {
+        const dia = partes[0].padStart(2, '0');
+        const mes = partes[1].padStart(2, '0');
+        const anio = partes[2];
+        return `${anio}-${mes}-${dia}`;
+      }
+      return fechaStr;
+    }
+
     const ESTACIONES = [
       { muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00 },
       { muni:"Itá Ibaté",           depto:"General Paz",        rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50 },
@@ -846,10 +869,10 @@
       document.getElementById('p-centro').value = persona.idCentro;
       document.getElementById('p-nombre').value = persona.nombreApellido;
       document.getElementById('p-dni').value = persona.dni;
-      document.getElementById('p-dni').readOnly = true; // Bloquea DNI para resguardar clave primaria de actualización
-      document.getElementById('p-nac').value = persona.fechaNac || "";
-      document.getElementById('p-fecha').value = persona.fechaIngreso || "";
-      document.getElementById('p-egreso').value = persona.fechaEgreso || "";
+      document.getElementById('p-dni').readOnly = true;
+      document.getElementById('p-nac').value = parsearFechaParaInput(persona.fechaNac);
+      document.getElementById('p-fecha').value = parsearFechaParaInput(persona.fechaIngreso);
+      document.getElementById('p-egreso').value = parsearFechaParaInput(persona.fechaEgreso);
       document.getElementById('p-sexo').value = persona.sexo || "Masculino";
       document.getElementById('p-grupo-etario').value = persona.grupoEtario || "25 a 49 años";
       document.getElementById('p-diagnostico').value = persona.diagnostico || "";
@@ -930,15 +953,17 @@
         }
       }
 
+      const fechaIngresoRaw = document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0];
+
       const nuevaP = {
         action: "add_persona",
         idPersona: idPersona || ("PER-" + Date.now()),
         idCentro: idCentroIngresado,
         nombreApellido: document.getElementById('p-nombre').value.trim(),
         dni: dniIngresado,
-        fechaNac: document.getElementById('p-nac').value,
-        fechaIngreso: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
-        fechaEgreso: document.getElementById('p-egreso').value || "",
+        fechaNac: formatearFechaLatina(document.getElementById('p-nac').value),
+        fechaIngreso: formatearFechaLatina(fechaIngresoRaw),
+        fechaEgreso: formatearFechaLatina(document.getElementById('p-egreso').value),
         sexo: document.getElementById('p-sexo').value,
         grupoEtario: document.getElementById('p-grupo-etario').value,
         diagnostico: document.getElementById('p-diagnostico').value,
@@ -976,6 +1001,8 @@
         }
       }
 
+      const hoyIso = new Date().toISOString().split('T')[0];
+
       const nuevoM = {
         action: "add_monitoreo",
         idPersona: idPersona || ("PER-" + Date.now()),
@@ -987,7 +1014,7 @@
         discapacidad: document.getElementById('m-discapacidad').value,
         medicacion: document.getElementById('m-medicacion').value,
         sintomas: document.getElementById('m-sintomas').value,
-        fechaIngreso: new Date().toISOString().split('T')[0]
+        fechaIngreso: formatearFechaLatina(hoyIso)
       };
 
       cerrarModal('modalMonitoreo');
