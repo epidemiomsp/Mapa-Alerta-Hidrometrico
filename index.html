@@ -176,7 +176,7 @@
       }
 
       .list {
-        padding-bottom: 80px !important; /* Espacio de seguridad para scroll en pantallas móviles con navegadores táctiles */
+        padding-bottom: 80px !important;
       }
     }
   </style>
@@ -263,7 +263,7 @@
         <div class="form-group"><label>Teléfono / Responsable</label><input type="text" id="c-contacto" placeholder="Ej: 3624772121"></div>
         <div class="form-row-2">
           <div class="form-group"><label>Baños Operativos</label><input type="number" id="c-banos" value="0"></div>
-          <div class="form-group"><label>Insumos</label><input type="text" step="any" id="c-agua" placeholder="Ej: Medicamentos, Sueros, NaDCC"></div>
+          <div class="form-group"><label>Insumos</label><input type="text" id="c-agua" placeholder="Ej: Medicamentos, Sueros, NaDCC"></div>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalCentro')">Cancelar</button>
@@ -339,6 +339,25 @@
           <button type="submit" class="btn-action" style="background:#17a2b8;">Guardar Monitoreo</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal para Detalle de Insumos -->
+  <div class="modal-overlay" id="modalInsumos">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="insumos-titulo">Detalle de Insumos</h3>
+        <button class="close-modal" onclick="cerrarModal('modalInsumos')">&times;</button>
+      </div>
+      <div style="padding: 10px 0; font-size: 0.9rem; color: #fff;">
+        <p style="color: var(--txt-dim); margin-bottom: 6px; font-size: 0.75rem;">Insumos y recursos registrados:</p>
+        <div id="insumos-contenido" style="background: #121212; border: 1px solid var(--border); padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace;">
+          Sin registrar
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-sec" onclick="cerrarModal('modalInsumos')">Cerrar</button>
+      </div>
     </div>
   </div>
 
@@ -700,7 +719,7 @@
         lng: parseFloat(rawLng),
         contacto: document.getElementById('c-contacto').value || "Sin dato",
         banos: parseInt(document.getElementById('c-banos').value) || 0,
-        agua: parseFloat(document.getElementById('c-agua').value) || 0
+        insumos: document.getElementById('c-agua').value || "Sin registrar"
       };
       cerrarModal('modalCentro');
       enviarAData(nuevo, "centros");
@@ -825,10 +844,11 @@
               <b>Municipio:</b> ${c.municipio}<br>
               <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
               <b>Contacto:</b> ${c.contacto}<br>
-              <b>Baños:</b> ${c.banos || 0} | <b>Insumos:</b> ${c.agua || 'Sin registrar'}
+              <b>Baños:</b> ${c.banos || 0} | <b>Insumos:</b> ${c.insumos || c.agua || 'Sin registrar'}
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-              <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-top:10px;">
+              <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
+              <button onclick="verInsumosCentro('${c.id}')" style="background:#17a2b8; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">📦 Insumos</button>
               <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
             </div>
           </div>
@@ -841,6 +861,16 @@
       cambiarPestana('ingresos');
       const filtrados = personasData.filter(p => String(p.idCentro) === String(idCentro));
       renderIngresos(filtrados);
+    }
+
+    function verInsumosCentro(idCentro) {
+      const centro = centrosData.find(c => String(c.id) === String(idCentro));
+      if (!centro) return;
+
+      document.getElementById('insumos-titulo').innerText = `Insumos - ${centro.nombre}`;
+      document.getElementById('insumos-contenido').innerText = centro.insumos || centro.agua || 'Sin insumos registrados';
+      
+      abrirModal('modalInsumos');
     }
 
     function renderIngresos(personas) {
