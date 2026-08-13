@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Monitoreo Hidrométrico y Centros de Evacuados - Corrientes</title>
+  <title>Monitoreo Hidrométrico y Centros de Evacuados - GEOEPI</title>
 
   <!-- CSS Leaflet CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
@@ -39,7 +39,6 @@
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); height: calc(100dvh - 50px); overflow: hidden; }
     
-    /* Panel Lateral Desktop */
     #sidebar { 
       width: 380px; 
       background: var(--bg); 
@@ -77,7 +76,6 @@
     .list::-webkit-scrollbar { width: 5px; }
     .list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     
-    /* Tarjetas */
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
     .card:hover { border-color: #555; }
     .muni { font-weight: 600; font-size: 0.88rem; }
@@ -130,20 +128,16 @@
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2500; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
 
-    /* Modal Autenticación */
     #modalAuth { z-index: 4000; background: rgba(18,18,18,0.95); }
     .user-info-badge { font-size: 0.7rem; color: var(--txt-dim); border-right: 1px solid var(--border); padding-right: 8px; margin-right: 4px; display: flex; align-items: center; gap: 4px; }
 
-    /* MÓVIL OPTIMIZADO */
     @media (max-width: 768px) {
       .title-area p { display: none; }
       .title-area h1 { font-size: 0.80rem; }
-      
       .btn-text-full { display: none; }
       .btn-text-short { display: inline; }
       .header-actions { gap: 3px; }
       .btn-action, .btn-sec { padding: 5px 6px; font-size: 0.68rem; }
-
       .container { flex-direction: column; }
       
       #sidebar { 
@@ -162,30 +156,11 @@
         transform: translateY(0);
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
-
-      #sidebar.collapsed { 
-        transform: translateY(100%) !important; 
-      }
-
-      .toggle-sidebar-btn { 
-        display: none !important; 
-      }
-
-      .tab-bar {
-        background: #181818;
-        display: flex;
-        align-items: center;
-        height: 40px;
-        min-height: 40px;
-      }
-
-      .sec-tab {
-        height: calc(100% - 40px) !important;
-      }
-
-      .list {
-        padding-bottom: 80px !important;
-      }
+      #sidebar.collapsed { transform: translateY(100%) !important; }
+      .toggle-sidebar-btn { display: none !important; }
+      .tab-bar { background: #181818; display: flex; align-items: center; height: 40px; min-height: 40px; }
+      .sec-tab { height: calc(100% - 40px) !important; }
+      .list { padding-bottom: 80px !important; }
     }
   </style>
 </head>
@@ -261,7 +236,6 @@
         <h3 id="authTitle">Acceso al Sistema GEOEPI</h3>
       </div>
       
-      <!-- Formulario de Acceso -->
       <form id="formLogin" onsubmit="procesarLogin(event)">
         <div class="form-group">
           <label>Correo Electrónico Registrado *</label>
@@ -273,7 +247,6 @@
         </div>
       </form>
 
-      <!-- Formulario de Registro Solicitud -->
       <form id="formRegistro" style="display:none;" onsubmit="procesarRegistro(event)">
         <div class="form-group">
           <label>Nombre y Apellido *</label>
@@ -491,7 +464,6 @@
 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgLrRuhtSp6jkZ8vpqt-RyVnEl7JW2zPaVq3jTNEzV9-eIxJiLtqmz509Izz14n83vZg/exec";
 
-    // Helper para convertir fechas YYYY-MM-DD a formato latino DD/MM/YYYY
     function formatearFechaLatina(fechaStr) {
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('-');
@@ -501,7 +473,6 @@
       return fechaStr;
     }
 
-    // Helper inverso para cargar fechas DD/MM/YYYY o YYYY-MM-DD dentro de <input type="date">
     function parsearFechaParaInput(fechaStr) {
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('/');
@@ -536,7 +507,6 @@
       (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
     ];
 
-    // LÓGICA DE AUTENTICACIÓN
     function verificarSesionGuardada() {
       const emailSesion = localStorage.getItem('geoepi_user');
       if (emailSesion) {
@@ -584,7 +554,7 @@
             abrirModal('modalAuth');
           }
         })
-        .catch(err => {
+        .catch(() => {
           document.getElementById('loading').classList.add('off');
           alert("Error de conexión al verificar credenciales.");
         });
@@ -807,7 +777,6 @@
           className: 'custom-river-pin',
           html: `
             <div style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-              <img src="./Rio-removebg-preview.png" style="width:28px; height:28px; object-fit:contain; margin-bottom:2px;" alt="Río">
               <div style="background:rgba(18,18,18,0.90); color:#fff; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; white-space:nowrap;">
                 ${est.nombre}
               </div>
@@ -816,8 +785,8 @@
               </div>
             </div>
           `,
-          iconSize: [110, 65],
-          iconAnchor: [55, 15]
+          iconSize: [110, 50],
+          iconAnchor: [55, 10]
         });
 
         const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
@@ -931,7 +900,6 @@
       if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
     }
 
-    // PREPARAR NUEVOS REGISTROS (LIMPIEZA DE FORMULARIOS)
     function prepararNuevoCentro(lat = '', lng = '') {
       document.getElementById('modalCentroTitulo').innerText = "Nuevo Centro de Evacuados";
       document.getElementById('c-id').value = "";
@@ -977,7 +945,6 @@
       abrirModal('modalMonitoreo');
     }
 
-    // CARGAR Y EDITAR REGISTROS
     function editarCentro(idCentro, event) {
       if (event) event.stopPropagation();
       const centro = centrosData.find(c => String(c.id) === String(idCentro));
@@ -993,7 +960,7 @@
       document.getElementById('c-lng').value = centro.lng;
       document.getElementById('c-contacto').value = centro.contacto;
       document.getElementById('c-banos').value = centro.banos;
-      document.getElementById('c-agua').value = centro.insumos || centro.agua || "";
+      document.getElementById('c-agua').value = centro.insumos || "";
 
       abrirModal('modalCentro');
     }
@@ -1040,7 +1007,6 @@
       abrirModal('modalMonitoreo');
     }
 
-    // GUARDAR O ACTUALIZAR
     function guardarCentro(e) {
       e.preventDefault();
       const rawLat = String(document.getElementById('c-lat').value).replace(',', '.');
@@ -1073,7 +1039,6 @@
       const nombreIngresado = document.getElementById('p-nombre').value.trim().toLowerCase();
       const idCentroIngresado = document.getElementById('p-centro').value;
 
-      // Validación solo al crear un nuevo registro
       if (!idPersona) {
         const personaExistenteDNI = personasData.find(p => String(p.dni).trim() === dniIngresado);
         if (personaExistenteDNI) {
@@ -1163,7 +1128,6 @@
       enviarAData(nuevoM, "monitoreo");
     }
 
-    // ACCIONES DE ELIMINACIÓN
     function eliminarCentro(idCentro, event) {
       if (event) event.stopPropagation();
       if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
@@ -1176,9 +1140,7 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: "delete_centro", id: idCentro, usuario: usuarioSesion })
       })
-      .then(() => {
-        cargarDatosActualizados();
-      })
+      .then(() => cargarDatosActualizados())
       .catch(err => {
         console.error("Error al eliminar centro:", err);
         document.getElementById('loading').classList.add('off');
@@ -1197,9 +1159,7 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: "delete_persona", dni: dni, usuario: usuarioSesion })
       })
-      .then(() => {
-        cargarDatosActualizados();
-      })
+      .then(() => cargarDatosActualizados())
       .catch(err => {
         console.error("Error al eliminar persona:", err);
         document.getElementById('loading').classList.add('off');
@@ -1218,9 +1178,7 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: "delete_monitoreo", dni: dni, usuario: usuarioSesion })
       })
-      .then(() => {
-        cargarDatosActualizados();
-      })
+      .then(() => cargarDatosActualizados())
       .catch(err => {
         console.error("Error al eliminar monitoreo:", err);
         document.getElementById('loading').classList.add('off');
@@ -1276,14 +1234,18 @@
         };
         listEl.appendChild(card);
 
-        const iconoSalud = L.icon({
-          iconUrl: './3304549.png',
-          iconSize: [36, 36],
-          iconAnchor: [18, 36],
-          popupAnchor: [0, -32]
+        const customIconCentro = L.divIcon({
+          className: 'custom-centro-pin',
+          html: `
+            <div style="background:${colorPin}; color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.5); font-size:14px;">
+              🏠
+            </div>
+          `,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
         });
 
-        const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
+        const marker = L.marker([c.lat, c.lng], { icon: customIconCentro }).addTo(map);
         marker.bindPopup(`
           <div style="color:#000; min-width: 180px;">
             <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
@@ -1296,7 +1258,7 @@
               <b>Municipio:</b> ${c.municipio}<br>
               <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
               <b>Contacto:</b> ${c.contacto}<br>
-              <b>Baños:</b> ${c.banos || 0} | <b>Insumos:</b> ${c.insumos || c.agua || 'Sin registrar'}
+              <b>Baños:</b> ${c.banos || 0} | <b>Insumos:</b> ${c.insumos || 'Sin registrar'}
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-top:10px;">
               <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
@@ -1321,7 +1283,7 @@
       if (!centro) return;
 
       document.getElementById('insumos-titulo').innerText = `Insumos - ${centro.nombre}`;
-      document.getElementById('insumos-contenido').innerText = centro.insumos || centro.agua || 'Sin insumos registrados';
+      document.getElementById('insumos-contenido').innerText = centro.insumos || 'Sin insumos registrados';
       
       abrirModal('modalInsumos');
     }
