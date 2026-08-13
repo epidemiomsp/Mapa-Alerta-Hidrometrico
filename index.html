@@ -854,7 +854,7 @@
 
     function editarCentro(idCentro, event) {
       if (event) event.stopPropagation();
-      const centro = centrosData.find(c => String(c.id) === String(idCentro));
+      const centro = centrosData.find(c => String(c.id).trim() === String(idCentro).trim());
       if (!centro) return;
 
       document.getElementById('modalCentroTitulo').innerText = "Editar Centro de Evacuados";
@@ -924,7 +924,7 @@
 
       const nuevo = {
         action: "add_centro",
-        id: idExistente ? idExistente : Date.now(),
+        id: idExistente ? String(idExistente).trim() : String(Date.now()),
         nombre: document.getElementById('c-nombre').value,
         municipio: document.getElementById('c-muni').value,
         evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
@@ -1042,6 +1042,7 @@
       enviarAData(nuevoM, "monitoreo");
     }
 
+    // ELIMINACIONES CORREGIDAS
     function eliminarCentro(idCentro, event) {
       if (event) event.stopPropagation();
       if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
@@ -1052,10 +1053,10 @@
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: "delete_centro", id: idCentro })
+        body: JSON.stringify({ action: "delete_centro", id: String(idCentro).trim() })
       })
       .then(() => {
-        cargarDatosActualizados();
+        setTimeout(cargarDatosActualizados, 1000);
       })
       .catch(err => {
         console.error("Error al eliminar centro:", err);
@@ -1073,10 +1074,10 @@
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: "delete_persona", dni: dni })
+        body: JSON.stringify({ action: "delete_persona", dni: String(dni).trim() })
       })
       .then(() => {
-        cargarDatosActualizados();
+        setTimeout(cargarDatosActualizados, 1000);
       })
       .catch(err => {
         console.error("Error al eliminar persona:", err);
@@ -1094,10 +1095,10 @@
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: "delete_monitoreo", dni: dni })
+        body: JSON.stringify({ action: "delete_monitoreo", dni: String(dni).trim() })
       })
       .then(() => {
-        cargarDatosActualizados();
+        setTimeout(cargarDatosActualizados, 1000);
       })
       .catch(err => {
         console.error("Error al eliminar monitoreo:", err);
@@ -1115,8 +1116,10 @@
         body: JSON.stringify(payload)
       })
       .then(() => {
-        cargarDatosActualizados();
-        cambiarPestana(pestanaDestino);
+        setTimeout(() => {
+          cargarDatosActualizados();
+          cambiarPestana(pestanaDestino);
+        }, 1000);
       })
       .catch(err => {
         console.error("Error al enviar datos:", err);
@@ -1190,12 +1193,12 @@
 
     function verEvacuadosCentro(idCentro) {
       cambiarPestana('ingresos');
-      const filtrados = personasData.filter(p => String(p.idCentro) === String(idCentro));
+      const filtrados = personasData.filter(p => String(p.idCentro).trim() === String(idCentro).trim());
       renderIngresos(filtrados);
     }
 
     function verInsumosCentro(idCentro) {
-      const centro = centrosData.find(c => String(c.id) === String(idCentro));
+      const centro = centrosData.find(c => String(c.id).trim() === String(idCentro).trim());
       if (!centro) return;
 
       document.getElementById('insumos-titulo').innerText = `Insumos - ${centro.nombre}`;
@@ -1209,7 +1212,7 @@
       listEl.innerHTML = personas.length ? '' : '<div style="color:#666; font-size:0.75rem; text-align:center; padding:15px;">Sin registros de ingresos</div>';
       
       personas.forEach(p => {
-        const centro = centrosData.find(c => String(c.id) === String(p.idCentro)) || { nombre: 'Centro General' };
+        const centro = centrosData.find(c => String(c.id).trim() === String(p.idCentro).trim()) || { nombre: 'Centro General' };
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
@@ -1231,7 +1234,7 @@
       listEl.innerHTML = monitoreos.length ? '' : '<div style="color:#666; font-size:0.75rem; text-align:center; padding:15px;">Sin registros de monitoreo</div>';
       
       monitoreos.forEach(m => {
-        const centro = centrosData.find(c => String(c.id) === String(m.idCentro)) || { nombre: 'Centro General' };
+        const centro = centrosData.find(c => String(c.id).trim() === String(m.idCentro).trim()) || { nombre: 'Centro General' };
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
