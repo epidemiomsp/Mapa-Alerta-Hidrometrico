@@ -279,7 +279,6 @@
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
 
-      <!-- Leyenda de error si se repite DNI o Nombre -->
       <div id="alertPersona" class="alert-msg"></div>
 
       <form onsubmit="guardarPersona(event)">
@@ -364,7 +363,6 @@
         <button class="close-modal" onclick="cerrarModal('modalMonitoreo')">&times;</button>
       </div>
 
-      <!-- Leyenda de error si se repite DNI o Nombre -->
       <div id="alertMonitoreo" class="alert-msg"></div>
 
       <form onsubmit="guardarMonitoreo(event)">
@@ -440,8 +438,9 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    // URL DE LA APLICACIÓN WEB DE GOOGLE APPS SCRIPT ACTUALIZADA
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPuH8sQqTTucVIi1nT8g606xMpO6rEjoRltEPPL43T0KuY5D6LVcem8EEY-f9egICGbw/exec";
+    // ENDPOINTS DESACOPLADOS DE GOOGLE APPS SCRIPT
+    const URL_BASE_DATOS = "https://script.google.com/macros/s/AKfycbyYhsiCGCeGFQMH973pQrrHkT5lqv5LTL-6qh_qu4ws-KV03kjiyrisk0svV4XG_M06rA/exec";
+    const URL_RIOS = "https://script.google.com/macros/s/AKfycbzPuH8sQqTTucVIi1nT8g606xMpO6rEjoRltEPPL43T0KuY5D6LVcem8EEY-f9egICGbw/exec";
 
     function formatearFechaLatina(fechaStr) {
       if (!fechaStr) return "";
@@ -550,63 +549,71 @@
     function cargarDatosActualizados() {
       document.getElementById('loading').classList.remove('off');
       
-      fetch(APPS_SCRIPT_URL)
-        .then(res => res.json())
-        .then(data => {
-          // 1. Cargar Centros, Personas e Ingresos desde Apps Script
-          centrosData = data.centros || [];
-          personasData = data.personas || [];
-          monitoreoData = data.monitoreos || [];
-          actualizarSelectsCentros();
-          renderCentros(centrosData);
-          renderIngresos(personasData);
-          renderMonitoreo(monitoreoData);
-
-          // 2. Procesar datos de los ríos (directamente desde el objeto o mapa)
-          const riosData = data.rios || data;
-          
-          estacionesData = ESTACIONES.map(est => {
-            let infoEst = null;
-
-            if (Array.isArray(riosData)) {
-              infoEst = riosData.find(r => String(r.id) === String(est.id) || String(r.seriesId) === String(est.seriesId));
-            } else if (typeof riosData === 'object' && riosData !== null) {
-              infoEst = riosData[est.id] || riosData[est.seriesId];
-            }
-
-            let obs = infoEst ? (infoEst.historico || infoEst.datos || []) : [];
-            let alturaVal = 2.00;
-            let tendenciaVal = "permanece";
-
-            if (obs && obs.length > 0) {
-              const ult = obs[obs.length - 1];
-              alturaVal = parseFloat(ult.nivel || ult.valor) || 2.00;
-              if (obs.length > 1) {
-                const prev = parseFloat(obs[obs.length - 2].nivel || obs[obs.length - 2].valor) || alturaVal;
-                const diff = alturaVal - prev;
-                if (diff > 0.02) tendenciaVal = "crece";
-                else if (diff < -0.02) tendenciaVal = "baja";
-              }
-            } else if (infoEst && infoEst.altura !== undefined) {
-              alturaVal = parseFloat(infoEst.altura) || 2.00;
-            }
-
-            return { 
-              ...est, 
-              nombre: est.muni, 
-              altura: alturaVal, 
-              tendencia: tendenciaVal, 
-              historico: obs 
-            };
-          });
-
-          renderEstaciones(estacionesData);
-          document.getElementById('loading').classList.add('off');
+      // Ejecución asíncrona simultánea mediante Promise.all
+      Promise.all([
+        fetch(URL_BASE_DATOS).then(res => res.json()).catch(err => {
+          console.error("Error al cargar Base de Datos:", err);
+          return { centros: [], personas: [], monitoreos: [] };
+        }),
+        fetch(URL_RIOS).then(res => res.json()).catch(err => {
+          console.error("Error al cargar Ríos (INA):", err);
+          return [];
         })
-        .catch(err => {
-          console.error("Error al cargar datos desde Apps Script:", err);
-          document.getElementById('loading').classList.add('off');
+      ])
+      .then(([dataDB, riosData]) => {
+        // 1. Cargar Centros, Personas e Ingresos desde Script Base de Datos
+        centrosData = dataDB.centros || [];
+        personasData = dataDB.personas || [];
+        monitoreoData = dataDB.monitoreos || [];
+        
+        actualizarSelectsCentros();
+        renderCentros(centrosData);
+        renderIngresos(personasData);
+        renderMonitoreo(monitoreoData);
+
+        // 2. Procesar datos de Ríos desde Script Ríos (INA)
+        estacionesData = ESTACIONES.map(est => {
+          let infoEst = null;
+
+          if (Array.isArray(riosData)) {
+            infoEst = riosData.find(r => String(r.id) === String(est.id) || String(r.seriesId) === String(est.seriesId));
+          } else if (typeof riosData === 'object' && riosData !== null) {
+            infoEst = riosData[est.id] || riosData[est.seriesId];
+          }
+
+          let obs = infoEst ? (infoEst.historico || infoEst.datos || []) : [];
+          let alturaVal = 2.00;
+          let tendenciaVal = "permanece";
+
+          if (obs && obs.length > 0) {
+            const ult = obs[obs.length - 1];
+            alturaVal = parseFloat(ult.nivel || ult.valor) || 2.00;
+            if (obs.length > 1) {
+              const prev = parseFloat(obs[obs.length - 2].nivel || obs[obs.length - 2].valor) || alturaVal;
+              const diff = alturaVal - prev;
+              if (diff > 0.02) tendenciaVal = "crece";
+              else if (diff < -0.02) tendenciaVal = "baja";
+            }
+          } else if (infoEst && infoEst.altura !== undefined) {
+            alturaVal = parseFloat(infoEst.altura) || 2.00;
+          }
+
+          return { 
+            ...est, 
+            nombre: est.muni, 
+            altura: alturaVal, 
+            tendencia: tendenciaVal, 
+            historico: obs 
+          };
         });
+
+        renderEstaciones(estacionesData);
+        document.getElementById('loading').classList.add('off');
+      })
+      .catch(err => {
+        console.error("Error general al sincronizar:", err);
+        document.getElementById('loading').classList.add('off');
+      });
     }
 
     function renderEstaciones(estaciones) {
@@ -1031,7 +1038,7 @@
 
       document.getElementById('loading').classList.remove('off');
 
-      fetch(APPS_SCRIPT_URL, {
+      fetch(URL_BASE_DATOS, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1052,7 +1059,7 @@
 
       document.getElementById('loading').classList.remove('off');
 
-      fetch(APPS_SCRIPT_URL, {
+      fetch(URL_BASE_DATOS, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1073,7 +1080,7 @@
 
       document.getElementById('loading').classList.remove('off');
 
-      fetch(APPS_SCRIPT_URL, {
+      fetch(URL_BASE_DATOS, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1091,7 +1098,7 @@
     function enviarAData(payload, pestanaDestino) {
       document.getElementById('loading').classList.remove('off');
 
-      fetch(APPS_SCRIPT_URL, {
+      fetch(URL_BASE_DATOS, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
