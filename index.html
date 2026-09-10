@@ -517,7 +517,14 @@
         return fetchWithTimeout(targetUrl, {}, 4000)
           .then(res => {
             if (!res.ok) throw new Error("Proxy response not OK");
-            return res.json();
+            return res.text();
+          })
+          .then(text => {
+            try {
+              return JSON.parse(text);
+            } catch (e) {
+              return text; // Devuelve texto si es HTML
+            }
           })
           .catch(() => intentar());
       }
@@ -574,6 +581,45 @@
       }
     }
 
+    // Parseo automático con DOMParser para HTML extraído del INA
+    function parsearHTMLIna(htmlText) {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        const filas = doc.querySelectorAll('table tbody tr, .tabla-alturas tr, table tr');
+        let ultimaAltura = null;
+        
+        filas.forEach(fila => {
+          const columnas = fila.querySelectorAll('td');
+          if (columnas.length >= 2) {
+            const textoVal = columnas[columnas.length - 1].innerText.replace(',', '.').trim();
+            const valNum = parseFloat(textoVal);
+            if (!isNaN(valNum)) {
+              ultimaAltura = valNum;
+            }
+          }
+        });
+        return ultimaAltura;
+      } catch (e) {
+        console.warn("Error al parsear HTML del INA:", e);
+        return null;
+      }
+    }
+
+    function getCachedData(seriesId) {
+      try {
+        const cached = localStorage.getItem(`ina_est_${seriesId}`);
+        if (cached) return JSON.parse(cached);
+      } catch(e) {}
+      return null;
+    }
+
+    function setCachedData(seriesId, data) {
+      try {
+        localStorage.setItem(`ina_est_${seriesId}`, JSON.stringify(data));
+      } catch(e) {}
+    }
+
     function cargarDatosActualizados() {
       document.getElementById('loading').classList.remove('off');
       
@@ -594,26 +640,63 @@
       const hace7Dias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
       const promesasEstaciones = ESTACIONES.map(est => {
-        const urlIna = `https://alerta.ina.gob.ar/a5/getObservaciones?tipo=puntual&series_id=${est.seriesId}&timestart=${hace7Dias}&timeend=${hoy}`;
-        return fetchConProxy(urlIna)
+        const urlInaJson = `https://alerta.ina.gob.ar/a5/getObservaciones?tipo=puntual&series_id=${est.seriesId}&timestart=${hace7Dias}&timeend=${hoy}`;
+        const urlInaTablaHtml = `https://alerta.ina.gob.ar/siyah/estacion/list_tab_obsev?id=${est.seriesId}`;
+
+        return fetchConProxy(urlInaJson)
           .then(data => {
-            let obs = Array.isArray(data) ? data : (data.observaciones || data.datos || []);
-            let alturaVal = 2.00;
+            let obs = [];
+            let alturaVal = null;
             let tendenciaVal = "permanece";
 
-            if (obs && obs.length > 0) {
-              const ult = obs[obs.length - 1];
-              alturaVal = parseFloat(ult.valor) || 2.00;
-              if (obs.length > 1) {
-                const prev = parseFloat(obs[obs.length - 2].valor) || alturaVal;
-                const diff = alturaVal - prev;
-                if (diff > 0.02) tendenciaVal = "crece";
-                else if (diff < -0.02) tendenciaVal = "baja";
+            if (typeof data === 'object') {
+              obs = Array.isArray(data) ? data : (data.observaciones || data.datos || []);
+              if (obs && obs.length > 0) {
+                const ult = obs[obs.length - 1];
+                alturaVal = parseFloat(ult.valor);
+                if (obs.length > 1) {
+                  const prev = parseFloat(obs[obs.length - 2].valor) || alturaVal;
+                  const diff = alturaVal - prev;
+                  if (diff > 0.02) tendenciaVal = "crece";
+                  else if (diff < -0.02) tendenciaVal = "baja";
+                }
               }
+            } else if (typeof data === 'string') {
+              alturaVal = parsearHTMLIna(data);
             }
-            return { ...est, nombre: est.muni, altura: alturaVal, tendencia: tendenciaVal, historico: obs };
+
+            if (alturaVal === null || isNaN(alturaVal)) {
+              return fetchConProxy(urlInaTablaHtml).then(htmlRes => {
+                const alturaScraped = parsearHTMLIna(typeof htmlRes === 'string' ? htmlRes : JSON.stringify(htmlRes));
+                const cached = getCachedData(est.seriesId);
+                const finalAlt = alturaScraped !== null ? alturaScraped : (cached ? cached.altura : 2.00);
+                
+                const resObj = { ...est, nombre: est.muni, altura: finalAlt, tendencia: "permanece", historico: [] };
+                setCachedData(est.seriesId, resObj);
+                return resObj;
+              });
+            }
+
+            const resObj = { ...est, nombre: est.muni, altura: alturaVal, tendencia: tendenciaVal, historico: obs };
+            setCachedData(est.seriesId, resObj);
+            return resObj;
           })
-          .catch(() => ({ ...est, nombre: est.muni, altura: 2.00, tendencia: "permanece", historico: [] }));
+          .catch(() => {
+            return fetchConProxy(urlInaTablaHtml)
+              .then(htmlRes => {
+                const alturaScraped = parsearHTMLIna(typeof htmlRes === 'string' ? htmlRes : JSON.stringify(htmlRes));
+                const cached = getCachedData(est.seriesId);
+                const finalAlt = alturaScraped !== null ? alturaScraped : (cached ? cached.altura : 2.00);
+                
+                const resObj = { ...est, nombre: est.muni, altura: finalAlt, tendencia: "permanece", historico: [] };
+                setCachedData(est.seriesId, resObj);
+                return resObj;
+              })
+              .catch(() => {
+                const cached = getCachedData(est.seriesId);
+                return cached || { ...est, nombre: est.muni, altura: 2.00, tendencia: "permanece", historico: [] };
+              });
+          });
       });
 
       Promise.allSettled([fetchBackend, ...promesasEstaciones]).then(results => {
@@ -1042,7 +1125,6 @@
       enviarAData(nuevoM, "monitoreo");
     }
 
-    // ELIMINACIONES CORREGIDAS
     function eliminarCentro(idCentro, event) {
       if (event) event.stopPropagation();
       if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
