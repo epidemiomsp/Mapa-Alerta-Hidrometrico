@@ -546,21 +546,37 @@
       }
     }
 
-    function cargarDatosActualizados() {
+    async function fetchJsonRobust(url) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        // Fallback a proxy si falla por CORS
+      }
+      try {
+        const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+        const resProxy = await fetch(proxyUrl);
+        if (resProxy.ok) {
+          const text = await resProxy.text();
+          return JSON.parse(text);
+        }
+      } catch (e) {
+        console.error("Error fetching via proxy:", e);
+      }
+      return null;
+    }
+
+    async function cargarDatosActualizados() {
       document.getElementById('loading').classList.remove('off');
       
-      // Ejecución asíncrona simultánea mediante Promise.all
-      Promise.all([
-        fetch(URL_BASE_DATOS).then(res => res.json()).catch(err => {
-          console.error("Error al cargar Base de Datos:", err);
-          return { centros: [], personas: [], monitoreos: [] };
-        }),
-        fetch(URL_RIOS).then(res => res.json()).catch(err => {
-          console.error("Error al cargar Ríos (INA):", err);
-          return [];
-        })
-      ])
-      .then(([dataDB, riosData]) => {
+      try {
+        const [dataDB, riosData] = await Promise.all([
+          fetchJsonRobust(URL_BASE_DATOS).then(data => data || { centros: [], personas: [], monitoreos: [] }).catch(() => ({ centros: [], personas: [], monitoreos: [] })),
+          fetchJsonRobust(URL_RIOS).then(data => data || []).catch(() => [])
+        ]);
+
         // 1. Cargar Centros, Personas e Ingresos desde Script Base de Datos
         centrosData = dataDB.centros || [];
         personasData = dataDB.personas || [];
@@ -608,12 +624,11 @@
         });
 
         renderEstaciones(estacionesData);
-        document.getElementById('loading').classList.add('off');
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Error general al sincronizar:", err);
+      } finally {
         document.getElementById('loading').classList.add('off');
-      });
+      }
     }
 
     function renderEstaciones(estaciones) {
