@@ -279,6 +279,7 @@
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
 
+      <!-- Leyenda de error si se repite DNI o Nombre -->
       <div id="alertPersona" class="alert-msg"></div>
 
       <form onsubmit="guardarPersona(event)">
@@ -363,6 +364,7 @@
         <button class="close-modal" onclick="cerrarModal('modalMonitoreo')">&times;</button>
       </div>
 
+      <!-- Leyenda de error si se repite DNI o Nombre -->
       <div id="alertMonitoreo" class="alert-msg"></div>
 
       <form onsubmit="guardarMonitoreo(event)">
@@ -438,7 +440,8 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgLrRuhtSp6jkZ8vpqt-RyVnEl7JW2zPaVq3jTNEzV9-eIxJiLtqmz509Izz14n83vZg/exec";
+    // URL DE LA APLICACIÓN WEB DE GOOGLE APPS SCRIPT ACTUALIZADA
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPuH8sQqTTucVIi1nT8g606xMpO6rEjoRltEPPL43T0KuY5D6LVcem8EEY-f9egICGbw/exec";
 
     function formatearFechaLatina(fechaStr) {
       if (!fechaStr) return "";
@@ -462,25 +465,20 @@
     }
 
     const ESTACIONES = [
-      { muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00 },
-      { muni:"Itá Ibaté",           depto:"General Paz",        rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50 },
-      { muni:"Itatí",               depto:"Itatí",              rio:"Paraná", siteCode:17, seriesId:17, lat:-27.2727, lng:-58.2454, alerta:6.80, evacuacion:7.50 },
-      { muni:"Paso de la Patria",   depto:"San Cosme",          rio:"Paraná", siteCode:18, seriesId:18, lat:-27.3175, lng:-58.5757, alerta:6.50, evacuacion:7.00 },
-      { muni:"Corrientes",          depto:"Capital",            rio:"Paraná", siteCode:19, seriesId:19, lat:-27.4692, lng:-58.8306, alerta:6.50, evacuacion:7.00 },
-      { muni:"Empedrado",           depto:"Empedrado",          rio:"Paraná", siteCode:21, seriesId:21, lat:-27.9522, lng:-58.8054, alerta:6.50, evacuacion:6.70 },
-      { muni:"Bella Vista",         depto:"Bella Vista",        rio:"Paraná", siteCode:22, seriesId:22, lat:-28.5099, lng:-59.0300, alerta:6.00, evacuacion:6.40 },
-      { muni:"Goya",                depto:"Goya",               rio:"Paraná", siteCode:23, seriesId:23, lat:-29.1400, lng:-59.2600, alerta:5.20, evacuacion:5.70 },
-      { muni:"Esquina",             depto:"Esquina",            rio:"Paraná", siteCode:25, seriesId:25, lat:-30.0135, lng:-59.5286, alerta:5.00, evacuacion:5.40 },
-      { muni:"Santo Tomé",          depto:"Santo Tomé",         rio:"Uruguay", siteCode:68, seriesId:68, lat:-28.5462, lng:-56.0455, alerta:11.50, evacuacion:12.50 },
-      { muni:"Alvear",              depto:"General Alvear",     rio:"Uruguay", siteCode:69, seriesId:69, lat:-29.0982, lng:-56.5546, alerta:9.50, evacuacion:11.00 },
-      { muni:"Yapeyú",              depto:"San Martín",         rio:"Uruguay", siteCode:71, seriesId:71, lat:-29.4694, lng:-56.8180, alerta:9.50, evacuacion:10.50 },
-      { muni:"Paso de los Libres",  depto:"Paso de los Libres", rio:"Uruguay", siteCode:72, seriesId:72, lat:-29.7130, lng:-57.0870, alerta:7.50, evacuacion:8.50 },
-      { muni:"Monte Caseros",       depto:"Monte Caseros",      rio:"Uruguay", siteCode:74, seriesId:74, lat:-30.2517, lng:-57.6379, alerta:7.50, evacuacion:8.50 }
-    ];
-
-    const CORS_PROXIES = [
-      (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+      { id: 48, muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00 },
+      { id: 46, muni:"Itá Ibaté",           depto:"General Paz",        rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50 },
+      { id: 45, muni:"Itatí",               depto:"Itatí",              rio:"Paraná", siteCode:17, seriesId:17, lat:-27.2727, lng:-58.2454, alerta:6.80, evacuacion:7.50 },
+      { id: 44, muni:"Paso de la Patria",   depto:"San Cosme",          rio:"Paraná", siteCode:18, seriesId:18, lat:-27.3175, lng:-58.5757, alerta:6.50, evacuacion:7.00 },
+      { id: 43, muni:"Corrientes",          depto:"Capital",            rio:"Paraná", siteCode:19, seriesId:19, lat:-27.4692, lng:-58.8306, alerta:6.50, evacuacion:7.00 },
+      { id: 42, muni:"Empedrado",           depto:"Empedrado",          rio:"Paraná", siteCode:21, seriesId:21, lat:-27.9522, lng:-58.8054, alerta:6.50, evacuacion:6.70 },
+      { id: 41, muni:"Bella Vista",         depto:"Bella Vista",        rio:"Paraná", siteCode:22, seriesId:22, lat:-28.5099, lng:-59.0300, alerta:6.00, evacuacion:6.40 },
+      { id: 40, muni:"Goya",                depto:"Goya",               rio:"Paraná", siteCode:23, seriesId:23, lat:-29.1400, lng:-59.2600, alerta:5.20, evacuacion:5.70 },
+      { id: 39, muni:"Esquina",             depto:"Esquina",            rio:"Paraná", siteCode:25, seriesId:25, lat:-30.0135, lng:-59.5286, alerta:5.00, evacuacion:5.40 },
+      { id: 67, muni:"Santo Tomé",          depto:"Santo Tomé",         rio:"Uruguay", siteCode:68, seriesId:68, lat:-28.5462, lng:-56.0455, alerta:11.50, evacuacion:12.50 },
+      { id: 68, muni:"Alvear",              depto:"General Alvear",     rio:"Uruguay", siteCode:69, seriesId:69, lat:-29.0982, lng:-56.5546, alerta:9.50, evacuacion:11.00 },
+      { id: 69, muni:"La Cruz / Yapeyú",    depto:"San Martín",         rio:"Uruguay", siteCode:71, seriesId:71, lat:-29.4694, lng:-56.8180, alerta:9.50, evacuacion:10.50 },
+      { id: 70, muni:"Paso de los Libres",  depto:"Paso de los Libres", rio:"Uruguay", siteCode:72, seriesId:72, lat:-29.7130, lng:-57.0870, alerta:7.50, evacuacion:8.50 },
+      { id: 71, muni:"Monte Caseros",       depto:"Monte Caseros",      rio:"Uruguay", siteCode:74, seriesId:74, lat:-30.2517, lng:-57.6379, alerta:7.50, evacuacion:8.50 }
     ];
 
     function initApp() {
@@ -497,29 +495,6 @@
 
       cargarDatosActualizados();
       actualizarEstiloBotonInfo();
-    }
-
-    function fetchWithTimeout(url, options = {}, timeout = 5000) {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), timeout);
-      return fetch(url, { ...options, signal: controller.signal })
-        .finally(() => clearTimeout(id));
-    }
-
-    function fetchConProxy(url) {
-      let index = 0;
-      function intentar() {
-        if (index >= CORS_PROXIES.length) return fetchWithTimeout(url, {}, 4000);
-        const targetUrl = CORS_PROXIES[index](url);
-        index++;
-        return fetchWithTimeout(targetUrl, {}, 4000)
-          .then(res => {
-            if (!res.ok) throw new Error("Proxy response not OK");
-            return res.json();
-          })
-          .catch(() => intentar());
-      }
-      return intentar();
     }
 
     function toggleCapaDepartamentos() {
@@ -575,9 +550,10 @@
     function cargarDatosActualizados() {
       document.getElementById('loading').classList.remove('off');
       
-      const fetchBackend = fetch(APPS_SCRIPT_URL)
+      fetch(APPS_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
+          // 1. Cargar Centros, Personas e Ingresos desde Apps Script
           centrosData = data.centros || [];
           personasData = data.personas || [];
           monitoreoData = data.monitoreos || [];
@@ -585,43 +561,52 @@
           renderCentros(centrosData);
           renderIngresos(personasData);
           renderMonitoreo(monitoreoData);
-        })
-        .catch(err => console.error("Error al cargar backend:", err));
 
-      const hoy = new Date().toISOString().split('T')[0];
-      const hace7Dias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          // 2. Procesar datos de los ríos (directamente desde el objeto o mapa)
+          const riosData = data.rios || data;
+          
+          estacionesData = ESTACIONES.map(est => {
+            let infoEst = null;
 
-      const promesasEstaciones = ESTACIONES.map(est => {
-        const urlIna = `https://alerta.ina.gob.ar/a5/getObservaciones?tipo=puntual&series_id=${est.seriesId}&timestart=${hace7Dias}&timeend=${hoy}`;
-        return fetchConProxy(urlIna)
-          .then(data => {
-            let obs = Array.isArray(data) ? data : (data.observaciones || data.datos || []);
+            if (Array.isArray(riosData)) {
+              infoEst = riosData.find(r => String(r.id) === String(est.id) || String(r.seriesId) === String(est.seriesId));
+            } else if (typeof riosData === 'object' && riosData !== null) {
+              infoEst = riosData[est.id] || riosData[est.seriesId];
+            }
+
+            let obs = infoEst ? (infoEst.historico || infoEst.datos || []) : [];
             let alturaVal = 2.00;
             let tendenciaVal = "permanece";
 
             if (obs && obs.length > 0) {
               const ult = obs[obs.length - 1];
-              alturaVal = parseFloat(ult.valor) || 2.00;
+              alturaVal = parseFloat(ult.nivel || ult.valor) || 2.00;
               if (obs.length > 1) {
-                const prev = parseFloat(obs[obs.length - 2].valor) || alturaVal;
+                const prev = parseFloat(obs[obs.length - 2].nivel || obs[obs.length - 2].valor) || alturaVal;
                 const diff = alturaVal - prev;
                 if (diff > 0.02) tendenciaVal = "crece";
                 else if (diff < -0.02) tendenciaVal = "baja";
               }
+            } else if (infoEst && infoEst.altura !== undefined) {
+              alturaVal = parseFloat(infoEst.altura) || 2.00;
             }
-            return { ...est, nombre: est.muni, altura: alturaVal, tendencia: tendenciaVal, historico: obs };
-          })
-          .catch(() => ({ ...est, nombre: est.muni, altura: 2.00, tendencia: "permanece", historico: [] }));
-      });
 
-      Promise.allSettled([fetchBackend, ...promesasEstaciones]).then(results => {
-        const estResults = results.slice(1).map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean);
-        if (estResults.length > 0) {
-          estacionesData = estResults;
+            return { 
+              ...est, 
+              nombre: est.muni, 
+              altura: alturaVal, 
+              tendencia: tendenciaVal, 
+              historico: obs 
+            };
+          });
+
           renderEstaciones(estacionesData);
-        }
-        document.getElementById('loading').classList.add('off');
-      });
+          document.getElementById('loading').classList.add('off');
+        })
+        .catch(err => {
+          console.error("Error al cargar datos desde Apps Script:", err);
+          document.getElementById('loading').classList.add('off');
+        });
     }
 
     function renderEstaciones(estaciones) {
@@ -714,12 +699,12 @@
       const obs = est.historico || [];
 
       const labels = obs.map(item => {
-        const str = String(item.timestart || "").split('T')[0];
+        const str = String(item.fecha || item.timestart || "").split('T')[0];
         if (!str) return "";
         const partes = str.split('-');
         return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : str;
       });
-      const valores = obs.map(item => parseFloat(item.valor) || 0);
+      const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
 
       if (miChart) miChart.destroy();
 
