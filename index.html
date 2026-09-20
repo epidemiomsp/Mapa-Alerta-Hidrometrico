@@ -446,7 +446,7 @@
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('-');
       if (partes.length === 3 && partes[0].length === 4) {
-        return `${partes[2]}/${partes}/${partes[0]}`;
+        return `${partes}/${partes}/${partes[0]}`;
       }
       return fechaStr;
     }
@@ -457,7 +457,7 @@
       if (partes.length === 3) {
         const dia = partes[0].padStart(2, '0');
         const mes = partes.padStart(2, '0');
-        const anio = partes[2];
+        const anio = partes;
         return `${anio}-${mes}-${dia}`;
       }
       return fechaStr;
@@ -715,11 +715,20 @@
       const est = estacionesData.find(e => e.seriesId === seriesId) || {};
       const obs = est.historico || [];
 
+      const mesesCortos = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
       const labels = obs.map(item => {
-        const str = String(item.fecha || item.timestart || "").split('T')[0];
-        if (!str) return "";
-        const partes = str.split('-');
-        return partes.length === 3 ? `${partes[2]}-${partes}-${partes[0]}` : str;
+        const raw = String(item.fecha || item.timestart || "").split('T')[0];
+        if (!raw) return "";
+        const partes = raw.split(/[-/]/);
+        if (partes.length === 3) {
+          let anio = partes[0].length === 4 ? partes[0] : partes;
+          let mesIdx = parseInt(partes, 10) - 1;
+          let dia = parseInt(partes[0].length === 4 ? partes : partes[0], 10);
+          if (mesIdx >= 0 && mesIdx < 12) {
+            return `${dia} ${mesesCortos[mesIdx]} ${anio}`;
+          }
+        }
+        return raw;
       });
       const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
 
@@ -743,14 +752,14 @@
               label: 'Alerta',
               data: Array(labels.length || 1).fill(nivelAlerta),
               borderColor: '#f59e0b',
-              borderDash: [5, 5],
+              borderDash:,
               pointRadius: 0
             },
             {
               label: 'Evacuación',
               data: Array(labels.length || 1).fill(nivelEvac),
               borderColor: '#ef4444',
-              borderDash: [5, 5],
+              borderDash:,
               pointRadius: 0
             }
           ]
