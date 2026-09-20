@@ -39,6 +39,7 @@
 
     .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); height: calc(100dvh - 50px); overflow: hidden; }
     
+    /* Panel Lateral Desktop con Fondo Blanco */
     #sidebar { 
       width: 380px; 
       background: #ffffff; 
@@ -69,11 +70,13 @@
     .list::-webkit-scrollbar { width: 5px; }
     .list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
     
+    /* Tarjetas claras */
     .card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
     .card:hover { border-color: #0a84ff; background: #ffffff; }
     .muni { font-weight: 600; font-size: 0.88rem; color: #1c1c1e; }
     .rio { font-size: 0.68rem; color: #3a3a3c; background: #e5e5ea; padding: 2px 6px; border-radius: 4px; }
     
+    /* Número de altura en azul */
     .altura { font-size: 1.25rem; font-weight: 700; color: #0a84ff; }
 
     .item-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; margin-bottom: 8px; position: relative; font-size: 0.75rem; color: #333; }
@@ -104,6 +107,7 @@
       border-radius: 4px;
     }
 
+    /* Modales Claros */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-box { background: #ffffff; border: 1px solid #ccc; border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25); color: #1c1c1e; }
@@ -119,11 +123,13 @@
     .form-row-2 .form-group { flex: 1; }
     .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 
+    /* Mensajes de Alerta/Error en Modales */
     .alert-msg { background: #ffebe9; border: 1px solid #ffc1c0; color: #cf222e; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px; display: none; }
 
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
 
+    /* MÓVIL OPTIMIZADO */
     @media (max-width: 768px) {
       .title-area p { display: none; }
       .title-area h1 { font-size: 0.80rem; }
@@ -152,11 +158,25 @@
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      #sidebar.collapsed { transform: translateY(100%) !important; }
+      #sidebar.collapsed { 
+        transform: translateY(100%) !important; 
+      }
 
-      .tab-bar { background: #f2f2f7; display: flex; align-items: center; height: 40px; min-height: 40px; }
-      .sec-tab { height: calc(100% - 40px) !important; }
-      .list { padding-bottom: 80px !important; }
+      .tab-bar {
+        background: #f2f2f7;
+        display: flex;
+        align-items: center;
+        height: 40px;
+        min-height: 40px;
+      }
+
+      .sec-tab {
+        height: calc(100% - 40px) !important;
+      }
+
+      .list {
+        padding-bottom: 80px !important;
+      }
     }
   </style>
 </head>
@@ -258,35 +278,75 @@
         <h3 id="modalPersonaTitulo">Ingreso de Persona</h3>
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
+
       <div id="alertPersona" class="alert-msg"></div>
+
       <form onsubmit="guardarPersona(event)">
         <input type="hidden" id="p-idPersona">
-        <div class="form-group"><label>Centro de Evacuados *</label><select id="p-centro" required></select></div>
-        <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="p-nombre" required placeholder="Ej: Juan Pérez"></div>
-        <div class="form-row-2">
-          <div class="form-group"><label>DNI / Documento *</label><input type="text" id="p-dni" required></div>
-          <div class="form-group"><label>Fecha de Nacimiento</label><input type="date" id="p-nac"></div>
+        <div class="form-group">
+          <label>Centro de Evacuados *</label>
+          <select id="p-centro" required></select>
         </div>
-        <div class="form-row-2">
-          <div class="form-group"><label>Fecha de Ingreso</label><input type="date" id="p-fecha"></div>
-          <div class="form-group"><label>Fecha de Egreso</label><input type="date" id="p-egreso"></div>
+        <div class="form-group">
+          <label>Nombre y Apellido *</label>
+          <input type="text" id="p-nombre" required placeholder="Ej: Juan Pérez">
         </div>
+        
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>DNI / Documento *</label>
+            <input type="text" id="p-dni" required>
+          </div>
+          <div class="form-group">
+            <label>Fecha de Nacimiento</label>
+            <input type="date" id="p-nac">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Fecha de Ingreso</label>
+            <input type="date" id="p-fecha">
+          </div>
+          <div class="form-group">
+            <label>Fecha de Egreso</label>
+            <input type="date" id="p-egreso">
+          </div>
+        </div>
+
         <div class="form-row-2">
           <div class="form-group">
             <label>Sexo</label>
-            <select id="p-sexo"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Otro">Otro</option></select>
+            <select id="p-sexo">
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Otro">Otro</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Grupo Etario</label>
             <select id="p-grupo-etario">
-              <option value="< 1 año">&lt; 1 año</option><option value="1 a 4 años">1 a 4 años</option>
-              <option value="5 a 14 años">5 a 14 años</option><option value="15 a 24 años">15 a 24 años</option>
-              <option value="25 a 49 años" selected>25 a 49 años</option><option value="50 a 64 años">50 a 64 años</option><option value="65+ años">65+ años</option>
+              <option value="< 1 año">&lt; 1 año</option>
+              <option value="1 a 4 años">1 a 4 años</option>
+              <option value="5 a 14 años">5 a 14 años</option>
+              <option value="15 a 24 años">15 a 24 años</option>
+              <option value="25 a 49 años" selected>25 a 49 años</option>
+              <option value="50 a 64 años">50 a 64 años</option>
+              <option value="65+ años">65+ años</option>
             </select>
           </div>
         </div>
-        <div class="form-group"><label>ENO / ECNT / Lesiones</label><input type="text" id="p-diagnostico" placeholder="Ej: Diabetes, Hipertensión"></div>
-        <div class="form-group"><label>Síntomas al Ingreso</label><input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos"></div>
+
+        <div class="form-group">
+          <label>ENO / ECNT / Lesiones</label>
+          <input type="text" id="p-diagnostico" placeholder="Ej: Diabetes, Hipertensión, Traumatismo">
+        </div>
+
+        <div class="form-group">
+          <label>Síntomas al Ingreso</label>
+          <input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos, Ninguno">
+        </div>
+
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalPersona')">Cancelar</button>
           <button type="submit" class="btn-action" style="background:#28a745;">Guardar Registro</button>
@@ -302,18 +362,29 @@
         <h3 id="modalMonitoreoTitulo">Registro Monitoreo Diario</h3>
         <button class="close-modal" onclick="cerrarModal('modalMonitoreo')">&times;</button>
       </div>
+
       <div id="alertMonitoreo" class="alert-msg"></div>
+
       <form onsubmit="guardarMonitoreo(event)">
         <input type="hidden" id="m-idPersona">
-        <div class="form-group"><label>Centro de Evacuados *</label><select id="m-centro" required></select></div>
+        <div class="form-group">
+          <label>Centro de Evacuados *</label>
+          <select id="m-centro" required></select>
+        </div>
         <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="m-nombre" required></div>
         <div class="form-row-2">
           <div class="form-group"><label>DNI *</label><input type="text" id="m-dni" required></div>
           <div class="form-group"><label>Edad</label><input type="number" id="m-edad"></div>
         </div>
         <div class="form-row-2">
-          <div class="form-group"><label>¿Embarazada?</label><select id="m-embarazada"><option value="NO">NO</option><option value="SI">SI</option></select></div>
-          <div class="form-group"><label>¿Discapacidad?</label><select id="m-discapacidad"><option value="NO">NO</option><option value="SI">SI</option></select></div>
+          <div class="form-group">
+            <label>¿Embarazada?</label>
+            <select id="m-embarazada"><option value="NO">NO</option><option value="SI">SI</option></select>
+          </div>
+          <div class="form-group">
+            <label>¿Discapacidad?</label>
+            <select id="m-discapacidad"><option value="NO">NO</option><option value="SI">SI</option></select>
+          </div>
         </div>
         <div class="form-group"><label>Medicación Requerida</label><input type="text" id="m-medicacion" placeholder="Ej: Enalapril 10mg"></div>
         <div class="form-group"><label>Síntomas / Observaciones Sanitarias</label><input type="text" id="m-sintomas"></div>
@@ -333,9 +404,13 @@
       </div>
       <div style="padding: 10px 0; font-size: 0.9rem; color: #1c1c1e;">
         <p style="color: #666; margin-bottom: 6px; font-size: 0.75rem;">Insumos y recursos registrados:</p>
-        <div id="insumos-contenido" style="background: #f8f9fa; border: 1px solid #e0e0e0; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; color: #1c1c1e;">Sin registrar</div>
+        <div id="insumos-contenido" style="background: #f8f9fa; border: 1px solid #e0e0e0; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; color: #1c1c1e;">
+          Sin registrar
+        </div>
       </div>
-      <div class="form-actions"><button type="button" class="btn-sec" onclick="cerrarModal('modalInsumos')">Cerrar</button></div>
+      <div class="form-actions">
+        <button type="button" class="btn-sec" onclick="cerrarModal('modalInsumos')">Cerrar</button>
+      </div>
     </div>
   </div>
 
@@ -348,7 +423,9 @@
       <div id="chartContainer" style="position: relative; height: 300px; width: 100%;">
         <canvas id="chartEvolucion"></canvas>
       </div>
-      <div class="form-actions"><button type="button" class="btn-sec" onclick="cerrarModal('modalGrafico')">Cerrar</button></div>
+      <div class="form-actions">
+        <button type="button" class="btn-sec" onclick="cerrarModal('modalGrafico')">Cerrar</button>
+      </div>
     </div>
   </div>
 
@@ -361,6 +438,7 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
+    // ENDPOINTS DESACOPLADOS DE GOOGLE APPS SCRIPT
     const URL_BASE_DATOS = "https://script.google.com/macros/s/AKfycbxWH1ygTGS5m-ak8HMdjpPvlTbXimom43OUxEZBjD0TlItw1h3R9L3W6z3siqXxBr5Ngw/exec";
     const URL_RIOS = "https://script.google.com/macros/s/AKfycbzPuH8sQqTTucVIi1nT8g606xMpO6rEjoRltEPPL43T0KuY5D6LVcem8EEY-f9egICGbw/exec";
 
@@ -368,7 +446,7 @@
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('-');
       if (partes.length === 3 && partes[0].length === 4) {
-        return `${partes}-${partes}-${partes[0]}`;
+        return `${partes[2]}/${partes}/${partes[0]}`;
       }
       return fechaStr;
     }
@@ -377,26 +455,29 @@
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('/');
       if (partes.length === 3) {
-        return `${partes}-${partes.padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+        const dia = partes[0].padStart(2, '0');
+        const mes = partes.padStart(2, '0');
+        const anio = partes[2];
+        return `${anio}-${mes}-${dia}`;
       }
       return fechaStr;
     }
 
     const ESTACIONES = [
-      { id: 48, muni:"Ituzaingó", depto:"Ituzaingó", rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00 },
-      { id: 46, muni:"Itá Ibaté", depto:"General Paz", rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50 },
-      { id: 45, muni:"Itatí", depto:"Itatí", rio:"Paraná", siteCode:17, seriesId:17, lat:-27.2727, lng:-58.2454, alerta:6.80, evacuacion:7.50 },
-      { id: 44, muni:"Paso de la Patria", depto:"San Cosme", rio:"Paraná", siteCode:18, seriesId:18, lat:-27.3175, lng:-58.5757, alerta:6.50, evacuacion:7.00 },
-      { id: 43, muni:"Corrientes", depto:"Capital", rio:"Paraná", siteCode:19, seriesId:19, lat:-27.4692, lng:-58.8306, alerta:6.50, evacuacion:7.00 },
-      { id: 42, muni:"Empedrado", depto:"Empedrado", rio:"Paraná", siteCode:21, seriesId:21, lat:-27.9522, lng:-58.8054, alerta:6.50, evacuacion:6.70 },
-      { id: 41, muni:"Bella Vista", depto:"Bella Vista", rio:"Paraná", siteCode:22, seriesId:22, lat:-28.5099, lng:-59.0300, alerta:6.00, evacuacion:6.40 },
-      { id: 40, muni:"Goya", depto:"Goya", rio:"Paraná", siteCode:23, seriesId:23, lat:-29.1400, lng:-59.2600, alerta:5.20, evacuacion:5.70 },
-      { id: 39, muni:"Esquina", depto:"Esquina", rio:"Paraná", siteCode:25, seriesId:25, lat:-30.0135, lng:-59.5286, alerta:5.00, evacuacion:5.40 },
-      { id: 67, muni:"Santo Tomé", depto:"Santo Tomé", rio:"Uruguay", siteCode:68, seriesId:68, lat:-28.5462, lng:-56.0455, alerta:11.50, evacuacion:12.50 },
-      { id: 68, muni:"Alvear", depto:"General Alvear", rio:"Uruguay", siteCode:69, seriesId:69, lat:-29.0982, lng:-56.5546, alerta:9.50, evacuacion:11.00 },
-      { id: 69, muni:"La Cruz / Yapeyú", depto:"San Martín", rio:"Uruguay", siteCode:71, seriesId:71, lat:-29.4694, lng:-56.8180, alerta:9.50, evacuacion:10.50 },
-      { id: 70, muni:"Paso de los Libres", depto:"Paso de los Libres", rio:"Uruguay", siteCode:72, seriesId:72, lat:-29.7130, lng:-57.0870, alerta:7.50, evacuacion:8.50 },
-      { id: 71, muni:"Monte Caseros", depto:"Monte Caseros", rio:"Uruguay", siteCode:74, seriesId:74, lat:-30.2517, lng:-57.6379, alerta:7.50, evacuacion:8.50 }
+      { id: 48, muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00 },
+      { id: 46, muni:"Itá Ibaté",           depto:"General Paz",        rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50 },
+      { id: 45, muni:"Itatí",               depto:"Itatí",              rio:"Paraná", siteCode:17, seriesId:17, lat:-27.2727, lng:-58.2454, alerta:6.80, evacuacion:7.50 },
+      { id: 44, muni:"Paso de la Patria",   depto:"San Cosme",          rio:"Paraná", siteCode:18, seriesId:18, lat:-27.3175, lng:-58.5757, alerta:6.50, evacuacion:7.00 },
+      { id: 43, muni:"Corrientes",          depto:"Capital",            rio:"Paraná", siteCode:19, seriesId:19, lat:-27.4692, lng:-58.8306, alerta:6.50, evacuacion:7.00 },
+      { id: 42, muni:"Empedrado",           depto:"Empedrado",          rio:"Paraná", siteCode:21, seriesId:21, lat:-27.9522, lng:-58.8054, alerta:6.50, evacuacion:6.70 },
+      { id: 41, muni:"Bella Vista",         depto:"Bella Vista",        rio:"Paraná", siteCode:22, seriesId:22, lat:-28.5099, lng:-59.0300, alerta:6.00, evacuacion:6.40 },
+      { id: 40, muni:"Goya",                depto:"Goya",               rio:"Paraná", siteCode:23, seriesId:23, lat:-29.1400, lng:-59.2600, alerta:5.20, evacuacion:5.70 },
+      { id: 39, muni:"Esquina",             depto:"Esquina",            rio:"Paraná", siteCode:25, seriesId:25, lat:-30.0135, lng:-59.5286, alerta:5.00, evacuacion:5.40 },
+      { id: 67, muni:"Santo Tomé",          depto:"Santo Tomé",         rio:"Uruguay", siteCode:68, seriesId:68, lat:-28.5462, lng:-56.0455, alerta:11.50, evacuacion:12.50 },
+      { id: 68, muni:"Alvear",              depto:"General Alvear",     rio:"Uruguay", siteCode:69, seriesId:69, lat:-29.0982, lng:-56.5546, alerta:9.50, evacuacion:11.00 },
+      { id: 69, muni:"La Cruz / Yapeyú",    depto:"San Martín",         rio:"Uruguay", siteCode:71, seriesId:71, lat:-29.4694, lng:-56.8180, alerta:9.50, evacuacion:10.50 },
+      { id: 70, muni:"Paso de los Libres",  depto:"Paso de los Libres", rio:"Uruguay", siteCode:72, seriesId:72, lat:-29.7130, lng:-57.0870, alerta:7.50, evacuacion:8.50 },
+      { id: 71, muni:"Monte Caseros",       depto:"Monte Caseros",      rio:"Uruguay", siteCode:74, seriesId:74, lat:-30.2517, lng:-57.6379, alerta:7.50, evacuacion:8.50 }
     ];
 
     function initApp() {
@@ -418,6 +499,7 @@
     function toggleCapaDepartamentos() {
       if (!capaDepartamentos) {
         document.getElementById('loading').classList.remove('off');
+        
         fetch('./corrientes.json')
           .then(res => res.json())
           .then(data => {
@@ -433,6 +515,7 @@
                 });
               }
             });
+
             capaDepartamentos.addTo(map);
             departamentosVisibles = true;
             actualizarEstiloBotonDptos();
@@ -444,6 +527,7 @@
           });
         return;
       }
+
       if (departamentosVisibles) {
         map.removeLayer(capaDepartamentos);
         departamentosVisibles = false;
@@ -485,6 +569,7 @@
 
     async function cargarDatosActualizados() {
       document.getElementById('loading').classList.remove('off');
+      
       try {
         const [dataDB, riosData] = await Promise.all([
           fetchJsonRobust(URL_BASE_DATOS).then(data => data || { centros: [], personas: [], monitoreos: [] }).catch(() => ({ centros: [], personas: [], monitoreos: [] })),
@@ -502,6 +587,7 @@
 
         estacionesData = ESTACIONES.map(est => {
           let infoEst = null;
+
           if (Array.isArray(riosData)) {
             infoEst = riosData.find(r => String(r.id) === String(est.id) || String(r.seriesId) === String(est.seriesId));
           } else if (typeof riosData === 'object' && riosData !== null) {
@@ -523,7 +609,13 @@
             }
           }
 
-          return { ...est, nombre: est.muni, altura: alturaVal, tendencia: tendenciaVal, historico: obs };
+          return { 
+            ...est, 
+            nombre: est.muni, 
+            altura: alturaVal, 
+            tendencia: tendenciaVal, 
+            historico: obs 
+          };
         });
 
         renderEstaciones(estacionesData);
@@ -542,10 +634,16 @@
 
       estaciones.forEach(est => {
         let colorEstado = '#0a84ff';
-        if (est.tendencia === 'crece') colorEstado = '#F4492E';
-        else if (est.tendencia === 'baja') colorEstado = '#28a745';
-        else if (est.altura >= est.evacuacion) colorEstado = '#F4492E';
-        else if (est.altura >= est.alerta) colorEstado = '#FAAE05';
+
+        if (est.tendencia === 'crece') {
+          colorEstado = '#F4492E';
+        } else if (est.tendencia === 'baja') {
+          colorEstado = '#28a745';
+        } else if (est.altura >= est.evacuacion) {
+          colorEstado = '#F4492E';
+        } else if (est.altura >= est.alerta) {
+          colorEstado = '#FAAE05';
+        }
 
         let flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
 
@@ -621,7 +719,7 @@
         const str = String(item.fecha || item.timestart || "").split('T')[0];
         if (!str) return "";
         const partes = str.split('-');
-        return partes.length === 3 ? `${partes}-${partes}-${partes[0]}` : str;
+        return partes.length === 3 ? `${partes[2]}-${partes}-${partes[0]}` : str;
       });
       const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
 
@@ -645,16 +743,14 @@
               label: 'Alerta',
               data: Array(labels.length || 1).fill(nivelAlerta),
               borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245, 158, 11, 0.2)',
-              borderDash:,
+              borderDash: [5, 5],
               pointRadius: 0
             },
             {
               label: 'Evacuación',
               data: Array(labels.length || 1).fill(nivelEvac),
               borderColor: '#ef4444',
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              borderDash:,
+              borderDash: [5, 5],
               pointRadius: 0
             }
           ]
@@ -949,14 +1045,18 @@
     function eliminarCentro(idCentro, event) {
       if (event) event.stopPropagation();
       if (!confirm("¿Confirma que desea eliminar este centro de evacuados?")) return;
+
       document.getElementById('loading').classList.remove('off');
+
       fetch(URL_BASE_DATOS, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: "delete_centro", id: String(idCentro).trim() })
       })
-      .then(() => setTimeout(cargarDatosActualizados, 1000))
+      .then(() => {
+        setTimeout(cargarDatosActualizados, 1000);
+      })
       .catch(err => {
         console.error("Error al eliminar centro:", err);
         document.getElementById('loading').classList.add('off');
@@ -966,14 +1066,18 @@
     function eliminarPersona(dni, event) {
       if (event) event.stopPropagation();
       if (!confirm("¿Confirma que desea eliminar el registro de este ingreso?")) return;
+
       document.getElementById('loading').classList.remove('off');
+
       fetch(URL_BASE_DATOS, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: "delete_persona", dni: String(dni).trim() })
       })
-      .then(() => setTimeout(cargarDatosActualizados, 1000))
+      .then(() => {
+        setTimeout(cargarDatosActualizados, 1000);
+      })
       .catch(err => {
         console.error("Error al eliminar persona:", err);
         document.getElementById('loading').classList.add('off');
@@ -983,14 +1087,18 @@
     function eliminarMonitoreo(dni, event) {
       if (event) event.stopPropagation();
       if (!confirm("¿Confirma que desea eliminar este registro de monitoreo?")) return;
+
       document.getElementById('loading').classList.remove('off');
+
       fetch(URL_BASE_DATOS, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: "delete_monitoreo", dni: String(dni).trim() })
       })
-      .then(() => setTimeout(cargarDatosActualizados, 1000))
+      .then(() => {
+        setTimeout(cargarDatosActualizados, 1000);
+      })
       .catch(err => {
         console.error("Error al eliminar monitoreo:", err);
         document.getElementById('loading').classList.add('off');
@@ -999,6 +1107,7 @@
 
     function enviarAData(payload, pestanaDestino) {
       document.getElementById('loading').classList.remove('off');
+
       fetch(URL_BASE_DATOS, {
         method: 'POST',
         mode: 'no-cors',
@@ -1090,14 +1199,17 @@
     function verInsumosCentro(idCentro) {
       const centro = centrosData.find(c => String(c.id).trim() === String(idCentro).trim());
       if (!centro) return;
+
       document.getElementById('insumos-titulo').innerText = `Insumos - ${centro.nombre}`;
       document.getElementById('insumos-contenido').innerText = centro.insumos || centro.agua || 'Sin insumos registrados';
+      
       abrirModal('modalInsumos');
     }
 
     function renderIngresos(personas) {
       const listEl = document.getElementById('list-ingresos');
       listEl.innerHTML = personas.length ? '' : '<div style="color:#666; font-size:0.75rem; text-align:center; padding:15px;">Sin registros de ingresos</div>';
+      
       personas.forEach(p => {
         const centro = centrosData.find(c => String(c.id).trim() === String(p.idCentro).trim()) || { nombre: 'Centro General' };
         const card = document.createElement('div');
@@ -1119,6 +1231,7 @@
     function renderMonitoreo(monitoreos) {
       const listEl = document.getElementById('list-monitoreo');
       listEl.innerHTML = monitoreos.length ? '' : '<div style="color:#666; font-size:0.75rem; text-align:center; padding:15px;">Sin registros de monitoreo</div>';
+      
       monitoreos.forEach(m => {
         const centro = centrosData.find(c => String(c.id).trim() === String(m.idCentro).trim()) || { nombre: 'Centro General' };
         const card = document.createElement('div');
@@ -1148,6 +1261,7 @@
       const sidebar = document.getElementById('sidebar');
       const btnInfo = document.getElementById('btn-toggle-info');
       const isCollapsed = sidebar.classList.contains('collapsed');
+
       if (btnInfo) {
         btnInfo.style.background = isCollapsed ? '#2c2c2e' : '#0a84ff';
         btnInfo.style.borderColor = isCollapsed ? '#3a3a3c' : '#005bb5';
