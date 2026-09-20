@@ -446,7 +446,7 @@
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('-');
       if (partes.length === 3 && partes[0].length === 4) {
-        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        return `${partes[2]}/${partes}/${partes[0]}`;
       }
       return fechaStr;
     }
@@ -456,7 +456,7 @@
       const partes = String(fechaStr).trim().split('/');
       if (partes.length === 3) {
         const dia = partes[0].padStart(2, '0');
-        const mes = partes[1].padStart(2, '0');
+        const mes = partes.padStart(2, '0');
         const anio = partes[2];
         return `${anio}-${mes}-${dia}`;
       }
@@ -548,13 +548,12 @@
 
     async function fetchJsonRobust(url) {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { redirect: 'follow' });
         if (res.ok) {
-          return await res.json();
+          const txt = await res.text();
+          try { return JSON.parse(txt); } catch(e){}
         }
-      } catch (e) {
-        // Fallback a proxy si falla por CORS
-      }
+      } catch (e) {}
       try {
         const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
         const resProxy = await fetch(proxyUrl);
@@ -577,7 +576,6 @@
           fetchJsonRobust(URL_RIOS).then(data => data || []).catch(() => [])
         ]);
 
-        // 1. Cargar Centros, Personas e Ingresos desde Script Base de Datos
         centrosData = dataDB.centros || [];
         personasData = dataDB.personas || [];
         monitoreoData = dataDB.monitoreos || [];
@@ -587,7 +585,6 @@
         renderIngresos(personasData);
         renderMonitoreo(monitoreoData);
 
-        // 2. Procesar datos de Ríos desde Script Ríos (INA)
         estacionesData = ESTACIONES.map(est => {
           let infoEst = null;
 
@@ -598,20 +595,18 @@
           }
 
           let obs = infoEst ? (infoEst.historico || infoEst.datos || []) : [];
-          let alturaVal = 2.00;
+          let alturaVal = infoEst && infoEst.altura !== undefined ? parseFloat(infoEst.altura) : 2.00;
           let tendenciaVal = "permanece";
 
           if (obs && obs.length > 0) {
             const ult = obs[obs.length - 1];
-            alturaVal = parseFloat(ult.nivel || ult.valor) || 2.00;
+            alturaVal = parseFloat(ult.nivel || ult.valor) || alturaVal;
             if (obs.length > 1) {
               const prev = parseFloat(obs[obs.length - 2].nivel || obs[obs.length - 2].valor) || alturaVal;
               const diff = alturaVal - prev;
               if (diff > 0.02) tendenciaVal = "crece";
               else if (diff < -0.02) tendenciaVal = "baja";
             }
-          } else if (infoEst && infoEst.altura !== undefined) {
-            alturaVal = parseFloat(infoEst.altura) || 2.00;
           }
 
           return { 
@@ -724,7 +719,7 @@
         const str = String(item.fecha || item.timestart || "").split('T')[0];
         if (!str) return "";
         const partes = str.split('-');
-        return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : str;
+        return partes.length === 3 ? `${partes[2]}-${partes}-${partes[0]}` : str;
       });
       const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
 
