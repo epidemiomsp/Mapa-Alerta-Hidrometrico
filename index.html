@@ -715,11 +715,12 @@
       const est = estacionesData.find(e => e.seriesId === seriesId) || {};
       const obs = est.historico || [];
 
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
       const labels = obs.map(item => {
         const str = String(item.fecha || item.timestart || "").split('T')[0];
         if (!str) return "";
-        const partes = str.split('-');
-        return partes.length === 3 ? `${partes[2]}-${partes}-${partes[0]}` : str;
+        const p = str.split('-');
+        return p.length === 3 ? `${parseInt(p)} ${meses[parseInt(p[1]) - 1] || ''} ${p[0].slice(-2)}` : str;
       });
       const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
 
