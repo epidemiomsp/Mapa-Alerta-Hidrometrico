@@ -446,7 +446,7 @@
       if (!fechaStr) return "";
       const partes = String(fechaStr).trim().split('-');
       if (partes.length === 3 && partes[0].length === 4) {
-        return `${partes[2]}/${partes}/${partes[0]}`;
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
       }
       return fechaStr;
     }
@@ -456,11 +456,27 @@
       const partes = String(fechaStr).trim().split('/');
       if (partes.length === 3) {
         const dia = partes[0].padStart(2, '0');
-        const mes = partes.padStart(2, '0');
+        const mes = partes[1].padStart(2, '0');
         const anio = partes[2];
         return `${anio}-${mes}-${dia}`;
       }
       return fechaStr;
+    }
+
+    // Formato de fecha estilo INA: "20 sep 2026"
+    function formatearFechaGrafico(fechaStr) {
+      if (!fechaStr) return "";
+      const str = String(fechaStr).trim().split('T')[0];
+      const partes = str.split('-');
+      if (partes.length !== 3) return str;
+
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      const dia = parseInt(partes[2], 10);
+      const mes = parseInt(partes[1], 10) - 1;
+      const anio = partes[0];
+
+      if (isNaN(dia) || isNaN(mes) || mes < 0 || mes > 11) return str;
+      return `${dia} ${meses[mes]} ${anio}`;
     }
 
     const ESTACIONES = [
@@ -715,12 +731,8 @@
       const est = estacionesData.find(e => e.seriesId === seriesId) || {};
       const obs = est.historico || [];
 
-      const labels = obs.map(item => {
-        const str = String(item.fecha || item.timestart || "").split('T')[0];
-        if (!str) return "";
-        const partes = str.split('-');
-        return partes.length === 3 ? `${partes[2]}-${partes}-${partes[0]}` : str;
-      });
+      // === ÚNICO CAMBIO: formato de fechas estilo INA ===
+      const labels = obs.map(item => formatearFechaGrafico(item.fecha || item.timestart || ""));
       const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
 
       if (miChart) miChart.destroy();
