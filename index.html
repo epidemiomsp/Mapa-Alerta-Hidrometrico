@@ -479,21 +479,22 @@
       return `${dia} ${meses[mes]} ${anio}`;
     }
 
+    // === ESTACIONES actualizadas con Aguas_Bajas del Excel ===
     const ESTACIONES = [
-      { id: 48, muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00 },
-      { id: 46, muni:"Itá Ibaté",           depto:"General Paz",        rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50 },
-      { id: 45, muni:"Itatí",               depto:"Itatí",              rio:"Paraná", siteCode:17, seriesId:17, lat:-27.2727, lng:-58.2454, alerta:6.80, evacuacion:7.50 },
-      { id: 44, muni:"Paso de la Patria",   depto:"San Cosme",          rio:"Paraná", siteCode:18, seriesId:18, lat:-27.3175, lng:-58.5757, alerta:6.50, evacuacion:7.00 },
-      { id: 43, muni:"Corrientes",          depto:"Capital",            rio:"Paraná", siteCode:19, seriesId:19, lat:-27.4692, lng:-58.8306, alerta:6.50, evacuacion:7.00 },
-      { id: 42, muni:"Empedrado",           depto:"Empedrado",          rio:"Paraná", siteCode:21, seriesId:21, lat:-27.9522, lng:-58.8054, alerta:6.50, evacuacion:6.70 },
-      { id: 41, muni:"Bella Vista",         depto:"Bella Vista",        rio:"Paraná", siteCode:22, seriesId:22, lat:-28.5099, lng:-59.0300, alerta:6.00, evacuacion:6.40 },
-      { id: 40, muni:"Goya",                depto:"Goya",               rio:"Paraná", siteCode:23, seriesId:23, lat:-29.1400, lng:-59.2600, alerta:5.20, evacuacion:5.70 },
-      { id: 39, muni:"Esquina",             depto:"Esquina",            rio:"Paraná", siteCode:25, seriesId:25, lat:-30.0135, lng:-59.5286, alerta:5.00, evacuacion:5.40 },
-      { id: 67, muni:"Santo Tomé",          depto:"Santo Tomé",         rio:"Uruguay", siteCode:68, seriesId:68, lat:-28.5462, lng:-56.0455, alerta:11.50, evacuacion:12.50 },
-      { id: 68, muni:"Alvear",              depto:"General Alvear",     rio:"Uruguay", siteCode:69, seriesId:69, lat:-29.0982, lng:-56.5546, alerta:9.50, evacuacion:11.00 },
-      { id: 69, muni:"La Cruz / Yapeyú",    depto:"San Martín",         rio:"Uruguay", siteCode:71, seriesId:71, lat:-29.4694, lng:-56.8180, alerta:9.50, evacuacion:10.50 },
-      { id: 70, muni:"Paso de los Libres",  depto:"Paso de los Libres", rio:"Uruguay", siteCode:72, seriesId:72, lat:-29.7130, lng:-57.0870, alerta:7.50, evacuacion:8.50 },
-      { id: 71, muni:"Monte Caseros",       depto:"Monte Caseros",      rio:"Uruguay", siteCode:74, seriesId:74, lat:-30.2517, lng:-57.6379, alerta:7.50, evacuacion:8.50 }
+      { id: 48, muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00, aguasBajas:0.81 },
+      { id: 46, muni:"Itá Ibaté",           depto:"General Paz",        rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50, aguasBajas:1.00 },
+      { id: 45, muni:"Itatí",               depto:"Itatí",              rio:"Paraná", siteCode:17, seriesId:17, lat:-27.2727, lng:-58.2454, alerta:6.80, evacuacion:7.50, aguasBajas:1.20 },
+      { id: 44, muni:"Paso de la Patria",   depto:"San Cosme",          rio:"Paraná", siteCode:18, seriesId:18, lat:-27.3175, lng:-58.5757, alerta:6.50, evacuacion:7.00, aguasBajas:1.10 },
+      { id: 43, muni:"Corrientes",          depto:"Capital",            rio:"Paraná", siteCode:19, seriesId:19, lat:-27.4692, lng:-58.8306, alerta:6.50, evacuacion:7.00, aguasBajas:1.20 },
+      { id: 42, muni:"Empedrado",           depto:"Empedrado",          rio:"Paraná", siteCode:21, seriesId:21, lat:-27.9522, lng:-58.8054, alerta:6.50, evacuacion:6.70, aguasBajas:1.10 },
+      { id: 41, muni:"Bella Vista",         depto:"Bella Vista",        rio:"Paraná", siteCode:22, seriesId:22, lat:-28.5099, lng:-59.0300, alerta:6.00, evacuacion:6.40, aguasBajas:1.20 },
+      { id: 40, muni:"Goya",                depto:"Goya",               rio:"Paraná", siteCode:23, seriesId:23, lat:-29.1400, lng:-59.2600, alerta:5.20, evacuacion:5.70, aguasBajas:1.30 },
+      { id: 39, muni:"Esquina",             depto:"Esquina",            rio:"Paraná", siteCode:25, seriesId:25, lat:-30.0135, lng:-59.5286, alerta:5.00, evacuacion:5.40, aguasBajas:1.20 },
+      { id: 67, muni:"Santo Tomé",          depto:"Santo Tomé",         rio:"Uruguay", siteCode:68, seriesId:68, lat:-28.5462, lng:-56.0455, alerta:11.50, evacuacion:12.50, aguasBajas:1.50 },
+      { id: 68, muni:"Alvear",              depto:"General Alvear",     rio:"Uruguay", siteCode:69, seriesId:69, lat:-29.0982, lng:-56.5546, alerta:9.50, evacuacion:11.00, aguasBajas:1.20 },
+      { id: 69, muni:"La Cruz / Yapeyú",    depto:"San Martín",         rio:"Uruguay", siteCode:71, seriesId:71, lat:-29.4694, lng:-56.8180, alerta:9.50, evacuacion:10.50, aguasBajas:1.10 },
+      { id: 70, muni:"Paso de los Libres",  depto:"Paso de los Libres", rio:"Uruguay", siteCode:72, seriesId:72, lat:-29.7130, lng:-57.0870, alerta:7.50, evacuacion:8.50, aguasBajas:1.00 },
+      { id: 71, muni:"Monte Caseros",       depto:"Monte Caseros",      rio:"Uruguay", siteCode:74, seriesId:74, lat:-30.2517, lng:-57.6379, alerta:7.50, evacuacion:8.50, aguasBajas:0.80 }
     ];
 
     function initApp() {
@@ -675,7 +676,7 @@
             <span style="font-size:0.8rem; color:#666;">mts</span>
             <span style="margin-left:auto; font-size:0.8rem; color:${colorEstado}; font-weight:bold;">${flecha} ${est.tendencia}</span>
           </div>
-          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.seriesId}, ${est.alerta}, ${est.evacuacion})" 
+          <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.seriesId}, ${est.alerta}, ${est.evacuacion}, ${est.aguasBajas})" 
                   style="margin-top:8px; width:100%; background:#e5e5ea; border:1px solid #ccc; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
             📈 Ver Gráfica de Evolución
           </button>
@@ -709,8 +710,9 @@
             <b>${est.nombre}</b><br>
             Río: ${est.rio}<br>
             Altura actual: <b>${est.altura.toFixed(2)}m</b> (${est.tendencia})<br>
-            Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br><br>
-            <button onclick="mostrarGraficoINA('${est.nombre}', ${est.seriesId}, ${est.alerta}, ${est.evacuacion})" 
+            Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br>
+            Aguas bajas: ${est.aguasBajas}m<br><br>
+            <button onclick="mostrarGraficoINA('${est.nombre}', ${est.seriesId}, ${est.alerta}, ${est.evacuacion}, ${est.aguasBajas})" 
                     style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
               📈 Ver Gráfica de Evolución
             </button>
@@ -720,7 +722,7 @@
       });
     }
 
-    function mostrarGraficoINA(nombreEstacion, seriesId, nivelAlerta, nivelEvac) {
+    function mostrarGraficoINA(nombreEstacion, seriesId, nivelAlerta, nivelEvac, nivelAguasBajas) {
       document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
       abrirModal('modalGrafico');
 
@@ -731,7 +733,6 @@
       const est = estacionesData.find(e => e.seriesId === seriesId) || {};
       const obs = est.historico || [];
 
-      // === ÚNICO CAMBIO: formato de fechas estilo INA ===
       const labels = obs.map(item => formatearFechaGrafico(item.fecha || item.timestart || ""));
       const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
 
@@ -756,24 +757,45 @@
               data: Array(labels.length || 1).fill(nivelAlerta),
               borderColor: '#f59e0b',
               borderDash: [5, 5],
-              pointRadius: 0
+              pointRadius: 0,
+              borderWidth: 1.5
             },
             {
               label: 'Evacuación',
               data: Array(labels.length || 1).fill(nivelEvac),
               borderColor: '#ef4444',
               borderDash: [5, 5],
-              pointRadius: 0
+              pointRadius: 0,
+              borderWidth: 1.5
+            },
+            {
+              label: 'Aguas bajas',
+              data: Array(labels.length || 1).fill(nivelAguasBajas || 0),
+              borderColor: '#d97706',
+              borderDash: [4, 4],
+              pointRadius: 0,
+              borderWidth: 1.5
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#333' } } },
+          plugins: { 
+            legend: { 
+              labels: { color: '#333', boxWidth: 12, font: { size: 11 } } 
+            } 
+          },
           scales: {
-            x: { ticks: { color: '#666' }, grid: { color: '#e0e0e0' } },
-            y: { ticks: { color: '#666' }, grid: { color: '#e0e0e0' } }
+            x: { 
+              ticks: { color: '#666', maxRotation: 45, minRotation: 0 }, 
+              grid: { color: '#e0e0e0' } 
+            },
+            y: { 
+              min: 0,                    // ← línea cero como en el INA
+              ticks: { color: '#666' }, 
+              grid: { color: '#e0e0e0' } 
+            }
           }
         }
       });
