@@ -584,63 +584,79 @@
       return null;
     }
 
+    function procesarYRenderizarRios(riosData) {
+      estacionesData = ESTACIONES.map(est => {
+        let infoEst = null;
+
+        if (Array.isArray(riosData)) {
+          infoEst = riosData.find(r => String(r.id) === String(est.id) || String(r.seriesId) === String(est.seriesId));
+        } else if (typeof riosData === 'object' && riosData !== null) {
+          infoEst = riosData[est.id] || riosData[est.seriesId];
+        }
+
+        let obs = infoEst ? (infoEst.historico || infoEst.datos || []) : [];
+        let alturaVal = infoEst && infoEst.altura !== undefined ? parseFloat(infoEst.altura) : 2.00;
+        let tendenciaVal = "permanece";
+
+        if (obs && obs.length > 0) {
+          const ult = obs[obs.length - 1];
+          alturaVal = parseFloat(ult.nivel || ult.valor) || alturaVal;
+          if (obs.length > 1) {
+            const prev = parseFloat(obs[obs.length - 2].nivel || obs[obs.length - 2].valor) || alturaVal;
+            const diff = alturaVal - prev;
+            if (diff > 0.02) tendenciaVal = "crece";
+            else if (diff < -0.02) tendenciaVal = "baja";
+          }
+        }
+
+        return { 
+          ...est, 
+          nombre: est.muni, 
+          altura: alturaVal, 
+          tendencia: tendenciaVal, 
+          historico: obs 
+        };
+      });
+
+      renderEstaciones(estacionesData);
+    }
+
     async function cargarDatosActualizados() {
-      document.getElementById('loading').classList.remove('off');
-      
-      try {
-        const [dataDB, riosData] = await Promise.all([
-          fetchJsonRobust(URL_BASE_DATOS).then(data => data || { centros: [], personas: [], monitoreos: [] }).catch(() => ({ centros: [], personas: [], monitoreos: [] })),
-          fetchJsonRobust(URL_RIOS).then(data => data || []).catch(() => [])
-        ]);
-
-        centrosData = dataDB.centros || [];
-        personasData = dataDB.personas || [];
-        monitoreoData = dataDB.monitoreos || [];
-        
-        actualizarSelectsCentros();
-        renderCentros(centrosData);
-        renderIngresos(personasData);
-        renderMonitoreo(monitoreoData);
-
-        estacionesData = ESTACIONES.map(est => {
-          let infoEst = null;
-
-          if (Array.isArray(riosData)) {
-            infoEst = riosData.find(r => String(r.id) === String(est.id) || String(r.seriesId) === String(est.seriesId));
-          } else if (typeof riosData === 'object' && riosData !== null) {
-            infoEst = riosData[est.id] || riosData[est.seriesId];
-          }
-
-          let obs = infoEst ? (infoEst.historico || infoEst.datos || []) : [];
-          let alturaVal = infoEst && infoEst.altura !== undefined ? parseFloat(infoEst.altura) : 2.00;
-          let tendenciaVal = "permanece";
-
-          if (obs && obs.length > 0) {
-            const ult = obs[obs.length - 1];
-            alturaVal = parseFloat(ult.nivel || ult.valor) || alturaVal;
-            if (obs.length > 1) {
-              const prev = parseFloat(obs[obs.length - 2].nivel || obs[obs.length - 2].valor) || alturaVal;
-              const diff = alturaVal - prev;
-              if (diff > 0.02) tendenciaVal = "crece";
-              else if (diff < -0.02) tendenciaVal = "baja";
-            }
-          }
-
-          return { 
-            ...est, 
-            nombre: est.muni, 
-            altura: alturaVal, 
-            tendencia: tendenciaVal, 
-            historico: obs 
-          };
-        });
-
-        renderEstaciones(estacionesData);
-      } catch (err) {
-        console.error("Error general al sincronizar:", err);
-      } finally {
-        document.getElementById('loading').classList.add('off');
+      const riosCache = localStorage.getItem('cache_rios_data');
+      if (riosCache) {
+        try {
+          procesarYRenderizarRios(JSON.parse(riosCache));
+        } catch(e) {}
       }
+
+      document.getElementById('loading').classList.remove('off');
+
+      const promesaRios = fetchJsonRobust(URL_RIOS)
+        .then(riosData => {
+          if (riosData) {
+            localStorage.setItem('cache_rios_data', JSON.stringify(riosData));
+            procesarYRenderizarRios(riosData);
+          }
+        })
+        .catch(err => console.error("Error al cargar ríos:", err));
+
+      const promesaBaseDatos = fetchJsonRobust(URL_BASE_DATOS)
+        .then(dataDB => {
+          const data = dataDB || { centros: [], personas: [], monitoreos: [] };
+          centrosData = data.centros || [];
+          personasData = data.personas || [];
+          monitoreoData = data.monitoreos || [];
+          
+          actualizarSelectsCentros();
+          renderCentros(centrosData);
+          renderIngresos(personasData);
+          renderMonitoreo(monitoreoData);
+        })
+        .catch(err => console.error("Error al cargar DB:", err));
+
+      Promise.allSettled([promesaRios, promesaBaseDatos]).then(() => {
+        document.getElementById('loading').classList.add('off');
+      });
     }
 
     function renderEstaciones(estaciones) {
