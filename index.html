@@ -108,9 +108,9 @@
     }
 
     /* Modales Claros */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; padding: 12px; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-box { background: #ffffff; border: 1px solid #ccc; border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25); color: #1c1c1e; }
+    .modal-box { background: #ffffff; border: 1px solid #ccc; border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25); color: #1c1c1e; box-sizing: border-box; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
     .modal-header h3 { font-size: 0.95rem; color: #1c1c1e; font-weight: bold; }
     .close-modal { background: none; border: none; color: #666; font-size: 1.3rem; cursor: pointer; }
@@ -140,6 +140,28 @@
       .btn-action, .btn-sec { padding: 5px 6px; font-size: 0.68rem; }
 
       .container { flex-direction: column; }
+      
+      /* Ajuste crítico para el modal en móviles */
+      .modal-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 8px;
+        padding: 12px;
+        max-height: 95vh;
+      }
+
+      #chartContainer {
+        height: 240px !important;
+      }
+
+      /* Transformar los KPIs en diseño flexible adaptable en columna para evitar scroll horizontal */
+      #grafico-kpis {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+        white-space: normal !important;
+        padding: 8px 10px !important;
+      }
       
       #sidebar { 
         width: 100% !important; 
@@ -799,7 +821,6 @@
       const est = estacionesData.find(e => e.seriesId === seriesId) || {};
       const obs = est.historico || [];
 
-      // Título y subtítulo
       document.getElementById('grafico-titulo').innerText = nombreEstacion;
       const rio = est.rio || 'Río';
       const depto = est.depto || est.departamento || '';
@@ -809,11 +830,9 @@
 
       abrirModal('modalGrafico');
 
-      // Preparar datos
       const labels = obs.map(item => formatearFechaEjeX(item.fecha || item.timestart || ""));
       const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
 
-      // KPIs
       const nObs = valores.length;
       let ultimaAltura = '–';
       let ultimaFecha = '–';
@@ -847,23 +866,19 @@
       document.getElementById('kpi-max').innerText = maxVal;
       document.getElementById('kpi-min').innerText = minVal;
 
-      // Canvas
       const container = document.getElementById('chartContainer');
       container.innerHTML = '<canvas id="chartEvolucion"></canvas>';
       const ctx = document.getElementById('chartEvolucion').getContext('2d');
 
       if (miChart) miChart.destroy();
 
-      // Escala Y: dejar margen superior (~1 m) por encima del nivel de evacuación
-      // para que se lea bien la etiqueta y se vea si el nivel la supera
       const umbralMax = Math.max(
         Number(nivelEvac) || 0,
         Number(nivelAlerta) || 0,
         ...(valores.length ? valores : [0])
       );
-      const yMax = Math.ceil((umbralMax + 1.0) * 2) / 2; // redondeo a 0.5 hacia arriba
+      const yMax = Math.ceil((umbralMax + 1.0) * 2) / 2;
 
-      // Plugin para etiquetas de umbrales (posicionamiento inteligente si están cerca)
       const umbralLabelsPlugin = {
         id: 'umbralLabels',
         afterDatasetsDraw(chart) {
@@ -878,19 +893,16 @@
           const bajas = Number(nivelAguasBajas);
           const cerca = (!isNaN(evac) && !isNaN(alerta) && Math.abs(evac - alerta) < 0.6);
 
-          // Evacuación (rojo) — si están cerca, etiqueta ARRIBA de la línea
           if (!isNaN(evac)) {
             const yPos = y.getPixelForValue(evac);
             ctx.fillStyle = '#ef4444';
             ctx.fillText('Evacuación ' + evac.toFixed(2), right - 6, yPos + (cerca ? -10 : -8));
           }
-          // Alerta (amarillo) — si están cerca, etiqueta ABAJO de la línea
           if (!isNaN(alerta)) {
             const yPos = y.getPixelForValue(alerta);
             ctx.fillStyle = '#ca8a04';
             ctx.fillText('Alerta ' + alerta.toFixed(2), right - 6, yPos + (cerca ? 12 : -8));
           }
-          // Aguas bajas (naranja)
           if (!isNaN(bajas) && bajas > 0) {
             const yPos = y.getPixelForValue(bajas);
             ctx.fillStyle = '#ea580c';
