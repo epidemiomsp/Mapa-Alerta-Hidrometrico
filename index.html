@@ -415,15 +415,33 @@
   </div>
 
   <div class="modal-overlay" id="modalGrafico">
-    <div class="modal-box" style="width: 600px;">
-      <div class="modal-header">
-        <h3 id="grafico-titulo">Evolución Hidrométrica</h3>
-        <button class="close-modal" onclick="cerrarModal('modalGrafico')">&times;</button>
+    <div class="modal-box" style="width: 720px; max-width: 96%;">
+      <div class="modal-header" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+          <h3 id="grafico-titulo" style="margin: 0;">Evolución Hidrométrica</h3>
+          <button class="close-modal" onclick="cerrarModal('modalGrafico')">&times;</button>
+        </div>
+        <div id="grafico-subtitulo" style="font-size: 0.78rem; color: #666; font-weight: 500; margin-top: 2px;"></div>
       </div>
-      <div id="chartContainer" style="position: relative; height: 300px; width: 100%;">
+
+      <div id="chartContainer" style="position: relative; height: 300px; width: 100%; margin-top: 8px;">
         <canvas id="chartEvolucion"></canvas>
       </div>
-      <div class="form-actions">
+
+      <!-- Barra de KPIs inferior -->
+      <div id="grafico-kpis" style="
+        display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;
+        gap: 8px; margin-top: 12px; padding: 10px 14px;
+        background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px;
+        font-size: 0.72rem; color: #333; line-height: 1.4; white-space: nowrap;
+      ">
+        <div><b>Observaciones:</b> <span id="kpi-obs">–</span></div>
+        <div><b>Última:</b> <span id="kpi-ultima">–</span></div>
+        <div><b>Variación:</b> <span id="kpi-variacion">–</span></div>
+        <div><b>Máx:</b> <span id="kpi-max">–</span> &nbsp; <b>Mín:</b> <span id="kpi-min">–</span></div>
+      </div>
+
+      <div class="form-actions" style="margin-top: 12px;">
         <button type="button" class="btn-sec" onclick="cerrarModal('modalGrafico')">Cerrar</button>
       </div>
     </div>
@@ -738,21 +756,149 @@
       });
     }
 
+    // Formato compacto para eje X: "16/09"
+    function formatearFechaEjeX(fechaStr) {
+      if (!fechaStr) return "";
+      try {
+        const d = new Date(fechaStr);
+        if (!isNaN(d.getTime())) {
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          return dd + '/' + mm;
+        }
+      } catch (e) {}
+      const str = String(fechaStr).trim().split(' ')[0].split('T')[0];
+      const partes = str.split('-');
+      if (partes.length === 3 && partes[0].length === 4) {
+        return partes[2] + '/' + partes[1];
+      }
+      return str;
+    }
+
+    function formatearFechaHora(fechaStr) {
+      if (!fechaStr) return "–";
+      try {
+        const d = new Date(fechaStr);
+        if (!isNaN(d.getTime())) {
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mi = String(d.getMinutes()).padStart(2, '0');
+          return dd + '/' + mm + ' ' + hh + ':' + mi;
+        }
+      } catch (e) {}
+      const s = String(fechaStr).trim();
+      const m = s.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+      if (m) return m[3] + '/' + m[2] + ' ' + m[4] + ':' + m[5];
+      const m2 = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (m2) return m2[3] + '/' + m2[2];
+      return s;
+    }
+
     function mostrarGraficoINA(nombreEstacion, seriesId, nivelAlerta, nivelEvac, nivelAguasBajas) {
-      document.getElementById('grafico-titulo').innerText = `Evolución Hidrométrica - ${nombreEstacion} (INA)`;
+      const est = estacionesData.find(e => e.seriesId === seriesId) || {};
+      const obs = est.historico || [];
+
+      // Título y subtítulo
+      document.getElementById('grafico-titulo').innerText = nombreEstacion;
+      const rio = est.rio || 'Río';
+      const depto = est.depto || est.departamento || '';
+      const dias = 7;
+      document.getElementById('grafico-subtitulo').innerText =
+        `${rio} · Depto ${depto} · Últimos ${dias} días`;
+
       abrirModal('modalGrafico');
 
+      // Preparar datos
+      const labels = obs.map(item => formatearFechaEjeX(item.fecha || item.timestart || ""));
+      const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
+
+      // KPIs
+      const nObs = valores.length;
+      let ultimaAltura = '–';
+      let ultimaFecha = '–';
+      let variacion = '–';
+      let colorVar = '#666';
+      let maxVal = '–';
+      let minVal = '–';
+
+      if (nObs > 0) {
+        const ultimo = obs[obs.length - 1];
+        ultimaAltura = parseFloat(ultimo.nivel || ultimo.valor).toFixed(2) + ' m';
+        ultimaFecha = formatearFechaHora(ultimo.fecha || ultimo.timestart);
+
+        const primero = parseFloat(obs[0].nivel || obs[0].valor) || 0;
+        const ultimoNum = parseFloat(ultimo.nivel || ultimo.valor) || 0;
+        const delta = ultimoNum - primero;
+        const signo = delta >= 0 ? '+' : '';
+        variacion = `${signo}${delta.toFixed(2)} m`;
+        colorVar = delta > 0 ? '#cf222e' : (delta < 0 ? '#1a7f37' : '#666');
+
+        maxVal = Math.max(...valores).toFixed(2) + ' m';
+        minVal = Math.min(...valores).toFixed(2) + ' m';
+      }
+
+      document.getElementById('kpi-obs').innerText = nObs;
+      document.getElementById('kpi-ultima').innerText = `${ultimaAltura} (${ultimaFecha})`;
+      const kpiVar = document.getElementById('kpi-variacion');
+      kpiVar.innerText = variacion;
+      kpiVar.style.color = colorVar;
+      kpiVar.style.fontWeight = '700';
+      document.getElementById('kpi-max').innerText = maxVal;
+      document.getElementById('kpi-min').innerText = minVal;
+
+      // Canvas
       const container = document.getElementById('chartContainer');
       container.innerHTML = '<canvas id="chartEvolucion"></canvas>';
       const ctx = document.getElementById('chartEvolucion').getContext('2d');
 
-      const est = estacionesData.find(e => e.seriesId === seriesId) || {};
-      const obs = est.historico || [];
-
-      const labels = obs.map(item => formatearFechaGrafico(item.fecha || item.timestart || ""));
-      const valores = obs.map(item => parseFloat(item.nivel || item.valor) || 0);
-
       if (miChart) miChart.destroy();
+
+      // Escala Y: dejar margen superior (~1 m) por encima del nivel de evacuación
+      // para que se lea bien la etiqueta y se vea si el nivel la supera
+      const umbralMax = Math.max(
+        Number(nivelEvac) || 0,
+        Number(nivelAlerta) || 0,
+        ...(valores.length ? valores : [0])
+      );
+      const yMax = Math.ceil((umbralMax + 1.0) * 2) / 2; // redondeo a 0.5 hacia arriba
+
+      // Plugin para etiquetas de umbrales (posicionamiento inteligente si están cerca)
+      const umbralLabelsPlugin = {
+        id: 'umbralLabels',
+        afterDatasetsDraw(chart) {
+          const { ctx, chartArea: { right }, scales: { y } } = chart;
+          ctx.save();
+          ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+
+          const evac = Number(nivelEvac);
+          const alerta = Number(nivelAlerta);
+          const bajas = Number(nivelAguasBajas);
+          const cerca = (!isNaN(evac) && !isNaN(alerta) && Math.abs(evac - alerta) < 0.6);
+
+          // Evacuación (rojo) — si están cerca, etiqueta ARRIBA de la línea
+          if (!isNaN(evac)) {
+            const yPos = y.getPixelForValue(evac);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillText('Evacuación ' + evac.toFixed(2), right - 6, yPos + (cerca ? -10 : -8));
+          }
+          // Alerta (amarillo) — si están cerca, etiqueta ABAJO de la línea
+          if (!isNaN(alerta)) {
+            const yPos = y.getPixelForValue(alerta);
+            ctx.fillStyle = '#ca8a04';
+            ctx.fillText('Alerta ' + alerta.toFixed(2), right - 6, yPos + (cerca ? 12 : -8));
+          }
+          // Aguas bajas (naranja)
+          if (!isNaN(bajas) && bajas > 0) {
+            const yPos = y.getPixelForValue(bajas);
+            ctx.fillStyle = '#ea580c';
+            ctx.fillText('Aguas bajas ' + bajas.toFixed(2), right - 6, yPos + 10);
+          }
+          ctx.restore();
+        }
+      };
 
       miChart = new Chart(ctx, {
         type: 'line',
@@ -762,58 +908,93 @@
             {
               label: 'Nivel (m)',
               data: valores.length ? valores : [0],
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              borderColor: '#1e40af',
+              backgroundColor: 'rgba(30, 64, 175, 0.08)',
               fill: true,
-              tension: 0.3,
-              pointRadius: 4
-            },
-            {
-              label: 'Alerta',
-              data: Array(labels.length || 1).fill(nivelAlerta),
-              borderColor: '#f59e0b',
-              borderDash: [5, 5],
-              pointRadius: 0,
-              borderWidth: 1.5
+              tension: 0.25,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              borderWidth: 2,
+              order: 1
             },
             {
               label: 'Evacuación',
               data: Array(labels.length || 1).fill(nivelEvac),
               borderColor: '#ef4444',
-              borderDash: [5, 5],
+              borderDash: [6, 4],
               pointRadius: 0,
-              borderWidth: 1.5
+              borderWidth: 1.5,
+              fill: false,
+              order: 2
+            },
+            {
+              label: 'Alerta',
+              data: Array(labels.length || 1).fill(nivelAlerta),
+              borderColor: '#eab308',
+              borderDash: [6, 4],
+              pointRadius: 0,
+              borderWidth: 1.5,
+              fill: false,
+              order: 3
             },
             {
               label: 'Aguas bajas',
               data: Array(labels.length || 1).fill(nivelAguasBajas || 0),
-              borderColor: '#d97706',
+              borderColor: '#f97316',
               borderDash: [4, 4],
               pointRadius: 0,
-              borderWidth: 1.5
+              borderWidth: 1.5,
+              fill: false,
+              order: 4
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { 
-            legend: { 
-              labels: { color: '#333', boxWidth: 12, font: { size: 11 } } 
-            } 
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  if (ctx.datasetIndex === 0) return `Nivel: ${ctx.parsed.y.toFixed(2)} m`;
+                  return null;
+                }
+              }
+            }
           },
           scales: {
-            x: { 
-              ticks: { color: '#666', maxRotation: 45, minRotation: 0 }, 
-              grid: { color: '#e0e0e0' } 
+            x: {
+              ticks: {
+                color: '#555',
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 10,
+                font: { size: 11 }
+              },
+              grid: { color: '#f0f0f0', drawBorder: false }
             },
-            y: { 
-              min: 0,                    // ← línea cero como en el INA
-              ticks: { color: '#666' }, 
-              grid: { color: '#e0e0e0' } 
+            y: {
+              min: 0,
+              max: yMax,
+              ticks: {
+                color: '#555',
+                font: { size: 11 },
+                callback: v => v.toFixed(1)
+              },
+              grid: { color: '#e8e8e8', drawBorder: false },
+              title: {
+                display: true,
+                text: 'Altura (m)',
+                color: '#666',
+                font: { size: 11, weight: '600' }
+              }
             }
           }
-        }
+        },
+        plugins: [umbralLabelsPlugin]
       });
     }
 
