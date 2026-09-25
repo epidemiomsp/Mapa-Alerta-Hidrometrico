@@ -123,13 +123,11 @@
     .form-row-2 .form-group { flex: 1; }
     .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 
-    /* Mensajes de Alerta/Error en Modales */
     .alert-msg { background: #ffebe9; border: 1px solid #ffc1c0; color: #cf222e; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px; display: none; }
 
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
 
-    /* MÓVIL OPTIMIZADO */
     @media (max-width: 768px) {
       .title-area p { display: none; }
       .title-area h1 { font-size: 0.80rem; }
@@ -141,7 +139,6 @@
 
       .container { flex-direction: column; }
       
-      /* Ajuste crítico para el modal en móviles */
       .modal-box {
         width: 100% !important;
         max-width: 100% !important;
@@ -154,7 +151,6 @@
         height: 240px !important;
       }
 
-      /* Transformar los KPIs en diseño flexible adaptable en columna para evitar scroll horizontal */
       #grafico-kpis {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -360,13 +356,8 @@
         </div>
 
         <div class="form-group">
-          <label>ENO / ECNT / Lesiones</label>
-          <input type="text" id="p-diagnostico" placeholder="Ej: Diabetes, Hipertensión, Traumatismo">
-        </div>
-
-        <div class="form-group">
-          <label>Síntomas al Ingreso</label>
-          <input type="text" id="p-sintomas" placeholder="Ej: Fiebre, Tos, Ninguno">
+          <label>👨‍👩‍👧‍👦 Grupo Familiar / Código de Familia</label>
+          <input type="text" id="p-familia" placeholder="Ej: FAM-1025 o DNI del jefe de familia">
         </div>
 
         <div class="form-actions">
@@ -478,7 +469,6 @@
     let capaDepartamentos = null;
     let departamentosVisibles = false;
 
-    // ENDPOINTS DESACOPLADOS DE GOOGLE APPS SCRIPT
     const URL_BASE_DATOS = "https://script.google.com/macros/s/AKfycbxWH1ygTGS5m-ak8HMdjpPvlTbXimom43OUxEZBjD0TlItw1h3R9L3W6z3siqXxBr5Ngw/exec";
     const URL_RIOS = "https://script.google.com/macros/s/AKfycbxbFye_X-EEjyTdyBnrTTv_G1FodaBPukRNdrLVG8c8VXUZGwPYV-Z_mET9orucNcF0rg/exec";
 
@@ -503,23 +493,6 @@
       return fechaStr;
     }
 
-    // Formato de fecha estilo INA: "20 sep 2026"
-    function formatearFechaGrafico(fechaStr) {
-      if (!fechaStr) return "";
-      const str = String(fechaStr).trim().split('T')[0];
-      const partes = str.split('-');
-      if (partes.length !== 3) return str;
-
-      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-      const dia = parseInt(partes[2], 10);
-      const mes = parseInt(partes[1], 10) - 1;
-      const anio = partes[0];
-
-      if (isNaN(dia) || isNaN(mes) || mes < 0 || mes > 11) return str;
-      return `${dia} ${meses[mes]} ${anio}`;
-    }
-
-    // === ESTACIONES actualizadas con Aguas_Bajas del Excel ===
     const ESTACIONES = [
       { id: 48, muni:"Ituzaingó",           depto:"Ituzaingó",          rio:"Paraná", siteCode:15, seriesId:15, lat:-27.5896, lng:-56.6819, alerta:3.50, evacuacion:4.00, aguasBajas:0.81 },
       { id: 46, muni:"Itá Ibaté",           depto:"General Paz",        rio:"Paraná", siteCode:16, seriesId:16, lat:-27.4290, lng:-57.3282, alerta:7.00, evacuacion:7.50, aguasBajas:1.34 },
@@ -778,7 +751,6 @@
       });
     }
 
-    // Formato compacto para eje X: "16/09"
     function formatearFechaEjeX(fechaStr) {
       if (!fechaStr) return "";
       try {
@@ -1075,8 +1047,7 @@
       document.getElementById('p-egreso').value = "";
       document.getElementById('p-sexo').value = "Masculino";
       document.getElementById('p-grupo-etario').value = "25 a 49 años";
-      document.getElementById('p-diagnostico').value = "";
-      document.getElementById('p-sintomas').value = "";
+      document.getElementById('p-familia').value = "";
       abrirModal('modalPersona');
     }
 
@@ -1132,8 +1103,7 @@
       document.getElementById('p-egreso').value = parsearFechaParaInput(persona.fechaEgreso);
       document.getElementById('p-sexo').value = persona.sexo || "Masculino";
       document.getElementById('p-grupo-etario').value = persona.grupoEtario || "25 a 49 años";
-      document.getElementById('p-diagnostico').value = persona.diagnostico || "";
-      document.getElementById('p-sintomas').value = persona.sintomas || "";
+      document.getElementById('p-familia').value = persona.grupoFamiliar || "";
 
       abrirModal('modalPersona');
     }
@@ -1226,8 +1196,7 @@
         fechaEgreso: formatearFechaLatina(document.getElementById('p-egreso').value),
         sexo: document.getElementById('p-sexo').value,
         grupoEtario: document.getElementById('p-grupo-etario').value,
-        diagnostico: document.getElementById('p-diagnostico').value,
-        sintomas: document.getElementById('p-sintomas').value
+        grupoFamiliar: document.getElementById('p-familia').value.trim()
       };
 
       cerrarModal('modalPersona');
@@ -1465,7 +1434,7 @@
           <div class="item-title">👤 ${p.nombreApellido} (${p.grupoEtario || 'S/D'})</div>
           <div class="item-sub">DNI: ${p.dni} | Centro: ${centro.nombre}</div>
           <div class="item-sub">Ingreso: ${p.fechaIngreso || 'S/D'} ${p.fechaEgreso ? '| Egreso: ' + p.fechaEgreso : ''}</div>
-          <div class="item-badge">Diag: ${p.diagnostico || 'Ninguno'} | Síntomas: ${p.sintomas || 'Ninguno'}</div>
+          ${p.grupoFamiliar ? `<div class="item-badge" style="background: #e1f5fe; color: #01579b;">👨‍👩‍👧‍👦 Grupo Familiar: ${p.grupoFamiliar}</div>` : ''}
         `;
         listEl.appendChild(card);
       });
