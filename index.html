@@ -108,12 +108,15 @@
     .form-group input:focus, .form-group select:focus { border-color: var(--primary); background: #fff; }
     .form-row-2 { display: flex; gap: 8px; }
     .form-row-2 .form-group { flex: 1; }
-    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
     .alert-msg { background: #ffebe9; border: 1px solid #ffc1c0; color: #cf222e; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px; display: none; }
 
     #loading { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(18,18,18,0.85); z-index: 2000; display:flex; justify-content:center; align-items:center; color: #fff; font-size: 0.9rem; }
     .off { display: none !important; }
+
+    .filtro-familia { padding: 6px 8px; border-bottom: 1px solid var(--border); background: #fff; flex-shrink: 0; }
+    .filtro-familia input { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.78rem; }
 
     @media (max-width: 768px) {
       .title-area p { display: none; }
@@ -197,6 +200,9 @@
       </div>
 
       <div id="sec-ingresos" class="sec-tab" style="display:none;">
+        <div class="filtro-familia">
+          <input type="text" id="filtro-grupo-familiar" placeholder="Filtrar por Grupo Familiar (ej: FAM-012)" oninput="filtrarPorGrupoFamiliar(this.value)">
+        </div>
         <div class="list" id="list-ingresos"></div>
       </div>
 
@@ -247,25 +253,68 @@
         <h3 id="modalPersonaTitulo">Ingreso de Persona</h3>
         <button class="close-modal" onclick="cerrarModal('modalPersona')">&times;</button>
       </div>
+
       <div id="alertPersona" class="alert-msg"></div>
+
       <form onsubmit="guardarPersona(event)">
         <input type="hidden" id="p-idPersona">
+
+        <!-- 1. Centro -->
         <div class="form-group">
           <label>Centro de Evacuados *</label>
           <select id="p-centro" required></select>
         </div>
+
+        <!-- 2. Grupo Familiar + Rol Familiar -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Grupo Familiar</label>
+            <input type="text" id="p-familia" placeholder="Ej: FAM-012 o apellido del jefe">
+          </div>
+          <div class="form-group">
+            <label>Rol Familiar</label>
+            <select id="p-rol-familiar">
+              <option value="">— Seleccionar —</option>
+              <option value="Jefe de Familia">Jefe de Familia</option>
+              <option value="Cónyuge o Pareja">Cónyuge o Pareja</option>
+              <option value="Hijo / Hija">Hijo / Hija</option>
+              <option value="Adulto Mayor">Adulto Mayor</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3. Apellido y Nombre -->
         <div class="form-group">
-          <label>Nombre y Apellido *</label>
-          <input type="text" id="p-nombre" required placeholder="Ej: Juan Pérez">
+          <label>Apellido y Nombre *</label>
+          <input type="text" id="p-nombre" required placeholder="Ej: Pérez Juan">
         </div>
+
+        <!-- 4. DNI (opcional) + Fecha Nacimiento (opcional) -->
         <div class="form-row-2">
-          <div class="form-group"><label>DNI / Documento *</label><input type="text" id="p-dni" required></div>
-          <div class="form-group"><label>Fecha de Nacimiento</label><input type="date" id="p-nac"></div>
+          <div class="form-group">
+            <label>DNI / Documento</label>
+            <input type="text" id="p-dni" placeholder="Opcional">
+          </div>
+          <div class="form-group">
+            <label>Fecha de Nacimiento</label>
+            <input type="date" id="p-nac">
+          </div>
         </div>
+
+        <!-- 5. Fecha Ingreso + Fecha Egreso -->
         <div class="form-row-2">
-          <div class="form-group"><label>Fecha de Ingreso</label><input type="date" id="p-fecha"></div>
-          <div class="form-group"><label>Fecha de Egreso</label><input type="date" id="p-egreso"></div>
+          <div class="form-group">
+            <label>Fecha de Ingreso</label>
+            <input type="date" id="p-fecha">
+          </div>
+          <div class="form-group">
+            <label>Fecha de Egreso</label>
+            <input type="date" id="p-egreso">
+          </div>
         </div>
+
+        <!-- 6. Sexo + Grupo Etario -->
         <div class="form-row-2">
           <div class="form-group">
             <label>Sexo</label>
@@ -288,12 +337,22 @@
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label>👨‍👩‍👧‍👦 Grupo Familiar / Código de Familia</label>
-          <input type="text" id="p-familia" placeholder="Ej: FAM-1025 o DNI del jefe de familia">
+
+        <!-- 7. Ubicación + Origen -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Ubicación (dentro del centro)</label>
+            <input type="text" id="p-ubicacion" placeholder="Ej: Aula 3, Carpa 12">
+          </div>
+          <div class="form-group">
+            <label>Origen (dirección o barrio)</label>
+            <input type="text" id="p-origen" placeholder="Ej: Barrio Centro, calle X">
+          </div>
         </div>
+
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalPersona')">Cancelar</button>
+          <button type="button" class="btn-action" style="background:#6c757d;" onclick="guardarPersonaYSeguir(event)">Guardar y seguir en familia</button>
           <button type="submit" class="btn-action" style="background:#28a745;">Guardar Registro</button>
         </div>
       </form>
@@ -316,7 +375,7 @@
         </div>
         <div class="form-group"><label>Nombre y Apellido *</label><input type="text" id="m-nombre" required></div>
         <div class="form-row-2">
-          <div class="form-group"><label>DNI *</label><input type="text" id="m-dni" required></div>
+          <div class="form-group"><label>DNI</label><input type="text" id="m-dni"></div>
           <div class="form-group"><label>Edad</label><input type="number" id="m-edad"></div>
         </div>
         <div class="form-row-2">
@@ -394,6 +453,7 @@
     let miChart = null;
     let capaDepartamentos = null;
     let departamentosVisibles = false;
+    let ultimoGrupoFamiliar = localStorage.getItem('ultimoGrupoFamiliar') || "";
 
     const URL_BASE_DATOS = "https://script.google.com/macros/s/AKfycbxWH1ygTGS5m-ak8HMdjpPvlTbXimom43OUxEZBjD0TlItw1h3R9L3W6z3siqXxBr5Ngw/exec";
     const URL_RIOS = "https://script.google.com/macros/s/AKfycbxbFye_X-EEjyTdyBnrTTv_G1FodaBPukRNdrLVG8c8VXUZGwPYV-Z_mET9orucNcF0rg/exec";
@@ -505,16 +565,12 @@
         if (res.ok) {
           const txt = await res.text();
           try { return JSON.parse(txt); } catch (e) {
-            console.warn("JSON parse falló en respuesta directa:", e);
+            console.warn("JSON parse falló:", e);
           }
-        } else {
-          console.warn("Fetch directo no OK:", res.status);
         }
       } catch (e) {
         console.warn("Fetch directo falló:", e.message);
       }
-
-      // Fallback proxy (puede estar caído)
       try {
         const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
         const resProxy = await fetch(proxyUrl);
@@ -574,7 +630,7 @@
       const promesaBaseDatos = fetchJsonRobust(URL_BASE_DATOS)
         .then(dataDB => {
           if (!dataDB) {
-            console.error("No se pudo cargar la base de datos. Revisar consola y endpoint.");
+            console.error("No se pudo cargar la base de datos.");
             centrosData = [];
             personasData = [];
             monitoreoData = [];
@@ -877,13 +933,15 @@
       document.getElementById('p-idPersona').value = "";
       document.getElementById('p-nombre').value = "";
       document.getElementById('p-dni').value = "";
-      document.getElementById('p-dni').readOnly = false;
       document.getElementById('p-nac').value = "";
       document.getElementById('p-fecha').value = new Date().toISOString().split('T')[0];
       document.getElementById('p-egreso').value = "";
       document.getElementById('p-sexo').value = "Masculino";
       document.getElementById('p-grupo-etario').value = "25 a 49 años";
-      document.getElementById('p-familia').value = "";
+      document.getElementById('p-familia').value = ultimoGrupoFamiliar || "";
+      document.getElementById('p-rol-familiar').value = "";
+      document.getElementById('p-ubicacion').value = "";
+      document.getElementById('p-origen').value = "";
       abrirModal('modalPersona');
     }
 
@@ -929,14 +987,16 @@
       document.getElementById('p-idPersona').value = persona.idPersona || "";
       document.getElementById('p-centro').value = persona.idCentro;
       document.getElementById('p-nombre').value = persona.nombreApellido;
-      document.getElementById('p-dni').value = persona.dni;
-      document.getElementById('p-dni').readOnly = false;
+      document.getElementById('p-dni').value = persona.dni || "";
       document.getElementById('p-nac').value = parsearFechaParaInput(persona.fechaNac);
       document.getElementById('p-fecha').value = parsearFechaParaInput(persona.fechaIngreso);
       document.getElementById('p-egreso').value = parsearFechaParaInput(persona.fechaEgreso);
       document.getElementById('p-sexo').value = persona.sexo || "Masculino";
       document.getElementById('p-grupo-etario').value = persona.grupoEtario || "25 a 49 años";
       document.getElementById('p-familia').value = persona.grupoFamiliar || "";
+      document.getElementById('p-rol-familiar').value = persona.rolFamiliar || "";
+      document.getElementById('p-ubicacion').value = persona.ubicacion || "";
+      document.getElementById('p-origen').value = persona.origen || "";
       abrirModal('modalPersona');
     }
 
@@ -982,40 +1042,25 @@
       enviarAData(nuevo, "centros");
     }
 
-    function guardarPersona(e) {
-      e.preventDefault();
-      ocultarAlertas();
-      const alertBox = document.getElementById('alertPersona');
+    function construirPayloadPersona() {
       const idPersona = document.getElementById('p-idPersona').value;
-      const dniIngresado = String(document.getElementById('p-dni').value).trim();
-      const nombreIngresado = String(document.getElementById('p-nombre').value).trim().toLowerCase();
-      const idCentroIngresado = String(document.getElementById('p-centro').value);
+      let dniIngresado = String(document.getElementById('p-dni').value).trim();
+      if (!dniIngresado) {
+        dniIngresado = "PENDIENTE-" + Date.now().toString().slice(-6);
+      }
+      const fechaIngresoRaw = document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0];
+      const grupoFamiliar = document.getElementById('p-familia').value.trim();
 
-      if (!idPersona) {
-        const personaExistenteDNI = personasData.find(p => String(p.dni).trim() === dniIngresado);
-        if (personaExistenteDNI) {
-          alertBox.innerText = `⚠️ El DNI ${dniIngresado} ya existe a nombre de: ${personaExistenteDNI.nombreApellido}.`;
-          alertBox.style.display = 'block';
-          alert(`⚠️ El DNI ${dniIngresado} ya existe a nombre de: ${personaExistenteDNI.nombreApellido}.`);
-          return;
-        }
-        const coincidenciaNombreCentro = personasData.find(p => 
-          String(p.nombreApellido).trim().toLowerCase() === nombreIngresado && 
-          String(p.idCentro) === idCentroIngresado
-        );
-        if (coincidenciaNombreCentro) {
-          alertBox.innerText = `⚠️ Ya existe una persona llamada "${document.getElementById('p-nombre').value}" en el centro seleccionado.`;
-          alertBox.style.display = 'block';
-          alert(`⚠️ Ya existe una persona llamada "${document.getElementById('p-nombre').value}" en el centro seleccionado.`);
-          return;
-        }
+      // Sticky
+      if (grupoFamiliar) {
+        ultimoGrupoFamiliar = grupoFamiliar;
+        localStorage.setItem('ultimoGrupoFamiliar', grupoFamiliar);
       }
 
-      const fechaIngresoRaw = document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0];
-      const nuevaP = {
+      return {
         action: "add_persona",
         idPersona: idPersona || ("PER-" + Date.now()),
-        idCentro: idCentroIngresado,
+        idCentro: String(document.getElementById('p-centro').value),
         nombreApellido: document.getElementById('p-nombre').value.trim(),
         dni: dniIngresado,
         fechaNac: formatearFechaLatina(document.getElementById('p-nac').value),
@@ -1023,37 +1068,108 @@
         fechaEgreso: formatearFechaLatina(document.getElementById('p-egreso').value),
         sexo: document.getElementById('p-sexo').value,
         grupoEtario: document.getElementById('p-grupo-etario').value,
-        grupoFamiliar: document.getElementById('p-familia').value.trim()
+        grupoFamiliar: grupoFamiliar,
+        rolFamiliar: document.getElementById('p-rol-familiar').value || "",
+        ubicacion: document.getElementById('p-ubicacion').value.trim(),
+        origen: document.getElementById('p-origen').value.trim()
       };
+    }
+
+    function guardarPersona(e) {
+      e.preventDefault();
+      ocultarAlertas();
+
+      const alertBox = document.getElementById('alertPersona');
+      const idPersona = document.getElementById('p-idPersona').value;
+      const dniIngresado = String(document.getElementById('p-dni').value).trim();
+      const nombreIngresado = String(document.getElementById('p-nombre').value).trim().toLowerCase();
+      const idCentroIngresado = String(document.getElementById('p-centro').value);
+
+      if (!idPersona && dniIngresado && !dniIngresado.startsWith("PENDIENTE-")) {
+        const personaExistenteDNI = personasData.find(p => String(p.dni).trim() === dniIngresado);
+        if (personaExistenteDNI) {
+          alertBox.innerText = `El DNI ${dniIngresado} ya existe a nombre de: ${personaExistenteDNI.nombreApellido}.`;
+          alertBox.style.display = 'block';
+          return;
+        }
+      }
+
+      if (!idPersona) {
+        const coincidenciaNombreCentro = personasData.find(p => 
+          String(p.nombreApellido).trim().toLowerCase() === nombreIngresado && 
+          String(p.idCentro) === idCentroIngresado
+        );
+        if (coincidenciaNombreCentro) {
+          alertBox.innerText = `Ya existe una persona llamada "${document.getElementById('p-nombre').value}" en el centro seleccionado.`;
+          alertBox.style.display = 'block';
+          return;
+        }
+      }
+
+      const nuevaP = construirPayloadPersona();
       cerrarModal('modalPersona');
       enviarAData(nuevaP, "ingresos");
+    }
+
+    function guardarPersonaYSeguir(e) {
+      e.preventDefault();
+      ocultarAlertas();
+
+      const alertBox = document.getElementById('alertPersona');
+      const nombre = document.getElementById('p-nombre').value.trim();
+      if (!nombre) {
+        alertBox.innerText = "El nombre es obligatorio.";
+        alertBox.style.display = 'block';
+        return;
+      }
+
+      const nuevaP = construirPayloadPersona();
+      
+      // Enviar sin cerrar el modal
+      document.getElementById('loading').classList.remove('off');
+      fetch(URL_BASE_DATOS, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(nuevaP)
+      })
+      .then(() => {
+        setTimeout(() => {
+          cargarDatosActualizados();
+          // Limpiar solo los campos de persona, mantener grupo y centro
+          document.getElementById('p-idPersona').value = "";
+          document.getElementById('p-nombre').value = "";
+          document.getElementById('p-dni').value = "";
+          document.getElementById('p-nac').value = "";
+          document.getElementById('p-rol-familiar').value = "";
+          document.getElementById('p-ubicacion').value = "";
+          document.getElementById('p-origen').value = "";
+          document.getElementById('p-fecha').value = new Date().toISOString().split('T')[0];
+          document.getElementById('loading').classList.add('off');
+        }, 1000);
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        document.getElementById('loading').classList.add('off');
+      });
     }
 
     function guardarMonitoreo(e) {
       e.preventDefault();
       ocultarAlertas();
+
       const alertBox = document.getElementById('alertMonitoreo');
       const idPersona = document.getElementById('m-idPersona').value;
-      const dniIngresado = String(document.getElementById('m-dni').value).trim();
+      let dniIngresado = String(document.getElementById('m-dni').value).trim();
+      if (!dniIngresado) dniIngresado = "PENDIENTE-" + Date.now().toString().slice(-6);
       const nombreIngresado = String(document.getElementById('m-nombre').value).trim().toLowerCase();
       const idCentroIngresado = String(document.getElementById('m-centro').value);
 
-      if (!idPersona) {
+      if (!idPersona && dniIngresado && !dniIngresado.startsWith("PENDIENTE-")) {
         const monitoreoExistenteDNI = monitoreoData.find(m => String(m.dni).trim() === dniIngresado);
         if (monitoreoExistenteDNI) {
-          alertBox.innerText = `⚠️ El DNI ${dniIngresado} ya tiene un monitoreo activo a nombre de: ${monitoreoExistenteDNI.nombreApellido}.`;
+          alertBox.innerText = `El DNI ${dniIngresado} ya tiene un monitoreo activo.`;
           alertBox.style.display = 'block';
-          alert(`⚠️ El DNI ${dniIngresado} ya tiene un monitoreo activo a nombre de: ${monitoreoExistenteDNI.nombreApellido}.`);
-          return;
-        }
-        const coincidenciaNombreCentro = monitoreoData.find(m => 
-          String(m.nombreApellido).trim().toLowerCase() === nombreIngresado && 
-          String(m.idCentro) === idCentroIngresado
-        );
-        if (coincidenciaNombreCentro) {
-          alertBox.innerText = `⚠️ Ya existe un registro de monitoreo para "${document.getElementById('m-nombre').value}" en este centro.`;
-          alertBox.style.display = 'block';
-          alert(`⚠️ Ya existe un registro de monitoreo para "${document.getElementById('m-nombre').value}" en este centro.`);
           return;
         }
       }
@@ -1072,6 +1188,7 @@
         sintomas: document.getElementById('m-sintomas').value,
         fechaIngreso: formatearFechaLatina(hoyIso)
       };
+
       cerrarModal('modalMonitoreo');
       enviarAData(nuevoM, "monitoreo");
     }
@@ -1184,7 +1301,6 @@
         };
         listEl.appendChild(card);
 
-        // Solo crear marker si las coordenadas son válidas (no 0,0 ni NaN)
         const latOk = typeof c.lat === 'number' && !isNaN(c.lat) && c.lat !== 0;
         const lngOk = typeof c.lng === 'number' && !isNaN(c.lng) && c.lng !== 0;
 
@@ -1238,11 +1354,25 @@
       abrirModal('modalInsumos');
     }
 
+    function filtrarPorGrupoFamiliar(texto) {
+      const filtro = (texto || "").trim().toLowerCase();
+      if (!filtro) {
+        renderIngresos(personasData);
+        return;
+      }
+      const filtrados = personasData.filter(p => 
+        String(p.grupoFamiliar || "").toLowerCase().includes(filtro)
+      );
+      renderIngresos(filtrados);
+    }
+
     function renderIngresos(personas) {
       const listEl = document.getElementById('list-ingresos');
       listEl.innerHTML = personas.length ? '' : '<div style="color:#666; font-size:0.75rem; text-align:center; padding:15px;">Sin registros de ingresos</div>';
+      
       personas.forEach(p => {
         const centro = centrosData.find(c => String(c.id).trim() === String(p.idCentro).trim()) || { nombre: 'Centro General' };
+        const dniMostrar = (p.dni && p.dni.startsWith("PENDIENTE-")) ? "DNI pendiente" : (p.dni || "Sin DNI");
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
@@ -1251,9 +1381,16 @@
             <button class="btn-card-action" onclick="eliminarPersona('${p.dni}', event)" title="Eliminar Persona">🗑️</button>
           </div>
           <div class="item-title">👤 ${p.nombreApellido} (${p.grupoEtario || 'S/D'})</div>
-          <div class="item-sub">DNI: ${p.dni} | Centro: ${centro.nombre}</div>
+          <div class="item-sub">DNI: ${dniMostrar} | Centro: ${centro.nombre}</div>
           <div class="item-sub">Ingreso: ${p.fechaIngreso || 'S/D'} ${p.fechaEgreso ? '| Egreso: ' + p.fechaEgreso : ''}</div>
-          ${p.grupoFamiliar ? `<div class="item-badge" style="background: #e1f5fe; color: #01579b;">👨‍👩‍👧‍👦 Grupo Familiar: ${p.grupoFamiliar}</div>` : ''}
+          ${(p.grupoFamiliar || p.rolFamiliar) ? `
+            <div class="item-badge" style="background: #e1f5fe; color: #01579b;">
+              ${p.grupoFamiliar || 'Sin código'}${p.rolFamiliar ? ' · ' + p.rolFamiliar : ''}
+            </div>` : ''}
+          ${(p.ubicacion || p.origen) ? `
+            <div class="item-sub" style="margin-top:3px;">
+              ${p.ubicacion ? 'Ubic: ' + p.ubicacion : ''}${p.ubicacion && p.origen ? ' | ' : ''}${p.origen ? 'Origen: ' + p.origen : ''}
+            </div>` : ''}
         `;
         listEl.appendChild(card);
       });
@@ -1262,6 +1399,7 @@
     function renderMonitoreo(monitoreos) {
       const listEl = document.getElementById('list-monitoreo');
       listEl.innerHTML = monitoreos.length ? '' : '<div style="color:#666; font-size:0.75rem; text-align:center; padding:15px;">Sin registros de monitoreo</div>';
+      
       monitoreos.forEach(m => {
         const centro = centrosData.find(c => String(c.id).trim() === String(m.idCentro).trim()) || { nombre: 'Centro General' };
         const card = document.createElement('div');
