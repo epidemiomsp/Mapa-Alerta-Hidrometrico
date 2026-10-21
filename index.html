@@ -199,6 +199,7 @@
         <span class="btn-text-full">+ Monitoreo</span><span class="btn-text-short">+ 🩺</span>
       </button>
       <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
+      <button class="btn-sec" id="btn-toggle-rs" onclick="toggleCapaRegionesSanitarias()">🏥 RS</button>
       <button class="btn-sec" id="btn-toggle-info" onclick="toggleSidebar()">📊 Info</button>
       <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
     </div>
@@ -482,6 +483,8 @@
     let miChart = null;
     let capaDepartamentos = null;
     let departamentosVisibles = false;
+    let capaRegionesSanitarias = null;
+    let regionesSanitariasVisibles = false;
     let ultimoGrupoFamiliar = localStorage.getItem('ultimoGrupoFamiliar') || "";
 
     const URL_BASE_DATOS = "https://script.google.com/macros/s/AKfycbz4qHHOSxjpVv3enlPme9dj1OoKpY8y1_e3HN6gb-SuxCna5a4M0rqIS9fu-HRwLlySzw/exec";
@@ -585,6 +588,61 @@
       if (btn) {
         btn.style.background = departamentosVisibles ? '#0a84ff' : '#2c2c2e';
         btn.style.borderColor = departamentosVisibles ? '#005bb5' : '#3a3a3c';
+      }
+    }
+
+    function toggleCapaRegionesSanitarias() {
+      if (!capaRegionesSanitarias) {
+        document.getElementById('loading').classList.remove('off');
+        fetch('./regiones_sanitarias.json')
+          .then(res => res.json())
+          .then(data => {
+            // GeometryCollection de LineStrings → se renderiza como polilíneas
+            capaRegionesSanitarias = L.geoJSON(data, {
+              style: () => ({
+                color: '#9b59b6',
+                weight: 2.5,
+                opacity: 0.95,
+                fillOpacity: 0
+              }),
+              onEachFeature: (feature, layer) => {
+                layer.bindTooltip('Región Sanitaria', {
+                  permanent: false,
+                  direction: 'center',
+                  className: 'dept-tooltip'
+                });
+                layer.on({
+                  mouseover: (e) => e.target.setStyle({ weight: 4, color: '#c39bd3' }),
+                  mouseout: (e) => capaRegionesSanitarias.resetStyle(e.target)
+                });
+              }
+            });
+            capaRegionesSanitarias.addTo(map);
+            regionesSanitariasVisibles = true;
+            actualizarEstiloBotonRS();
+            document.getElementById('loading').classList.add('off');
+          })
+          .catch(err => {
+            console.error("Error al cargar regiones_sanitarias.json:", err);
+            document.getElementById('loading').classList.add('off');
+          });
+        return;
+      }
+      if (regionesSanitariasVisibles) {
+        map.removeLayer(capaRegionesSanitarias);
+        regionesSanitariasVisibles = false;
+      } else {
+        map.addLayer(capaRegionesSanitarias);
+        regionesSanitariasVisibles = true;
+      }
+      actualizarEstiloBotonRS();
+    }
+
+    function actualizarEstiloBotonRS() {
+      const btn = document.getElementById('btn-toggle-rs');
+      if (btn) {
+        btn.style.background = regionesSanitariasVisibles ? '#9b59b6' : '#2c2c2e';
+        btn.style.borderColor = regionesSanitariasVisibles ? '#7d3c98' : '#3a3a3c';
       }
     }
 
