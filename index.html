@@ -253,21 +253,20 @@
       </div>
       <form onsubmit="guardarCentro(event)">
         <input type="hidden" id="c-id">
-        <div class="form-group"><label>Nombre del Centro *</label><input type="text" id="c-nombre" required placeholder="Ej: Hospital Billinghurst"></div>
+        <div class="form-group"><label>Nombre del Centro/Institución *</label><input type="text" id="c-nombre" required placeholder="Ej: Hospital Billinghurst"></div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="c-direccion" placeholder="Ej: Mendoza 555, Centro"></div>
         <div class="form-group"><label>Municipio / Localidad *</label><input type="text" id="c-muni" required placeholder="Ej: Ituzaingó"></div>
         <div class="form-row-2">
-          <div class="form-group"><label>Evacuados Actuales</label><input type="number" id="c-evacuados" value="0" min="0"></div>
-          <div class="form-group"><label>Capacidad Máxima</label><input type="number" id="c-capacidad" value="100" min="0"></div>
+          <div class="form-group"><label>Evacuados</label><input type="number" id="c-evacuados" value="0" min="0"></div>
+          <div class="form-group"><label>Autoevacuados</label><input type="number" id="c-autoevacuados" value="0" min="0"></div>
         </div>
         <div class="form-row-2">
           <div class="form-group"><label>Latitud *</label><input type="number" step="any" id="c-lat" required placeholder="-27.58688"></div>
           <div class="form-group"><label>Longitud *</label><input type="number" step="any" id="c-lng" required placeholder="-56.69061"></div>
         </div>
         <div class="form-group"><label>Teléfono / Responsable</label><input type="text" id="c-contacto" placeholder="Ej: 3624772121"></div>
-        <div class="form-row-2">
-          <div class="form-group"><label>Baños Operativos</label><input type="number" id="c-banos" value="0"></div>
-          <div class="form-group"><label>Insumos</label><input type="text" id="c-agua" placeholder="Ej: Medicamentos, Sueros, NaDCC"></div>
-        </div>
+        <div class="form-group"><label>Insumos</label><input type="text" id="c-insumos" placeholder="Ej: 200 pastillas potabilizadoras, sueros, NaDCC"></div>
+        <div class="form-group"><label>Observaciones</label><input type="text" id="c-observaciones" placeholder="Notas adicionales del centro / institución"></div>
         <div class="form-actions">
           <button type="button" class="btn-sec" onclick="cerrarModal('modalCentro')">Cancelar</button>
           <button type="submit" class="btn-action">Guardar Centro</button>
@@ -1073,14 +1072,15 @@
       document.getElementById('modalCentroTitulo').innerText = "Nuevo Centro de Evacuados";
       document.getElementById('c-id').value = "";
       document.getElementById('c-nombre').value = "";
+      document.getElementById('c-direccion').value = "";
       document.getElementById('c-muni').value = "";
       document.getElementById('c-evacuados').value = "0";
-      document.getElementById('c-capacidad').value = "100";
+      document.getElementById('c-autoevacuados').value = "0";
       document.getElementById('c-lat').value = lat;
       document.getElementById('c-lng').value = lng;
       document.getElementById('c-contacto').value = "";
-      document.getElementById('c-banos').value = "0";
-      document.getElementById('c-agua').value = "";
+      document.getElementById('c-insumos').value = "";
+      document.getElementById('c-observaciones').value = "";
       abrirModal('modalCentro');
     }
 
@@ -1123,15 +1123,16 @@
       if (!centro) return;
       document.getElementById('modalCentroTitulo').innerText = "Editar Centro de Evacuados";
       document.getElementById('c-id').value = centro.id;
-      document.getElementById('c-nombre').value = centro.nombre;
-      document.getElementById('c-muni').value = centro.municipio;
-      document.getElementById('c-evacuados').value = centro.evacuados;
-      document.getElementById('c-capacidad').value = centro.capacidad;
+      document.getElementById('c-nombre').value = centro.nombre || "";
+      document.getElementById('c-direccion').value = centro.direccion || "";
+      document.getElementById('c-muni').value = centro.municipio || "";
+      document.getElementById('c-evacuados').value = centro.evacuados || 0;
+      document.getElementById('c-autoevacuados').value = centro.autoevacuados || 0;
       document.getElementById('c-lat').value = centro.lat;
       document.getElementById('c-lng').value = centro.lng;
-      document.getElementById('c-contacto').value = centro.contacto;
-      document.getElementById('c-banos').value = centro.banos;
-      document.getElementById('c-agua').value = centro.insumos || centro.agua || "";
+      document.getElementById('c-contacto').value = centro.contacto || "";
+      document.getElementById('c-insumos').value = centro.insumos || "";
+      document.getElementById('c-observaciones').value = centro.observaciones || "";
       abrirModal('modalCentro');
     }
 
@@ -1185,15 +1186,16 @@
       const nuevo = {
         action: "add_centro",
         id: idExistente ? String(idExistente).trim() : String(Date.now()),
-        nombre: document.getElementById('c-nombre').value,
-        municipio: document.getElementById('c-muni').value,
+        nombre: document.getElementById('c-nombre').value.trim(),
+        direccion: document.getElementById('c-direccion').value.trim(),
+        municipio: document.getElementById('c-muni').value.trim(),
         evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
-        capacidad: parseInt(document.getElementById('c-capacidad').value) || 0,
+        autoevacuados: parseInt(document.getElementById('c-autoevacuados').value) || 0,
         lat: parseFloat(rawLat),
         lng: parseFloat(rawLng),
-        contacto: document.getElementById('c-contacto').value || "Sin dato",
-        banos: parseInt(document.getElementById('c-banos').value) || 0,
-        insumos: document.getElementById('c-agua').value || "Sin registrar"
+        contacto: document.getElementById('c-contacto').value.trim() || "Sin dato",
+        insumos: document.getElementById('c-insumos').value.trim() || "Sin registrar",
+        observaciones: document.getElementById('c-observaciones').value.trim() || ""
       };
       cerrarModal('modalCentro');
       enviarAData(nuevo, "centros");
@@ -1433,10 +1435,10 @@
       }
 
       centros.forEach(c => {
-        const pctOcupacion = c.capacidad > 0 ? Math.round((c.evacuados / c.capacidad) * 100) : 0;
+        const totalEvac = (Number(c.evacuados) || 0) + (Number(c.autoevacuados) || 0);
         let colorPin = '#0a84ff';
-        if (pctOcupacion >= 100) colorPin = '#F4492E';
-        else if (pctOcupacion >= 80) colorPin = '#FAAE05';
+        if (totalEvac >= 50) colorPin = '#F4492E';
+        else if (totalEvac >= 20) colorPin = '#FAAE05';
 
         const card = document.createElement('div');
         card.className = 'item-card';
@@ -1447,8 +1449,8 @@
             <button class="btn-card-action" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
           </div>
           <div class="item-title">🏠 ${c.nombre}</div>
-          <div class="item-sub">📍 ${c.municipio} | 📞 ${c.contacto}</div>
-          <div class="item-badge">Evacuados: ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)</div>
+          <div class="item-sub">📍 ${c.municipio}${c.direccion ? ' · ' + c.direccion : ''} | 📞 ${c.contacto || 'Sin dato'}</div>
+          <div class="item-badge">Evacuados: ${c.evacuados || 0} | Autoevacuados: ${c.autoevacuados || 0}</div>
         `;
         card.onclick = () => {
           if (c.lat && c.lng && !(c.lat === 0 && c.lng === 0)) {
@@ -1471,7 +1473,7 @@
 
           const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
           marker.bindPopup(`
-            <div style="color:#000; min-width: 180px;">
+            <div style="color:#000; min-width: 200px;">
               <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
                 Centro de Evacuados
               </div>
@@ -1479,10 +1481,12 @@
                 ${c.nombre}
               </div>
               <div style="font-size: 0.8rem; line-height: 1.4;">
+                ${c.direccion ? '<b>Dirección:</b> ' + c.direccion + '<br>' : ''}
                 <b>Municipio:</b> ${c.municipio}<br>
-                <b>Evacuados:</b> ${c.evacuados} / ${c.capacidad} (${pctOcupacion}%)<br>
-                <b>Contacto:</b> ${c.contacto}<br>
-                <b>Baños:</b> ${c.banos || 0} | <b>Insumos:</b> ${c.insumos || c.agua || 'Sin registrar'}
+                <b>Evacuados:</b> ${c.evacuados || 0} | <b>Autoevacuados:</b> ${c.autoevacuados || 0}<br>
+                <b>Contacto:</b> ${c.contacto || 'Sin dato'}<br>
+                <b>Insumos:</b> ${c.insumos || 'Sin registrar'}
+                ${c.observaciones ? '<br><b>Observaciones:</b> ' + c.observaciones : ''}
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-top:10px;">
                 <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
