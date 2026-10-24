@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Monitoreo Hidrométrico y Centros de Evacuados - Corrientes</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
@@ -13,25 +13,41 @@
     :root {
       --bg:#121212; --card:#ffffff; --border:#e0e0e0; --txt:#1c1c1e; --txt-dim:#666666;
       --normal:#719C29; --alerta:#FAAE05; --evac:#F4492E; --primary:#0a84ff;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--txt); height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    html, body { height: 100%; height: 100dvh; overflow: hidden; }
+    body { background: var(--bg); color: var(--txt); display: flex; flex-direction: column; }
     
     header { 
       background: #1a1a1a; 
       border-bottom: 1px solid #333; 
-      padding: 6px 10px; 
+      padding: 6px 8px; 
+      padding-top: max(6px, var(--safe-top));
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
       z-index: 2000; 
-      min-height: 50px; 
-      gap: 6px; 
+      min-height: 48px; 
+      gap: 4px;
+      flex-shrink: 0;
     }
-    .title-area h1 { font-size: 0.95rem; color: #fff; line-height: 1.2; }
-    .title-area p { font-size: 0.68rem; color: #a0a0a0; }
-    .header-actions { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
-    .container { display: flex; flex: 1; position: relative; height: calc(100vh - 50px); height: calc(100dvh - 50px); overflow: hidden; }
+    .title-area { min-width: 0; flex: 1; }
+    .title-area h1 { font-size: 0.92rem; color: #fff; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .title-area p { font-size: 0.65rem; color: #a0a0a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-actions { 
+      display: flex; 
+      gap: 3px; 
+      align-items: center; 
+      flex-wrap: nowrap; 
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      max-width: 62%;
+    }
+    .header-actions::-webkit-scrollbar { display: none; }
+    .container { display: flex; flex: 1; position: relative; height: calc(100% - 48px); overflow: hidden; }
     
     #sidebar { 
       width: 380px; 
@@ -43,7 +59,7 @@
       z-index: 1500; 
       height: 100%; 
       position: relative;
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
       will-change: transform;
     }
     #sidebar.collapsed { transform: translateX(-380px); margin-right: -380px; }
@@ -53,7 +69,7 @@
     .tab-btn.active { color: #000; border-bottom-color: var(--primary); background: #ffffff; font-weight: bold; }
     
     .filter-bar { padding: 6px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; background: #ffffff; flex-shrink: 0; }
-    .filter-btn { flex: 1; padding: 6px 4px; font-size: 0.7rem; background: transparent; border: 1px solid #ccc; color: #333; border-radius: 4px; cursor: pointer; }
+    .filter-btn { flex: 1; padding: 7px 4px; font-size: 0.7rem; background: transparent; border: 1px solid #ccc; color: #333; border-radius: 6px; cursor: pointer; min-height: 36px; }
     .filter-btn.active { background: #e5e5ea; color: #000; border-color: var(--primary); font-weight: bold; }
     
     .sec-tab { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
@@ -67,7 +83,6 @@
     .rio { font-size: 0.68rem; color: #3a3a3c; background: #e5e5ea; padding: 2px 6px; border-radius: 4px; }
     .altura { font-size: 1.25rem; font-weight: 700; color: #0a84ff; }
 
-    /* === ESTADOS HIDROMÉTRICOS === */
     .badge-estado {
       display: inline-block;
       font-size: 0.65rem;
@@ -103,13 +118,22 @@
     .item-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 0.68rem; background: #e5e5ea; color: #333; margin-top: 5px; }
     
     .card-actions-top { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
-    .btn-card-action { background: transparent; border: none; font-size: 0.95rem; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; }
+    .btn-card-action { background: transparent; border: none; font-size: 0.95rem; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; min-width: 32px; min-height: 32px; }
     .btn-card-action:hover { opacity: 1.0; transform: scale(1.1); }
 
-    #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; }
+    #map { flex: 1; height: 100%; background: #191a1a; width: 100%; z-index: 1; cursor: crosshair; touch-action: pan-x pan-y; }
     
-    .btn-action { background: var(--primary); color: #fff; border: none; padding: 6px 8px; border-radius: 5px; font-size: 0.72rem; cursor: pointer; font-weight: bold; white-space: nowrap; }
-    .btn-sec { background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; padding:6px 8px; border-radius:5px; cursor:pointer; font-size: 0.72rem; white-space: nowrap; }
+    .btn-action { 
+      background: var(--primary); color: #fff; border: none; 
+      padding: 7px 9px; border-radius: 6px; font-size: 0.72rem; 
+      cursor: pointer; font-weight: bold; white-space: nowrap;
+      min-height: 36px; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-sec { 
+      background:#2c2c2e; border:1px solid #3a3a3c; color:#fff; 
+      padding:7px 8px; border-radius:6px; cursor:pointer; font-size: 0.72rem; 
+      white-space: nowrap; min-height: 36px; display: inline-flex; align-items: center; justify-content: center;
+    }
 
     .btn-text-full { display: inline; }
     .btn-text-short { display: none; }
@@ -124,16 +148,30 @@
       border-radius: 4px;
     }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; padding: 12px; }
+    .modal-overlay { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; 
+      z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; 
+      padding: 12px; padding-bottom: max(12px, var(--safe-bottom));
+    }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-box { background: #ffffff; border: 1px solid #ccc; border-radius: 8px; width: 480px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25); color: #1c1c1e; box-sizing: border-box; }
+    .modal-box { 
+      background: #ffffff; border: 1px solid #ccc; border-radius: 10px; 
+      width: 480px; max-width: 95%; padding: 15px; 
+      max-height: 90vh; max-height: 90dvh; overflow-y: auto; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25); color: #1c1c1e; 
+      box-sizing: border-box; -webkit-overflow-scrolling: touch;
+    }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
     .modal-header h3 { font-size: 0.95rem; color: #1c1c1e; font-weight: bold; }
-    .close-modal { background: none; border: none; color: #666; font-size: 1.3rem; cursor: pointer; }
+    .close-modal { background: none; border: none; color: #666; font-size: 1.4rem; cursor: pointer; min-width: 36px; min-height: 36px; }
     
     .form-group { margin-bottom: 8px; }
     .form-group label { display: block; font-size: 0.72rem; color: #555; margin-bottom: 2px; font-weight: 600; }
-    .form-group input, .form-group select { width: 100%; background: #f9f9f9; border: 1px solid #ccc; color: #1c1c1e; padding: 6px; border-radius: 4px; font-size: 0.8rem; outline: none; }
+    .form-group input, .form-group select { 
+      width: 100%; background: #f9f9f9; border: 1px solid #ccc; color: #1c1c1e; 
+      padding: 8px; border-radius: 6px; font-size: 0.85rem; outline: none; min-height: 40px;
+    }
     .form-group input:focus, .form-group select:focus { border-color: var(--primary); background: #fff; }
     .form-row-2 { display: flex; gap: 8px; }
     .form-row-2 .form-group { flex: 1; }
@@ -147,23 +185,25 @@
     .off { display: none !important; }
 
     .filtro-familia { padding: 6px 8px; border-bottom: 1px solid var(--border); background: #fff; flex-shrink: 0; }
-    .filtro-familia input { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.78rem; }
+    .filtro-familia input { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.8rem; min-height: 40px; }
 
+    /* ========== MOBILE ========== */
     @media (max-width: 768px) {
       .title-area p { display: none; }
-      .title-area h1 { font-size: 0.80rem; }
+      .title-area h1 { font-size: 0.78rem; }
       .btn-text-full { display: none; }
       .btn-text-short { display: inline; }
-      .header-actions { gap: 3px; }
-      .btn-action, .btn-sec { padding: 5px 6px; font-size: 0.68rem; }
+      .header-actions { gap: 2px; max-width: 70%; }
+      .btn-action, .btn-sec { 
+        padding: 6px 7px; font-size: 0.68rem; min-height: 34px; min-width: 34px;
+      }
       .container { flex-direction: column; }
-      .modal-box { width: 100% !important; max-width: 100% !important; margin: 0 8px; padding: 12px; max-height: 95vh; }
-      #chartContainer { height: 240px !important; }
-      #grafico-kpis { flex-direction: column !important; align-items: stretch !important; gap: 6px !important; white-space: normal !important; padding: 8px 10px !important; }
+      
       #sidebar { 
         width: 100% !important; 
-        height: 55vh !important;
-        height: 55dvh !important; 
+        height: 52vh !important;
+        height: 52dvh !important; 
+        max-height: 58vh;
         border-right: none; 
         border-top: 1px solid var(--border); 
         position: absolute; 
@@ -172,14 +212,45 @@
         margin-right: 0 !important;
         margin-left: 0 !important;
         z-index: 1500; 
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+        box-shadow: 0 -6px 24px rgba(0,0,0,0.18);
         transform: translateY(0);
-        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 14px 14px 0 0;
+        padding-bottom: var(--safe-bottom);
       }
       #sidebar.collapsed { transform: translateY(100%) !important; }
-      .tab-bar { background: #f2f2f7; display: flex; align-items: center; height: 40px; min-height: 40px; }
-      .sec-tab { height: calc(100% - 40px) !important; }
-      .list { padding-bottom: 80px !important; }
+      
+      .tab-bar { background: #f2f2f7; height: 42px; min-height: 42px; border-radius: 14px 14px 0 0; }
+      .tab-btn { font-size: 0.7rem; padding: 10px 1px; }
+      .sec-tab { height: calc(100% - 42px) !important; }
+      .list { padding: 8px 10px 90px 10px !important; }
+      
+      .modal-box { 
+        width: 100% !important; max-width: 100% !important; 
+        margin: 0; padding: 14px; 
+        max-height: 92vh; max-height: 92dvh;
+        border-radius: 12px;
+      }
+      #chartContainer { height: 220px !important; }
+      #grafico-kpis { 
+        flex-direction: column !important; align-items: stretch !important; 
+        gap: 6px !important; white-space: normal !important; 
+        padding: 8px 10px !important; font-size: 0.7rem !important;
+      }
+      
+      .form-row-2, .form-row-3 { flex-direction: column; gap: 0; }
+      .form-actions { flex-direction: column-reverse; }
+      .form-actions .btn-action, .form-actions .btn-sec { width: 100%; min-height: 44px; }
+      
+      .card, .item-card { padding: 11px; }
+      .altura { font-size: 1.15rem; }
+      .filter-btn { min-height: 38px; font-size: 0.68rem; }
+    }
+
+    @media (max-width: 400px) {
+      .title-area h1 { font-size: 0.72rem; }
+      .header-actions { max-width: 68%; }
+      #sidebar { height: 50vh !important; height: 50dvh !important; }
     }
   </style>
 </head>
@@ -200,10 +271,10 @@
       <button class="btn-action" style="background:#17a2b8;" onclick="prepararNuevoMonitoreo()">
         <span class="btn-text-full">+ Monitoreo</span><span class="btn-text-short">+ 🩺</span>
       </button>
-      <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
-      <button class="btn-sec" id="btn-toggle-rs" onclick="toggleCapaRegionesSanitarias()">🏥 RS</button>
-      <button class="btn-sec" id="btn-toggle-centros" onclick="toggleCapaCentros()">🏠 Centros</button>
-      <button class="btn-sec" id="btn-toggle-info" onclick="toggleSidebar()">📊 Info</button>
+      <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️</button>
+      <button class="btn-sec" id="btn-toggle-rs" onclick="toggleCapaRegionesSanitarias()">🏥</button>
+      <button class="btn-sec" id="btn-toggle-centros" onclick="toggleCapaCentros()">🏠</button>
+      <button class="btn-sec" id="btn-toggle-info" onclick="toggleSidebar()">📊</button>
       <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
     </div>
   </header>
@@ -222,8 +293,8 @@
       <div id="sec-estaciones" class="sec-tab">
         <div class="filter-bar">
           <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
-          <button class="filter-btn" onclick="filtrar('Paraná', this)">Río Paraná</button>
-          <button class="filter-btn" onclick="filtrar('Uruguay', this)">Río Uruguay</button>
+          <button class="filter-btn" onclick="filtrar('Paraná', this)">Paraná</button>
+          <button class="filter-btn" onclick="filtrar('Uruguay', this)">Uruguay</button>
         </div>
         <div class="list" id="list-estaciones"></div>
       </div>
@@ -317,7 +388,6 @@
           </div>
         </div>
 
-        <!-- Apellido y Nombre + Tipo -->
         <div class="form-row-2">
           <div class="form-group" style="flex:2;">
             <label>Apellido y Nombre *</label>
@@ -332,7 +402,6 @@
           </div>
         </div>
 
-        <!-- DNI + Edad (en años) -->
         <div class="form-row-2">
           <div class="form-group">
             <label>DNI / Documento</label>
@@ -378,13 +447,11 @@
           </div>
         </div>
 
-        <!-- Origen solo en su línea -->
         <div class="form-group">
           <label>Origen (dirección o barrio)</label>
           <input type="text" id="p-origen" placeholder="Ej: Barrio Centro, calle X">
         </div>
 
-        <!-- Observaciones -->
         <div class="form-group">
           <label>Observaciones</label>
           <input type="text" id="p-obs" placeholder="Notas adicionales de la persona">
@@ -540,7 +607,7 @@
     ];
 
     function initApp() {
-      map = L.map('map', { preferCanvas: true }).setView([-28.5, -57.8], 7);
+      map = L.map('map', { preferCanvas: true, zoomControl: true }).setView([-28.5, -57.8], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
       map.on('click', function(e) {
@@ -550,6 +617,12 @@
         tempMarker = L.marker([lat, lng]).addTo(map);
         prepararNuevoCentro(lat, lng);
       });
+
+      // Mejor manejo de resize en móvil
+      const resizeObserver = new ResizeObserver(() => {
+        setTimeout(() => map.invalidateSize(), 100);
+      });
+      resizeObserver.observe(document.getElementById('map'));
 
       cargarDatosActualizados();
       actualizarEstiloBotonInfo();
@@ -757,6 +830,7 @@
 
       Promise.allSettled([promesaRios, promesaBaseDatos]).then(() => {
         document.getElementById('loading').classList.add('off');
+        setTimeout(() => map.invalidateSize(), 150);
       });
     }
 
@@ -823,7 +897,7 @@
             </span>
           </div>
           <button onclick="event.stopPropagation(); mostrarGraficoINA('${est.nombre}', ${est.seriesId}, ${est.alerta}, ${est.evacuacion}, ${est.aguasBajas})" 
-                  style="margin-top:8px; width:100%; background:#e5e5ea; border:1px solid #ccc; color:#0a84ff; padding:4px; border-radius:4px; font-size:0.72rem; cursor:pointer; font-weight:bold;">
+                  style="margin-top:8px; width:100%; background:#e5e5ea; border:1px solid #ccc; color:#0a84ff; padding:8px; border-radius:6px; font-size:0.72rem; cursor:pointer; font-weight:bold; min-height:38px;">
             📈 Ver Gráfica de Evolución
           </button>
         `;
@@ -864,7 +938,7 @@
             Alerta: ${est.alerta}m | Evacuación: ${est.evacuacion}m<br>
             Aguas bajas: ${est.aguasBajas}m<br><br>
             <button onclick="mostrarGraficoINA('${est.nombre}', ${est.seriesId}, ${est.alerta}, ${est.evacuacion}, ${est.aguasBajas})" 
-                    style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
+                    style="background:#0a84ff; color:#fff; border:none; padding:6px 10px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:0.75rem; min-height:36px;">
               📈 Ver Gráfica de Evolución
             </button>
           </div>
@@ -1017,7 +1091,7 @@
             }
           },
           scales: {
-            x: { ticks: { color: '#555', maxRotation: 0, minRotation: 0, autoSkip: true, maxTicksLimit: 10, font: { size: 11 } }, grid: { color: '#f0f0f0', drawBorder: false } },
+            x: { ticks: { color: '#555', maxRotation: 0, minRotation: 0, autoSkip: true, maxTicksLimit: 8, font: { size: 11 } }, grid: { color: '#f0f0f0', drawBorder: false } },
             y: { min: 0, max: yMax, ticks: { color: '#555', font: { size: 11 }, callback: v => v.toFixed(1) }, grid: { color: '#e8e8e8', drawBorder: false }, title: { display: true, text: 'Altura (m)', color: '#666', font: { size: 11, weight: '600' } } }
           }
         },
@@ -1489,11 +1563,11 @@
                 <b>Insumos:</b> ${c.insumos || 'Sin registrar'}
                 ${c.observaciones ? '<br><b>Observaciones:</b> ' + c.observaciones : ''}
               </div>
-              <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-top:10px;">
-                <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Personas</button>
-                <button onclick="verInsumosCentro('${c.id}')" style="background:#17a2b8; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">📦 Insumos</button>
-                <button onclick="editarCentro('${c.id}')" title="Editar Centro" style="background:#6c757d; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">✏️</button>
-                <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-top:10px; flex-wrap:wrap;">
+                <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem; min-height:34px;">👥 Personas</button>
+                <button onclick="verInsumosCentro('${c.id}')" style="background:#17a2b8; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem; min-height:34px;">📦 Insumos</button>
+                <button onclick="editarCentro('${c.id}')" title="Editar Centro" style="background:#6c757d; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem; min-height:34px;">✏️</button>
+                <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem; min-height:34px;">🗑️</button>
               </div>
             </div>
           `);
@@ -1585,7 +1659,7 @@
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('collapsed');
       actualizarEstiloBotonInfo();
-      setTimeout(() => map.invalidateSize(), 250);
+      setTimeout(() => map.invalidateSize(), 280);
     }
 
     function actualizarEstiloBotonInfo() {
@@ -1605,7 +1679,10 @@
       else renderEstaciones(estacionesData.filter(e => e.rio.toLowerCase().includes(rio.toLowerCase())));
     }
 
-    window.onresize = actualizarEstiloBotonInfo;
+    window.onresize = () => {
+      actualizarEstiloBotonInfo();
+      setTimeout(() => map && map.invalidateSize(), 150);
+    };
     window.onload = initApp;
   </script>
 </body>
