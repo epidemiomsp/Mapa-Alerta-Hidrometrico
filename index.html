@@ -126,7 +126,7 @@
 
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; padding: 12px; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-box { background: #ffffff; border: 1px solid #ccc; border-radius: 8px; width: 460px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25); color: #1c1c1e; box-sizing: border-box; }
+    .modal-box { background: #ffffff; border: 1px solid #ccc; border-radius: 8px; width: 480px; max-width: 95%; padding: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25); color: #1c1c1e; box-sizing: border-box; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
     .modal-header h3 { font-size: 0.95rem; color: #1c1c1e; font-weight: bold; }
     .close-modal { background: none; border: none; color: #666; font-size: 1.3rem; cursor: pointer; }
@@ -137,6 +137,8 @@
     .form-group input:focus, .form-group select:focus { border-color: var(--primary); background: #fff; }
     .form-row-2 { display: flex; gap: 8px; }
     .form-row-2 .form-group { flex: 1; }
+    .form-row-3 { display: flex; gap: 6px; }
+    .form-row-3 .form-group { flex: 1; }
     .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
     .alert-msg { background: #ffebe9; border: 1px solid #ffc1c0; color: #cf222e; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-bottom: 10px; display: none; }
@@ -244,7 +246,7 @@
     <div id="map"></div>
   </div>
 
-  <!-- Modal Centro -->
+  <!-- Modal Centro Actualizado con Evacuados, Autoevacuados y Cant. Familias en la misma fila -->
   <div class="modal-overlay" id="modalCentro">
     <div class="modal-box">
       <div class="modal-header">
@@ -256,10 +258,14 @@
         <div class="form-group"><label>Nombre del Centro/Institución *</label><input type="text" id="c-nombre" required placeholder="Ej: Hospital Billinghurst"></div>
         <div class="form-group"><label>Dirección</label><input type="text" id="c-direccion" placeholder="Ej: Mendoza 555, Centro"></div>
         <div class="form-group"><label>Municipio / Localidad *</label><input type="text" id="c-muni" required placeholder="Ej: Ituzaingó"></div>
-        <div class="form-row-2">
+        
+        <!-- Fila triple: Evacuados | Autoevacuados | Cant. Familias -->
+        <div class="form-row-3">
           <div class="form-group"><label>Evacuados</label><input type="number" id="c-evacuados" value="0" min="0"></div>
           <div class="form-group"><label>Autoevacuados</label><input type="number" id="c-autoevacuados" value="0" min="0"></div>
+          <div class="form-group"><label>Cant. Familias</label><input type="number" id="c-familias" value="0" min="0"></div>
         </div>
+
         <div class="form-row-2">
           <div class="form-group"><label>Latitud *</label><input type="number" step="any" id="c-lat" required placeholder="-27.58688"></div>
           <div class="form-group"><label>Longitud *</label><input type="number" step="any" id="c-lng" required placeholder="-56.69061"></div>
@@ -288,13 +294,11 @@
       <form onsubmit="guardarPersona(event)">
         <input type="hidden" id="p-idPersona">
 
-        <!-- 1. Centro -->
         <div class="form-group">
           <label>Centro de Evacuados *</label>
           <select id="p-centro" required></select>
         </div>
 
-        <!-- 2. Grupo Familiar + Rol Familiar -->
         <div class="form-row-2">
           <div class="form-group">
             <label>Grupo Familiar</label>
@@ -313,13 +317,11 @@
           </div>
         </div>
 
-        <!-- 3. Apellido y Nombre -->
         <div class="form-group">
           <label>Apellido y Nombre *</label>
           <input type="text" id="p-nombre" required placeholder="Ej: Pérez Juan">
         </div>
 
-        <!-- 4. DNI (opcional) + Fecha Nacimiento (opcional) -->
         <div class="form-row-2">
           <div class="form-group">
             <label>DNI / Documento</label>
@@ -331,7 +333,6 @@
           </div>
         </div>
 
-        <!-- 5. Fecha Ingreso + Fecha Egreso -->
         <div class="form-row-2">
           <div class="form-group">
             <label>Fecha de Ingreso</label>
@@ -343,7 +344,6 @@
           </div>
         </div>
 
-        <!-- 6. Sexo + Grupo Etario -->
         <div class="form-row-2">
           <div class="form-group">
             <label>Sexo</label>
@@ -367,7 +367,6 @@
           </div>
         </div>
 
-        <!-- 7. Ubicación + Origen -->
         <div class="form-row-2">
           <div class="form-group">
             <label>Ubicación (dentro del centro)</label>
@@ -596,7 +595,6 @@
         fetch('./regiones_sanitarias.json')
           .then(res => res.json())
           .then(data => {
-            // GeometryCollection de LineStrings → se renderiza como polilíneas
             capaRegionesSanitarias = L.geoJSON(data, {
               style: () => ({
                 color: '#9b59b6',
@@ -737,10 +735,6 @@
       });
     }
 
-    /**
-     * Determina estado hidrométrico según umbrales INA.
-     * Prioridad: EVACUACIÓN > ALERTA > NORMAL
-     */
     function getEstadoHidrometrico(est) {
       const altura = Number(est.altura) || 0;
       const alerta = Number(est.alerta);
@@ -779,7 +773,6 @@
       markersEstaciones.forEach(m => map.removeLayer(m));
       markersEstaciones = [];
 
-      // Ordenar: EVACUACIÓN primero, luego ALERTA, luego NORMAL
       const ordenadas = [...estaciones].sort((a, b) => {
         const ea = getEstadoHidrometrico(a);
         const eb = getEstadoHidrometrico(b);
@@ -790,15 +783,12 @@
       ordenadas.forEach(est => {
         const estado = getEstadoHidrometrico(est);
 
-        // Color por TENDENCIA (como en la versión original que funcionaba)
-        // crece = naranja/rojo, baja = verde, permanece = azul
-        let colorTendencia = '#0a84ff'; // permanece / default
+        let colorTendencia = '#0a84ff';
         if (est.tendencia === 'crece') colorTendencia = '#F4492E';
         else if (est.tendencia === 'baja') colorTendencia = '#28a745';
 
         const flecha = est.tendencia === 'crece' ? '⬆' : (est.tendencia === 'baja' ? '⬇' : '➔');
 
-        // Badge solo en lista: Nombre · EVACUACIÓN · Río Uruguay
         const badgeHtml = estado.label
           ? `<span class="badge-estado ${estado.cssClass}">${estado.label}</span>`
           : '';
@@ -808,7 +798,6 @@
         if (estado.estado === 'EVACUACION') card.style.borderLeft = '4px solid #F4492E';
         else if (estado.estado === 'ALERTA') card.style.borderLeft = '4px solid #FAAE05';
 
-        // Altura: si está en alerta/evac usa color de umbral; si no, azul normal
         const alturaClass = estado.alturaClass || '';
 
         card.innerHTML = `
@@ -837,8 +826,6 @@
         };
         listaEl.appendChild(card);
 
-        // === Marcador del mapa: SOLO nivel + flecha (sin leyenda ALERTA/EVACUACIÓN) ===
-        // Color del nivel en el mapa = tendencia (crece naranja, baja verde)
         const customIcon = L.divIcon({
           className: 'custom-river-pin',
           html: `
@@ -858,7 +845,6 @@
 
         const marker = L.marker([est.lat, est.lng], { icon: customIcon }).addTo(map);
 
-        // Popup: sí muestra el estado (útil al hacer click)
         const badgePopup = estado.label
           ? `<span style="display:inline-block; background:${estado.color}; color:#fff; font-size:0.7rem; font-weight:800; padding:2px 6px; border-radius:3px; margin-left:6px;">${estado.label}</span>`
           : '';
@@ -1076,6 +1062,7 @@
       document.getElementById('c-muni').value = "";
       document.getElementById('c-evacuados').value = "0";
       document.getElementById('c-autoevacuados').value = "0";
+      document.getElementById('c-familias').value = "0";
       document.getElementById('c-lat').value = lat;
       document.getElementById('c-lng').value = lng;
       document.getElementById('c-contacto').value = "";
@@ -1128,6 +1115,7 @@
       document.getElementById('c-muni').value = centro.municipio || "";
       document.getElementById('c-evacuados').value = centro.evacuados || 0;
       document.getElementById('c-autoevacuados').value = centro.autoevacuados || 0;
+      document.getElementById('c-familias').value = centro.familias || 0;
       document.getElementById('c-lat').value = centro.lat;
       document.getElementById('c-lng').value = centro.lng;
       document.getElementById('c-contacto').value = centro.contacto || "";
@@ -1191,6 +1179,7 @@
         municipio: document.getElementById('c-muni').value.trim(),
         evacuados: parseInt(document.getElementById('c-evacuados').value) || 0,
         autoevacuados: parseInt(document.getElementById('c-autoevacuados').value) || 0,
+        familias: parseInt(document.getElementById('c-familias').value) || 0,
         lat: parseFloat(rawLat),
         lng: parseFloat(rawLng),
         contacto: document.getElementById('c-contacto').value.trim() || "Sin dato",
@@ -1210,7 +1199,6 @@
       const fechaIngresoRaw = document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0];
       const grupoFamiliar = document.getElementById('p-familia').value.trim();
 
-      // Sticky
       if (grupoFamiliar) {
         ultimoGrupoFamiliar = grupoFamiliar;
         localStorage.setItem('ultimoGrupoFamiliar', grupoFamiliar);
@@ -1284,7 +1272,6 @@
 
       const nuevaP = construirPayloadPersona();
       
-      // Enviar sin cerrar el modal
       document.getElementById('loading').classList.remove('off');
       fetch(URL_BASE_DATOS, {
         method: 'POST',
@@ -1295,7 +1282,6 @@
       .then(() => {
         setTimeout(() => {
           cargarDatosActualizados();
-          // Limpiar solo los campos de persona, mantener grupo y centro
           document.getElementById('p-idPersona').value = "";
           document.getElementById('p-nombre').value = "";
           document.getElementById('p-dni').value = "";
@@ -1321,7 +1307,6 @@
       const idPersona = document.getElementById('m-idPersona').value;
       let dniIngresado = String(document.getElementById('m-dni').value).trim();
       if (!dniIngresado) dniIngresado = "PENDIENTE-" + Date.now().toString().slice(-6);
-      const nombreIngresado = String(document.getElementById('m-nombre').value).trim().toLowerCase();
       const idCentroIngresado = String(document.getElementById('m-centro').value);
 
       if (!idPersona && dniIngresado && !dniIngresado.startsWith("PENDIENTE-")) {
@@ -1449,8 +1434,9 @@
             <button class="btn-card-action" onclick="eliminarCentro('${c.id}', event)" title="Eliminar Centro">🗑️</button>
           </div>
           <div class="item-title">🏠 ${c.nombre}</div>
-          <div class="item-sub">📍 ${c.municipio}${c.direccion ? ' · ' + c.direccion : ''} | 📞 ${c.contacto || 'Sin dato'}</div>
-          <div class="item-badge">Evacuados: ${c.evacuados || 0} | Autoevacuados: ${c.autoevacuados || 0}</div>
+          <div class="item-sub">📍 ${c.municipio}${c.direccion ? ' · ' + c.direccion : ''}</div>
+          <div class="item-sub">📞 ${c.contacto || 'Sin dato'}</div>
+          <div class="item-badge">Evacuados: ${c.evacuados || 0} | Autoevacuados: ${c.autoevacuados || 0} | Familias: ${c.familias || 0}</div>
         `;
         card.onclick = () => {
           if (c.lat && c.lng && !(c.lat === 0 && c.lng === 0)) {
@@ -1484,6 +1470,7 @@
                 ${c.direccion ? '<b>Dirección:</b> ' + c.direccion + '<br>' : ''}
                 <b>Municipio:</b> ${c.municipio}<br>
                 <b>Evacuados:</b> ${c.evacuados || 0} | <b>Autoevacuados:</b> ${c.autoevacuados || 0}<br>
+                <b>Cant. Familias:</b> ${c.familias || 0}<br>
                 <b>Contacto:</b> ${c.contacto || 'Sin dato'}<br>
                 <b>Insumos:</b> ${c.insumos || 'Sin registrar'}
                 ${c.observaciones ? '<br><b>Observaciones:</b> ' + c.observaciones : ''}
