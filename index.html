@@ -202,6 +202,7 @@
       </button>
       <button class="btn-sec" id="btn-toggle-dptos" onclick="toggleCapaDepartamentos()">🗺️ Dptos</button>
       <button class="btn-sec" id="btn-toggle-rs" onclick="toggleCapaRegionesSanitarias()">🏥 RS</button>
+      <button class="btn-sec" id="btn-toggle-centros" onclick="toggleCapaCentros()">🏠 Centros</button>
       <button class="btn-sec" id="btn-toggle-info" onclick="toggleSidebar()">📊 Info</button>
       <button class="btn-sec" onclick="cargarDatosActualizados()">🔄</button>
     </div>
@@ -246,7 +247,7 @@
     <div id="map"></div>
   </div>
 
-  <!-- Modal Centro Actualizado con Evacuados, Autoevacuados y Cant. Familias en la misma fila -->
+  <!-- Modal Centro -->
   <div class="modal-overlay" id="modalCentro">
     <div class="modal-box">
       <div class="modal-header">
@@ -259,7 +260,6 @@
         <div class="form-group"><label>Dirección</label><input type="text" id="c-direccion" placeholder="Ej: Mendoza 555, Centro"></div>
         <div class="form-group"><label>Municipio / Localidad *</label><input type="text" id="c-muni" required placeholder="Ej: Ituzaingó"></div>
         
-        <!-- Fila triple: Evacuados | Autoevacuados | Cant. Familias -->
         <div class="form-row-3">
           <div class="form-group"><label>Evacuados</label><input type="number" id="c-evacuados" value="0" min="0"></div>
           <div class="form-group"><label>Autoevacuados</label><input type="number" id="c-autoevacuados" value="0" min="0"></div>
@@ -317,19 +317,30 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Apellido y Nombre *</label>
-          <input type="text" id="p-nombre" required placeholder="Ej: Pérez Juan">
+        <!-- Apellido y Nombre + Tipo -->
+        <div class="form-row-2">
+          <div class="form-group" style="flex:2;">
+            <label>Apellido y Nombre *</label>
+            <input type="text" id="p-nombre" required placeholder="Ej: Pérez Juan">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Tipo *</label>
+            <select id="p-tipo">
+              <option value="Evacuado">Evacuado</option>
+              <option value="Autoevacuado">Autoevacuado</option>
+            </select>
+          </div>
         </div>
 
+        <!-- DNI + Edad (en años) -->
         <div class="form-row-2">
           <div class="form-group">
             <label>DNI / Documento</label>
             <input type="text" id="p-dni" placeholder="Opcional">
           </div>
           <div class="form-group">
-            <label>Fecha de Nacimiento</label>
-            <input type="date" id="p-nac">
+            <label>Edad (años)</label>
+            <input type="number" id="p-edad" min="0" max="120" placeholder="Ej: 35">
           </div>
         </div>
 
@@ -367,15 +378,16 @@
           </div>
         </div>
 
-        <div class="form-row-2">
-          <div class="form-group">
-            <label>Ubicación (dentro del centro)</label>
-            <input type="text" id="p-ubicacion" placeholder="Ej: Aula 3, Carpa 12">
-          </div>
-          <div class="form-group">
-            <label>Origen (dirección o barrio)</label>
-            <input type="text" id="p-origen" placeholder="Ej: Barrio Centro, calle X">
-          </div>
+        <!-- Origen solo en su línea -->
+        <div class="form-group">
+          <label>Origen (dirección o barrio)</label>
+          <input type="text" id="p-origen" placeholder="Ej: Barrio Centro, calle X">
+        </div>
+
+        <!-- Observaciones -->
+        <div class="form-group">
+          <label>Observaciones</label>
+          <input type="text" id="p-obs" placeholder="Notas adicionales de la persona">
         </div>
 
         <div class="form-actions">
@@ -483,6 +495,7 @@
     let departamentosVisibles = false;
     let capaRegionesSanitarias = null;
     let regionesSanitariasVisibles = false;
+    let centrosVisibles = true;
     let ultimoGrupoFamiliar = localStorage.getItem('ultimoGrupoFamiliar') || "";
 
     const URL_BASE_DATOS = "https://script.google.com/macros/s/AKfycbz4qHHOSxjpVv3enlPme9dj1OoKpY8y1_e3HN6gb-SuxCna5a4M0rqIS9fu-HRwLlySzw/exec";
@@ -540,6 +553,27 @@
 
       cargarDatosActualizados();
       actualizarEstiloBotonInfo();
+      actualizarEstiloBotonCentros();
+    }
+
+    function toggleCapaCentros() {
+      centrosVisibles = !centrosVisibles;
+      markersCentros.forEach(m => {
+        if (centrosVisibles) {
+          m.addTo(map);
+        } else {
+          map.removeLayer(m);
+        }
+      });
+      actualizarEstiloBotonCentros();
+    }
+
+    function actualizarEstiloBotonCentros() {
+      const btn = document.getElementById('btn-toggle-centros');
+      if (btn) {
+        btn.style.background = centrosVisibles ? '#0a84ff' : '#2c2c2e';
+        btn.style.borderColor = centrosVisibles ? '#005bb5' : '#3a3a3c';
+      }
     }
 
     function toggleCapaDepartamentos() {
@@ -596,18 +630,9 @@
           .then(res => res.json())
           .then(data => {
             capaRegionesSanitarias = L.geoJSON(data, {
-              style: () => ({
-                color: '#9b59b6',
-                weight: 2.5,
-                opacity: 0.95,
-                fillOpacity: 0
-              }),
+              style: () => ({ color: '#9b59b6', weight: 2.5, opacity: 0.95, fillOpacity: 0 }),
               onEachFeature: (feature, layer) => {
-                layer.bindTooltip('Región Sanitaria', {
-                  permanent: false,
-                  direction: 'center',
-                  className: 'dept-tooltip'
-                });
+                layer.bindTooltip('Región Sanitaria', { permanent: false, direction: 'center', className: 'dept-tooltip' });
                 layer.on({
                   mouseover: (e) => e.target.setStyle({ weight: 4, color: '#c39bd3' }),
                   mouseout: (e) => capaRegionesSanitarias.resetStyle(e.target)
@@ -741,30 +766,12 @@
       const evac   = Number(est.evacuacion);
 
       if (!isNaN(evac) && altura >= evac) {
-        return {
-          estado: 'EVACUACION',
-          label: 'EVACUACIÓN',
-          color: '#F4492E',
-          cssClass: 'badge-evac',
-          alturaClass: 'altura-evac'
-        };
+        return { estado: 'EVACUACION', label: 'EVACUACIÓN', color: '#F4492E', cssClass: 'badge-evac', alturaClass: 'altura-evac' };
       }
       if (!isNaN(alerta) && altura >= alerta) {
-        return {
-          estado: 'ALERTA',
-          label: 'ALERTA',
-          color: '#FAAE05',
-          cssClass: 'badge-alerta',
-          alturaClass: 'altura-alerta'
-        };
+        return { estado: 'ALERTA', label: 'ALERTA', color: '#FAAE05', cssClass: 'badge-alerta', alturaClass: 'altura-alerta' };
       }
-      return {
-        estado: 'NORMAL',
-        label: '',
-        color: '#0a84ff',
-        cssClass: '',
-        alturaClass: ''
-      };
+      return { estado: 'NORMAL', label: '', color: '#0a84ff', cssClass: '', alturaClass: '' };
     }
 
     function renderEstaciones(estaciones) {
@@ -1076,16 +1083,17 @@
       document.getElementById('modalPersonaTitulo').innerText = "Ingreso de Persona";
       document.getElementById('p-idPersona').value = "";
       document.getElementById('p-nombre').value = "";
+      document.getElementById('p-tipo').value = "Evacuado";
       document.getElementById('p-dni').value = "";
-      document.getElementById('p-nac').value = "";
+      document.getElementById('p-edad').value = "";
       document.getElementById('p-fecha').value = new Date().toISOString().split('T')[0];
       document.getElementById('p-egreso').value = "";
       document.getElementById('p-sexo').value = "Masculino";
       document.getElementById('p-grupo-etario').value = "25 a 49 años";
       document.getElementById('p-familia').value = ultimoGrupoFamiliar || "";
       document.getElementById('p-rol-familiar').value = "";
-      document.getElementById('p-ubicacion').value = "";
       document.getElementById('p-origen').value = "";
+      document.getElementById('p-obs').value = "";
       abrirModal('modalPersona');
     }
 
@@ -1133,16 +1141,17 @@
       document.getElementById('p-idPersona').value = persona.idPersona || "";
       document.getElementById('p-centro').value = persona.idCentro;
       document.getElementById('p-nombre').value = persona.nombreApellido;
+      document.getElementById('p-tipo').value = persona.tipo || "Evacuado";
       document.getElementById('p-dni').value = persona.dni || "";
-      document.getElementById('p-nac').value = parsearFechaParaInput(persona.fechaNac);
+      document.getElementById('p-edad').value = persona.edad || "";
       document.getElementById('p-fecha').value = parsearFechaParaInput(persona.fechaIngreso);
       document.getElementById('p-egreso').value = parsearFechaParaInput(persona.fechaEgreso);
       document.getElementById('p-sexo').value = persona.sexo || "Masculino";
       document.getElementById('p-grupo-etario').value = persona.grupoEtario || "25 a 49 años";
       document.getElementById('p-familia').value = persona.grupoFamiliar || "";
       document.getElementById('p-rol-familiar').value = persona.rolFamiliar || "";
-      document.getElementById('p-ubicacion').value = persona.ubicacion || "";
       document.getElementById('p-origen').value = persona.origen || "";
+      document.getElementById('p-obs').value = persona.observaciones || "";
       abrirModal('modalPersona');
     }
 
@@ -1209,16 +1218,17 @@
         idPersona: idPersona || ("PER-" + Date.now()),
         idCentro: String(document.getElementById('p-centro').value),
         nombreApellido: document.getElementById('p-nombre').value.trim(),
+        tipo: document.getElementById('p-tipo').value,
         dni: dniIngresado,
-        fechaNac: formatearFechaLatina(document.getElementById('p-nac').value),
+        edad: document.getElementById('p-edad').value.trim(),
         fechaIngreso: formatearFechaLatina(fechaIngresoRaw),
         fechaEgreso: formatearFechaLatina(document.getElementById('p-egreso').value),
         sexo: document.getElementById('p-sexo').value,
         grupoEtario: document.getElementById('p-grupo-etario').value,
         grupoFamiliar: grupoFamiliar,
         rolFamiliar: document.getElementById('p-rol-familiar').value || "",
-        ubicacion: document.getElementById('p-ubicacion').value.trim(),
-        origen: document.getElementById('p-origen').value.trim()
+        origen: document.getElementById('p-origen').value.trim(),
+        observaciones: document.getElementById('p-obs').value.trim()
       };
     }
 
@@ -1285,10 +1295,10 @@
           document.getElementById('p-idPersona').value = "";
           document.getElementById('p-nombre').value = "";
           document.getElementById('p-dni').value = "";
-          document.getElementById('p-nac').value = "";
+          document.getElementById('p-edad').value = "";
           document.getElementById('p-rol-familiar').value = "";
-          document.getElementById('p-ubicacion').value = "";
           document.getElementById('p-origen').value = "";
+          document.getElementById('p-obs').value = "";
           document.getElementById('p-fecha').value = new Date().toISOString().split('T')[0];
           document.getElementById('loading').classList.add('off');
         }, 1000);
@@ -1457,7 +1467,9 @@
             popupAnchor: [0, -32]
           });
 
-          const marker = L.marker([c.lat, c.lng], { icon: iconoSalud }).addTo(map);
+          const marker = L.marker([c.lat, c.lng], { icon: iconoSalud });
+          if (centrosVisibles) marker.addTo(map);
+
           marker.bindPopup(`
             <div style="color:#000; min-width: 200px;">
               <div style="font-size:0.75rem; font-weight:bold; color:#0a84ff; text-transform:uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
@@ -1476,7 +1488,7 @@
                 ${c.observaciones ? '<br><b>Observaciones:</b> ' + c.observaciones : ''}
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-top:10px;">
-                <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Evacuados</button>
+                <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Personas</button>
                 <button onclick="verInsumosCentro('${c.id}')" style="background:#17a2b8; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">📦 Insumos</button>
                 <button onclick="editarCentro('${c.id}')" title="Editar Centro" style="background:#ffc107; color:#000; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">✏️</button>
                 <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
@@ -1528,17 +1540,18 @@
             <button class="btn-card-action" onclick="editarPersona('${p.dni}', event)" title="Editar Persona">✏️</button>
             <button class="btn-card-action" onclick="eliminarPersona('${p.dni}', event)" title="Eliminar Persona">🗑️</button>
           </div>
-          <div class="item-title">👤 ${p.nombreApellido} (${p.grupoEtario || 'S/D'})</div>
+          <div class="item-title">👤 ${p.nombreApellido} (Edad: ${p.edad || 'S/D'} años)</div>
           <div class="item-sub">DNI: ${dniMostrar} | Centro: ${centro.nombre}</div>
           <div class="item-sub">Ingreso: ${p.fechaIngreso || 'S/D'} ${p.fechaEgreso ? '| Egreso: ' + p.fechaEgreso : ''}</div>
-          ${(p.grupoFamiliar || p.rolFamiliar) ? `
-            <div class="item-badge" style="background: #e1f5fe; color: #01579b;">
-              ${p.grupoFamiliar || 'Sin código'}${p.rolFamiliar ? ' · ' + p.rolFamiliar : ''}
-            </div>` : ''}
-          ${(p.ubicacion || p.origen) ? `
-            <div class="item-sub" style="margin-top:3px;">
-              ${p.ubicacion ? 'Ubic: ' + p.ubicacion : ''}${p.ubicacion && p.origen ? ' | ' : ''}${p.origen ? 'Origen: ' + p.origen : ''}
-            </div>` : ''}
+          <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">
+            <span class="item-badge" style="background: #e8f5e9; color: #2e7d32; font-weight:bold;">${p.tipo || 'Evacuado'}</span>
+            ${(p.grupoFamiliar || p.rolFamiliar) ? `
+              <span class="item-badge" style="background: #e1f5fe; color: #01579b;">
+                ${p.grupoFamiliar || 'Sin código'}${p.rolFamiliar ? ' · ' + p.rolFamiliar : ''}
+              </span>` : ''}
+          </div>
+          ${p.origen ? `<div class="item-sub" style="margin-top:3px;">Origen: ${p.origen}</div>` : ''}
+          ${p.observaciones ? `<div class="item-sub" style="margin-top:2px; color:#c0392b;">Obs: ${p.observaciones}</div>` : ''}
         `;
         listEl.appendChild(card);
       });
