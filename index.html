@@ -1481,8 +1481,10 @@
               <div style="font-size: 0.8rem; line-height: 1.4;">
                 ${c.direccion ? '<b>Dirección:</b> ' + c.direccion + '<br>' : ''}
                 <b>Municipio:</b> ${c.municipio}<br>
-                <b>Evacuados:</b> ${c.evacuados || 0} | <b>Autoevacuados:</b> ${c.autoevacuados || 0}<br>
-                <b>Cant. Familias:</b> ${c.familias || 0}<br>
+                <div style="background: #fff3cd; border: 1px solid #ffeeba; padding: 5px 8px; border-radius: 5px; margin: 6px 0;">
+                  <b>Evacuados:</b> ${c.evacuados || 0} | <b>Autoevacuados:</b> ${c.autoevacuados || 0}<br>
+                  <b>Cant. Familias:</b> ${c.familias || 0}
+                </div>
                 <b>Contacto:</b> ${c.contacto || 'Sin dato'}<br>
                 <b>Insumos:</b> ${c.insumos || 'Sin registrar'}
                 ${c.observaciones ? '<br><b>Observaciones:</b> ' + c.observaciones : ''}
@@ -1490,7 +1492,7 @@
               <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-top:10px;">
                 <button onclick="verEvacuadosCentro('${c.id}')" style="background:#0a84ff; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">👥 Personas</button>
                 <button onclick="verInsumosCentro('${c.id}')" style="background:#17a2b8; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">📦 Insumos</button>
-                <button onclick="editarCentro('${c.id}')" title="Editar Centro" style="background:#ffc107; color:#000; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">✏️</button>
+                <button onclick="editarCentro('${c.id}')" title="Editar Centro" style="background:#6c757d; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">✏️</button>
                 <button onclick="eliminarCentro('${c.id}')" title="Eliminar Centro" style="background:#d9534f; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85rem;">🗑️</button>
               </div>
             </div>
